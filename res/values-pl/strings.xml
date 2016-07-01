@@ -24,11 +24,14 @@
   <string name="custom_location_title">Niestandardowa lokalizacja</string>
   <string name="weather_custom_location_dialog_title">Wprowadź lokalizację</string>
   <string name="weather_custom_location_title">Lokalizacja</string>
+  <string name="weather_custom_location_missing">Ustaw niestandardową lokalizację</string>
   <string name="weather_retrieve_location_dialog_title">Nie można uzyskać lokalizacji!</string>
   <string name="weather_retrieve_location_dialog_message">Geolokalizacja przez sieć jest wyłączona.\n\nWybierz niestandardową lokalizację lub włącz ustalanie lokalizacji przez sieć</string>
   <string name="weather_retrieve_location_dialog_enable_button">Włącz</string>
   <string name="settings_title">Ustawienia</string>
   <string name="auto_update_title">Automatyczne aktualizacje</string>
+  <string name="unit_metric">Metryczne (\u00b0C)</string>
+  <string name="unit_imperial">Imperialne (\u00b0F)</string>
   <string name="update">Akttualizuj</string>
   <string name="enable_title">Włącz</string>
   <string name="update_interval_title">Częstotliwość aktualizacji</string>
