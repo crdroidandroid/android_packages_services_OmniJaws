@@ -24,11 +24,14 @@
   <string name="custom_location_title">Aangepaste locatie</string>
   <string name="weather_custom_location_dialog_title">Voer locatie in</string>
   <string name="weather_custom_location_title">Locatie</string>
+  <string name="weather_custom_location_missing">Aangepaste locatie instellen</string>
   <string name="weather_retrieve_location_dialog_title">Kan locatie niet achterhalen!</string>
   <string name="weather_retrieve_location_dialog_message">Netwerk positie bepaling is uitgeschakeld.\n\nGeef een aangepaste lokatie op of schakel netwerk positie bepaling in</string>
   <string name="weather_retrieve_location_dialog_enable_button">Inschakelen</string>
   <string name="settings_title">Instellingen</string>
   <string name="auto_update_title">Automatische updates</string>
+  <string name="unit_metric">Metrisch (\u00b0C)</string>
+  <string name="unit_imperial">Imperiaal - (\u00b0F)</string>
   <string name="update">Bijwerken</string>
   <string name="enable_title">Inschakelen</string>
   <string name="update_interval_title">Tijd tussen updates</string>
