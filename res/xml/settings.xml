@@ -45,7 +45,7 @@
         android:key="units"
         android:title="@string/units_title" />
 
-    <CheckBoxPreference
+    <SwitchPreference
         android:defaultValue="false"
         android:key="custom_location"
         android:title="@string/custom_location_title" />

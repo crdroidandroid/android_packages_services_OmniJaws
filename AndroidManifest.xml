@@ -28,7 +28,7 @@
             android:exported="true"
             android:label="@string/settings_title"
             android:launchMode="singleTop"
-            android:theme="@android:style/Theme.Material.Settings" >
+            android:theme="@style/Theme.Main" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -40,7 +40,7 @@
             android:exported="true"
             android:label="@string/settings_title"
             android:launchMode="singleTop"
-            android:theme="@android:style/Theme.Material.Settings" >
+            android:theme="@style/Theme.Main" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
