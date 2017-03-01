@@ -17,8 +17,8 @@
 <resources>
 
     <!-- Material design app colors -->
-    <color name="colorPrimary">#4285f4</color>
-    <color name="colorPrimaryDark">#4169ac</color>
-    <color name="colorAccent">#4285f4</color>
+    <color name="colorPrimary">@*android:color/primary_material_settings</color>
+    <color name="colorPrimaryDark">@*android:color/primary_dark_material_dark</color>
+    <color name="colorAccent">@*android:color/accent_material_dark</color>
 
 </resources>
