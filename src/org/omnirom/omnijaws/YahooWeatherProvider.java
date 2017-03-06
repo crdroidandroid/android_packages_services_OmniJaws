@@ -174,39 +174,46 @@ public class YahooWeatherProvider extends AbstractWeatherProvider  {
         @Override
         public void startElement(String uri, String localName, String qName, Attributes attributes)
                 throws SAXException {
-            if (qName.equals("yweather:location")) {
-                city = attributes.getValue("city");
-            } else if (qName.equals("yweather:units")) {
-                temperatureUnit = attributes.getValue("temperature");
-                speedUnit = attributes.getValue("speed");
-            } else if (qName.equals("yweather:wind")) {
-                windDirection = (int) stringToFloat(attributes.getValue("direction"), -1);
-                windSpeed = stringToFloat(attributes.getValue("speed"), -1);
-            } else if (qName.equals("yweather:atmosphere")) {
-                humidity = stringToFloat(attributes.getValue("humidity"), -1);
-            } else if (qName.equals("yweather:condition")) {
-                condition = attributes.getValue("text");
-                conditionCode = (int) stringToFloat(attributes.getValue("code"), -1);
-                temperature = stringToFloat(attributes.getValue("temp"), Float.NaN);
-            } else if (qName.equals("yweather:forecast")) {
-                String date = attributes.getValue("date");
-                String dayShort = attributes.getValue("day");
-                // is this forecaset days before today?
-                if (dayShort .equals(todayShort) && !addForecastDay) {
-                    addForecastDay = true;
-                }
-                if (addForecastDay) {
-                    DayForecast day = new DayForecast(
+            switch (qName) {
+                case "yweather:location":
+                    city = attributes.getValue("city");
+                    break;
+                case "yweather:units":
+                    temperatureUnit = attributes.getValue("temperature");
+                    speedUnit = attributes.getValue("speed");
+                    break;
+                case "yweather:wind":
+                    windDirection = (int) stringToFloat(attributes.getValue("direction"), -1);
+                    windSpeed = stringToFloat(attributes.getValue("speed"), -1);
+                    break;
+                case "yweather:atmosphere":
+                    humidity = stringToFloat(attributes.getValue("humidity"), -1);
+                    break;
+                case "yweather:condition":
+                    condition = attributes.getValue("text");
+                    conditionCode = (int) stringToFloat(attributes.getValue("code"), -1);
+                    temperature = stringToFloat(attributes.getValue("temp"), Float.NaN);
+                    break;
+                case "yweather:forecast":
+                    String date = attributes.getValue("date");
+                    String dayShort = attributes.getValue("day");
+                    // is this forecaset days before today?
+                    if (dayShort.equals(todayShort) && !addForecastDay) {
+                        addForecastDay = true;
+                    }
+                    if (addForecastDay) {
+                        DayForecast day = new DayForecast(
                             /* low */ stringToFloat(attributes.getValue("low"), Float.NaN),
                             /* high */ stringToFloat(attributes.getValue("high"), Float.NaN),
                             /* condition */ attributes.getValue("text"),
                             /* conditionCode */ (int) stringToFloat(attributes.getValue("code"), -1),
-                            attributes.getValue("date"),
-                            metric);
-                    if (!Float.isNaN(day.low) && !Float.isNaN(day.high) && day.conditionCode >= 0) {
-                        forecasts.add(day);
+                                attributes.getValue("date"),
+                                metric);
+                        if (!Float.isNaN(day.low) && !Float.isNaN(day.high) && day.conditionCode >= 0) {
+                            forecasts.add(day);
+                        }
                     }
-                }
+                    break;
             }
         }
         public boolean isComplete() {

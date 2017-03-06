@@ -31,9 +31,6 @@ import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.os.Handler;
-import android.os.UserHandle;
-import android.provider.Settings;
 import android.util.Log;
 
 import org.omnirom.omnijaws.Config;
@@ -285,8 +282,7 @@ public class OmniJawsClient {
             int count = c.getCount();
             if (count == 1) {
                 c.moveToPosition(0);
-                boolean enabled = c.getInt(0) == 1;
-                return enabled;
+                return c.getInt(0) == 1;
             }
         }
         return true;

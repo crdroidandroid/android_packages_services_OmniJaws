@@ -22,7 +22,6 @@ import java.util.Date;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
 
 public class WeatherInfo {
     private static final DecimalFormat sNoDigitsFormat = new DecimalFormat("0");
