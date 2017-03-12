@@ -21,4 +21,5 @@ LOCAL_JAVA_LIBRARIES := org.apache.http.legacy
 LOCAL_SRC_FILES := $(call all-subdir-java-files)
 LOCAL_PACKAGE_NAME := OmniJaws
 LOCAL_MODULE_TAGS := optional
+LOCAL_PRIVILEGED_MODULE := true
 include $(BUILD_PACKAGE)

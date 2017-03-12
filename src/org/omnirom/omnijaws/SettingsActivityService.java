@@ -20,6 +20,7 @@ package org.omnirom.omnijaws;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -134,6 +135,8 @@ public class SettingsActivityService extends PreferenceActivity implements OnPre
                 // no longer found
                 settingHeaderPackage = DEFAULT_WEATHER_ICON_PACKAGE;
                 Config.setIconPack(this, settingHeaderPackage);
+                Settings.System.putString(getContentResolver(),
+                            Settings.System.OMNIJAWS_WEATHER_ICON_PACK, settingHeaderPackage);
                 valueIndex = mWeatherIconPack.findIndexOfValue(settingHeaderPackage);
             }
             mWeatherIconPack.setValueIndex(valueIndex >= 0 ? valueIndex : 0);
@@ -228,6 +231,8 @@ public class SettingsActivityService extends PreferenceActivity implements OnPre
         } else if (preference == mWeatherIconPack) {
             String value = (String) newValue;
             Config.setIconPack(this, value);
+            Settings.System.putString(getContentResolver(),
+                        Settings.System.OMNIJAWS_WEATHER_ICON_PACK, value);
             int valueIndex = mWeatherIconPack.findIndexOfValue(value);
             mWeatherIconPack.setSummary(mWeatherIconPack.getEntries()[valueIndex]);
             return true;
