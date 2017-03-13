@@ -332,6 +332,9 @@ public class SettingsActivityService extends PreferenceActivity implements OnPre
     private void disableService() {
         // stop any pending
         WeatherService.cancelUpdate(this);
+        // Disable statusbar weather
+        Settings.System.putInt(getContentResolver(),
+                Settings.System.STATUS_BAR_SHOW_WEATHER_TEMP, 0);
     }
 
     @Override
