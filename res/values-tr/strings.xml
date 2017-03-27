@@ -40,4 +40,9 @@
   <string name="interval_4_hour">4 saat</string>
   <string name="interval_6_hour">6 saat</string>
   <string name="interval_12_hour">12 saat</string>
+  <string name="weather_tile_title">Hava Durumu</string>
+  <string name="weather_icon_pack_title">Hava durumu simge paketi</string>
+  <string name="service_disabled">Devre dışı</string>
+  <string name="service_error">Hata</string>
+  <string name="last_update_time">Son güncelleme tarihi</string>
 </resources>

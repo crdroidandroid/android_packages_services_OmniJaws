@@ -16,4 +16,20 @@
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
-<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2"></resources>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+  <string name="weather_progress_title">場所を確認</string>
+  <string name="weather_select_location">場所を選択</string>
+  <string name="weather_custom_location_dialog_title">場所を入力</string>
+  <string name="weather_retrieve_location_dialog_title">場所を取得できません！</string>
+  <string name="weather_retrieve_location_dialog_enable_button">有効</string>
+  <string name="settings_title">設定</string>
+  <string name="auto_update_title">自動更新</string>
+  <string name="update">更新</string>
+  <string name="enable_title">有効</string>
+  <string name="update_interval_title">更新間隔</string>
+  <string name="interval_1_hour">1時間</string>
+  <string name="interval_2_hour">2時間</string>
+  <string name="interval_4_hour">4時間</string>
+  <string name="interval_6_hour">6時間</string>
+  <string name="interval_12_hour">12時間</string>
+</resources>

@@ -26,6 +26,7 @@
   <string name="settings_title">Inställningar</string>
   <string name="auto_update_title">Automatiska uppdateringar</string>
   <string name="update">Uppdatera</string>
+  <string name="enable_title">Aktivera</string>
   <string name="interval_1_hour">1 timme</string>
   <string name="interval_2_hour">2 timmar</string>
   <string name="interval_4_hour">4 timmar</string>

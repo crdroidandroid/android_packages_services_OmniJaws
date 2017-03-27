@@ -40,4 +40,10 @@
   <string name="interval_4_hour">4 óra</string>
   <string name="interval_6_hour">6 óra</string>
   <string name="interval_12_hour">12 óra</string>
+  <string name="weather_tile_title">Időjárás</string>
+  <string name="weather_icon_pack_title">Állapot ikoncsomag</string>
+  <string name="weather_icon_pack_playstore">Ikoncsomagok keresése</string>
+  <string name="service_disabled">Letiltva</string>
+  <string name="service_error">Hiba</string>
+  <string name="last_update_time">Utolsó frissítés időpontja</string>
 </resources>
