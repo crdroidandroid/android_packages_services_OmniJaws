@@ -86,7 +86,9 @@
                 android:resource="@xml/weather_appwidget" />
         </receiver>
 
-        <activity android:name=".widget.WeatherAppWidgetConfigure">
+        <activity
+            android:name=".widget.WeatherAppWidgetConfigure"
+            android:theme="@android:style/Theme.Material.Settings">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>

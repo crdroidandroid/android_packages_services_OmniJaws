@@ -90,8 +90,7 @@
                 android:layout_width="@dimen/weather_refresh_icon_size"
                 android:layout_height="@dimen/weather_refresh_icon_size"
                 android:layout_gravity="center_vertical"
-                android:scaleType="centerInside"
-                android:src="@drawable/ic_menu_refresh" />
+                android:scaleType="centerInside" />
         </LinearLayout>
 
         <LinearLayout
