@@ -78,6 +78,7 @@
             android:label="@string/weather_widget">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="android.intent.action.LOCALE_CHANGED" />
                 <action android:name="org.omnirom.omnijaws.WEATHER_UPDATE" />
                 <action android:name="org.omnirom.omnijaws.WEATHER_ERROR" />
                 <action android:name="org.omnirom.omnijaws.widget.WEATHER_REFRESH" />
