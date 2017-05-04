@@ -38,7 +38,7 @@ import org.omnirom.omnijaws.R;
 
 public class OmniJawsClient {
     private static final String TAG = "WeatherService:OmniJawsClient";
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
     public static final String SERVICE_PACKAGE = "org.omnirom.omnijaws";
     public static final Uri WEATHER_URI
             = Uri.parse("content://org.omnirom.omnijaws.provider/weather");
@@ -109,19 +109,11 @@ public class OmniJawsClient {
     private Context mContext;
     private WeatherInfo mCachedInfo;
     private boolean mEnabled;
-    private Resources mRes;
-    private String mPackageName;
-    private String mIconPrefix;
-    private String mSettingIconPackage;
     private boolean mMetric;
 
     public OmniJawsClient(Context context) {
         mContext = context;
         mEnabled = isOmniJawsServiceInstalled();
-
-        if (mEnabled) {
-            updateSettings();
-        }
     }
 
     public void updateWeather(boolean force) {
@@ -213,61 +205,6 @@ public class OmniJawsClient {
         if (DEBUG) Log.d(TAG, "queryWeather " + mCachedInfo);
     }
 
-    private void loadDefaultIconsPackage() {
-        mPackageName = ICON_PACKAGE_DEFAULT;
-        mIconPrefix = ICON_PREFIX_DEFAULT;
-        mSettingIconPackage = mPackageName + "." + mIconPrefix;
-        if (DEBUG) Log.d(TAG, "Load default icon pack " + mSettingIconPackage + " " + mPackageName + " " + mIconPrefix);
-        try {
-            PackageManager packageManager = mContext.getPackageManager();
-            mRes = packageManager.getResourcesForApplication(mPackageName);
-        } catch (Exception e) {
-            mRes = null;
-        }
-        if (mRes == null) {
-            Log.w(TAG, "No default package found");
-        }
-    }
-
-    private void loadCustomIconPackage() {
-        int idx = mSettingIconPackage.lastIndexOf(".");
-        mPackageName = mSettingIconPackage.substring(0, idx);
-        mIconPrefix = mSettingIconPackage.substring(idx + 1);
-        if (DEBUG) Log.d(TAG, "Load custom icon pack " + mSettingIconPackage + " " + mPackageName + " " + mIconPrefix);
-        try {
-            PackageManager packageManager = mContext.getPackageManager();
-            mRes = packageManager.getResourcesForApplication(mPackageName);
-        } catch (Exception e) {
-            mRes = null;
-        }
-        if (mRes == null) {
-            Log.w(TAG, "Icon pack loading failed - loading default");
-            loadDefaultIconsPackage();
-        }
-    }
-
-    public Drawable getWeatherConditionImage(int conditionCode) {
-        if (!isOmniJawsEnabled()) {
-            Log.w(TAG, "Requesting condition image while disabled");
-            return null;
-        }
-        if (!isAvailableApp(mPackageName)) {
-            Log.w(TAG, "Icon pack no longer available - loading default " + mPackageName);
-            loadDefaultIconsPackage();
-        }
-        if (mRes == null) {
-            Log.w(TAG, "Requesting condition image while disabled");
-            return null;
-        }
-        try {
-            int resId = mRes.getIdentifier(mIconPrefix + "_" + conditionCode, "drawable", mPackageName);
-            return mRes.getDrawable(resId);
-        } catch(Exception e) {
-            Log.w(TAG, "Failed to get condition image for " + conditionCode);
-            return null;
-        }
-    }
-
     private boolean isOmniJawsServiceInstalled() {
         return isAvailableApp(SERVICE_PACKAGE);
     }
@@ -315,18 +252,6 @@ public class OmniJawsClient {
         return mMetric ? "km/h":"mph";
     }
 
-    public void updateSettings() {
-        if (mEnabled) {
-            final String iconPack = Config.getIconPack(mContext);
-            if (iconPack == null) {
-                loadDefaultIconsPackage();
-            } else if (mSettingIconPackage == null || !iconPack.equals(mSettingIconPackage)) {
-                mSettingIconPackage = iconPack;
-                loadCustomIconPackage();
-            }
-        }
-    }
-
     private boolean isAvailableApp(String packageName) {
         final PackageManager pm = mContext.getPackageManager();
         try {
@@ -338,9 +263,4 @@ public class OmniJawsClient {
             return false;
         }
     }
-
-    public Drawable getErrorWeatherConditionImage() {
-        return mContext.getResources().getDrawable(R.drawable.weather_na);
-    }
-
 }

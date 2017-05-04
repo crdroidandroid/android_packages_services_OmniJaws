@@ -59,4 +59,5 @@
     <string name="show_background_title">Background shadow</string>
     <string name="weather_config_title">Service settings</string>
     <string name="weather_config_summary"></string>
+    <string name="omnijaws_service_error_marker" translatable="false">*</string>
 </resources>

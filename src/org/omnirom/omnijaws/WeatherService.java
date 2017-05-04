@@ -323,8 +323,6 @@ public class WeatherService extends Service {
                 } finally {
                     if (w == null) {
                         // error
-                        Config.clearWeatherData(WeatherService.this);
-                        WeatherContentProvider.updateCachedWeatherInfo(WeatherService.this);
                         Config.setUpdateError(WeatherService.this, true);
                     }
                     // send broadcast that something has changed
