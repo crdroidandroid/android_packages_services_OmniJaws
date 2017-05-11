@@ -120,14 +120,18 @@ public class OpenWeatherMapProvider extends AbstractWeatherProvider {
             ArrayList<DayForecast> forecasts =
                     parseForecasts(new JSONObject(forecastResponse).getJSONArray("list"), metric);
             String localizedCityName = conditions.getString("name");
-
+            float windSpeed = (float) windData.getDouble("speed");
+            if (metric) {
+                // speeds are in m/s so convert to our common metric unit km/h
+                windSpeed *= 3.6f;
+            }
             WeatherInfo w = new WeatherInfo(mContext, conditions.getString("id"), localizedCityName,
                     /* condition */ weather.getString("main"),
                     /* conditionCode */ mapConditionIconToCode(
                             weather.getString("icon"), weather.getInt("id")),
                     /* temperature */ sanitizeTemperature(conditionData.getDouble("temp"), metric),
                     /* humidity */ (float) conditionData.getDouble("humidity"),
-                    /* wind */ (float) windData.getDouble("speed"),
+                    /* wind */ windSpeed,
                     /* windDir */ windData.has("deg") ? windData.getInt("deg") : 0,
                     metric,
                     forecasts,
