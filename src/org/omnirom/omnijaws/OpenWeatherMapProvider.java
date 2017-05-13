@@ -198,7 +198,7 @@ public class OpenWeatherMapProvider extends AbstractWeatherProvider {
         }
         return (float) value;
     }
-    
+
     private static final HashMap<String, String> LANGUAGE_CODE_MAPPING = new HashMap<String, String>();
     static {
         LANGUAGE_CODE_MAPPING.put("bg-", "bg");

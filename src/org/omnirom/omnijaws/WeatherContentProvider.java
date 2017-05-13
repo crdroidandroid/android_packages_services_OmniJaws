@@ -44,6 +44,7 @@ public class WeatherContentProvider extends ContentProvider {
     private static final String COLUMN_CURRENT_WIND_DIRECTION = "wind_direction";
     private static final String COLUMN_CURRENT_TIME_STAMP = "time_stamp";
     private static final String COLUMN_CURRENT_CONDITION_CODE = "condition_code";
+    private static final String COLUMN_CURRENT_PIN_WHEEL = "pin_wheel";
 
     private static final String COLUMN_FORECAST_LOW = "forecast_low";
     private static final String COLUMN_FORECAST_HIGH = "forecast_high";
@@ -66,6 +67,7 @@ public class WeatherContentProvider extends ContentProvider {
             COLUMN_CURRENT_WIND_SPEED,
             COLUMN_CURRENT_WIND_DIRECTION,
             COLUMN_CURRENT_TIME_STAMP,
+            COLUMN_CURRENT_PIN_WHEEL,
             COLUMN_CURRENT_CONDITION_CODE,
             COLUMN_FORECAST_LOW,
             COLUMN_FORECAST_HIGH,
@@ -135,6 +137,7 @@ public class WeatherContentProvider extends ContentProvider {
                         .add(COLUMN_CURRENT_WIND_DIRECTION, weather.getWindDirection())
                         .add(COLUMN_CURRENT_TEMPERATURE, weather.getTemperature())
                         .add(COLUMN_CURRENT_TIME_STAMP, weather.getTimestamp().toString())
+                        .add(COLUMN_CURRENT_PIN_WHEEL, weather.getPinWheel())
                         .add(COLUMN_CURRENT_CONDITION_CODE, weather.getConditionCode());
 
                 // forecast
