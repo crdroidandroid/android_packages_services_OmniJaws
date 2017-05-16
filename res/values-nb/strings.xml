@@ -40,7 +40,16 @@
   <string name="interval_6_hour">6 timer</string>
   <string name="interval_12_hour">12 timer</string>
   <string name="weather_tile_title">Vær</string>
+  <string name="weather_icon_pack_playstore">Finn ikonpakker</string>
   <string name="service_disabled">Deaktivert</string>
   <string name="service_error">Feil</string>
   <string name="last_update_time">Siste oppdateringstidspunkt</string>
+  <string name="omnijaws_service_unkown">Ingen værdata</string>
+  <string name="omnijaws_service_error">Feil ved lasting av værdata</string>
+  <string name="omnijaws_service_init">Venter på værdata...</string>
+  <string name="omnijaws_service_progress">Oppdaterer...</string>
+  <string name="omnijaws_service_disabled">Tjeneste deaktivert</string>
+  <string name="weather_widget">Vær</string>
+  <string name="omnijaws_current_text">Nå</string>
+  <string name="weather_config_title">Serviceinnstillinger</string>
 </resources>

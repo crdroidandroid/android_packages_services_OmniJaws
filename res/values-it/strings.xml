@@ -45,5 +45,14 @@
   <string name="weather_icon_pack_playstore">Scegli pacchetto icone</string>
   <string name="service_disabled">Disabilitato</string>
   <string name="service_error">Errore</string>
-  <string name="last_update_time">Data ultima modifica</string>
+  <string name="last_update_time">Data ultimo aggiornamento</string>
+  <string name="omnijaws_service_unkown">Dati meteo non disponibili</string>
+  <string name="omnijaws_service_error">Errore durante il caricamento dei dati meteo</string>
+  <string name="omnijaws_service_init">In attesa di dati meteo...</string>
+  <string name="omnijaws_service_progress">Aggiornamento...</string>
+  <string name="omnijaws_service_disabled">Servizio disabilitato</string>
+  <string name="weather_widget">Meteo</string>
+  <string name="omnijaws_current_text">Adesso</string>
+  <string name="show_background_title">Ombra dello sfondo</string>
+  <string name="weather_config_title">Impostazioni servizio</string>
 </resources>

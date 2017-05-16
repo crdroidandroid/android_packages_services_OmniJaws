@@ -40,7 +40,19 @@
   <string name="interval_4_hour">4 godziny</string>
   <string name="interval_6_hour">6 godzin</string>
   <string name="interval_12_hour">12 godzin</string>
+  <string name="weather_tile_title">Pogoda</string>
+  <string name="weather_icon_pack_title">Pakiet ikon warunków zewnętrznych</string>
+  <string name="weather_icon_pack_playstore">Znajdź zestawy ikon</string>
   <string name="service_disabled">Wyłączony</string>
   <string name="service_error">Błąd</string>
   <string name="last_update_time">Data ostatniej aktualizacji</string>
+  <string name="omnijaws_service_unkown">Brak danych o pogodzie</string>
+  <string name="omnijaws_service_error">Błąd ładowania danych pogody</string>
+  <string name="omnijaws_service_init">Czekam na dane o pogodzie...</string>
+  <string name="omnijaws_service_progress">Aktualizowanie...</string>
+  <string name="omnijaws_service_disabled">Usługa wyłączona</string>
+  <string name="weather_widget">Pogoda</string>
+  <string name="omnijaws_current_text">Teraz</string>
+  <string name="show_background_title">Cień tła</string>
+  <string name="weather_config_title">Ustawienia usługi</string>
 </resources>

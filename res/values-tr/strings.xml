@@ -19,7 +19,7 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <string name="provider_title">Hava durumu sağlayıcısı</string>
   <string name="units_title">Birim</string>
-  <string name="weather_progress_title">Konum doğrulanıyor</string>
+  <string name="weather_progress_title">Konum doğrulama</string>
   <string name="weather_select_location">Konum seç</string>
   <string name="custom_location_title">Özel konum</string>
   <string name="weather_custom_location_dialog_title">Konum gir</string>
@@ -46,4 +46,13 @@
   <string name="service_disabled">Devre dışı</string>
   <string name="service_error">Hata</string>
   <string name="last_update_time">Son güncelleme tarihi</string>
+  <string name="omnijaws_service_unkown">Hava durumu verisi yok</string>
+  <string name="omnijaws_service_error">Hava durumu bilgisi yüklenemedi</string>
+  <string name="omnijaws_service_init">Hava durumu verisi bekleniyor...</string>
+  <string name="omnijaws_service_progress">Güncelleniyor...</string>
+  <string name="omnijaws_service_disabled">Hizmet devre dışı bırakıldı</string>
+  <string name="weather_widget">Hava Durumu</string>
+  <string name="omnijaws_current_text">Şu an</string>
+  <string name="show_background_title">Arka plan gölgesi</string>
+  <string name="weather_config_title">Hizmet ayarları</string>
 </resources>

@@ -46,4 +46,13 @@
   <string name="service_disabled">Desactivado</string>
   <string name="service_error">Erro</string>
   <string name="last_update_time">Ultima actualização</string>
+  <string name="omnijaws_service_unkown">Sem informação meteorológica</string>
+  <string name="omnijaws_service_error">Erro ao carregar dados meteorológicos</string>
+  <string name="omnijaws_service_init">À espera de dados meteorológicos...</string>
+  <string name="omnijaws_service_progress">A atualizar...</string>
+  <string name="omnijaws_service_disabled">Serviço desactivado</string>
+  <string name="weather_widget">Tempo</string>
+  <string name="omnijaws_current_text">Agora</string>
+  <string name="show_background_title">Estilo do fundo</string>
+  <string name="weather_config_title">Configurações do serviço</string>
 </resources>

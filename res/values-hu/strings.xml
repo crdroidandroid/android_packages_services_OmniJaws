@@ -46,4 +46,13 @@
   <string name="service_disabled">Letiltva</string>
   <string name="service_error">Hiba</string>
   <string name="last_update_time">Utolsó frissítés időpontja</string>
+  <string name="omnijaws_service_unkown">Nincs időjárási adat</string>
+  <string name="omnijaws_service_error">Hiba az időjárási adatok betöltésekor</string>
+  <string name="omnijaws_service_init">Várakozás az időjárási adatokra...</string>
+  <string name="omnijaws_service_progress">Frissítés...</string>
+  <string name="omnijaws_service_disabled">Szolgáltatás letiltva</string>
+  <string name="weather_widget">Időjárás</string>
+  <string name="omnijaws_current_text">Most</string>
+  <string name="show_background_title">Háttér árnyéka</string>
+  <string name="weather_config_title">Szolgáltatás beállítások</string>
 </resources>

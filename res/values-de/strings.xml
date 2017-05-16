@@ -56,5 +56,4 @@
   <string name="omnijaws_current_text">Jetzt</string>
   <string name="show_background_title">Hintergrund-Schatten</string>
   <string name="weather_config_title">Dienst-Einstellungen</string>
-  <string name="weather_config_summary"></string>
 </resources>

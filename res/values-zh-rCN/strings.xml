@@ -42,8 +42,17 @@
   <string name="interval_12_hour">12 小时</string>
   <string name="weather_tile_title">天气</string>
   <string name="weather_icon_pack_title">天气图标包</string>
-  <string name="weather_icon_pack_playstore">下载图标包</string>
+  <string name="weather_icon_pack_playstore">查找图标包</string>
   <string name="service_disabled">禁用</string>
   <string name="service_error">错误</string>
-  <string name="last_update_time">上次更新时间</string>
+  <string name="last_update_time">最后更新时间</string>
+  <string name="omnijaws_service_unkown">没有天气数据</string>
+  <string name="omnijaws_service_error">读取天气数据错误</string>
+  <string name="omnijaws_service_init">正在等待天气数据...</string>
+  <string name="omnijaws_service_progress">正在更新......</string>
+  <string name="omnijaws_service_disabled">服务已禁用</string>
+  <string name="weather_widget">天气</string>
+  <string name="omnijaws_current_text">现在</string>
+  <string name="show_background_title">背景阴影</string>
+  <string name="weather_config_title">服务设置</string>
 </resources>
