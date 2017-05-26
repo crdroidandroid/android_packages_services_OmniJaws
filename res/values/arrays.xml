@@ -18,8 +18,8 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
 
 	<string-array name="provider_entries" translatable="false">
-		<item>@string/provider_openweathermap</item>
 		<item>@string/provider_yahoo</item>
+		<item>@string/provider_openweathermap</item>
 	</string-array>
 	<string-array name="provider_values" translatable="false">
 		<item>0</item>
