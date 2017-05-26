@@ -2,7 +2,6 @@ About
 -----
 OmniJaws "Just another weather service"
 is a minimized service to fetch weather data from OpenWeatherMap or Yahoo.
-Thanks to http://openweathermap.org/ for providing an unrestricted API key
 
 OpenWeatherMap API
 http://openweathermap.org/current
