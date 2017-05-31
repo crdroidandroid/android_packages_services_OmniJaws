@@ -40,4 +40,19 @@
   <string name="interval_4_hour">4 uur</string>
   <string name="interval_6_hour">6 uur</string>
   <string name="interval_12_hour">12 uur</string>
+  <string name="weather_tile_title">Weer</string>
+  <string name="weather_icon_pack_title">Weer pictogrammen pakket</string>
+  <string name="weather_icon_pack_playstore">Kies pictogram pakket</string>
+  <string name="service_disabled">Uitgeschakeld</string>
+  <string name="service_error">Fout</string>
+  <string name="last_update_time">Laatste bijgewerkt</string>
+  <string name="omnijaws_service_unkown">Geen weer gegevens</string>
+  <string name="omnijaws_service_error">Fout bij het laden van weergegevens</string>
+  <string name="omnijaws_service_init">Wachten op weergegevens...</string>
+  <string name="omnijaws_service_progress">Bijwerken...</string>
+  <string name="omnijaws_service_disabled">Service uitgeschakeld</string>
+  <string name="weather_widget">Weer</string>
+  <string name="omnijaws_current_text">Nu</string>
+  <string name="show_background_title">Achtergrond schaduw</string>
+  <string name="weather_config_title">Service-instellingen</string>
 </resources>

@@ -31,6 +31,7 @@
   <string name="settings_title">Innstillinger</string>
   <string name="auto_update_title">Automatiske oppdateringer</string>
   <string name="unit_metric">Metrisk (\u00b0C)</string>
+  <string name="unit_imperial">Imperial (\u00b0F)</string>
   <string name="update">Oppdater</string>
   <string name="enable_title">Aktiver</string>
   <string name="update_interval_title">Oppdateringsintervall</string>
@@ -40,6 +41,7 @@
   <string name="interval_6_hour">6 timer</string>
   <string name="interval_12_hour">12 timer</string>
   <string name="weather_tile_title">Vær</string>
+  <string name="weather_icon_pack_title">Tilstand ikonpakke</string>
   <string name="weather_icon_pack_playstore">Finn ikonpakker</string>
   <string name="service_disabled">Deaktivert</string>
   <string name="service_error">Feil</string>
@@ -51,5 +53,6 @@
   <string name="omnijaws_service_disabled">Tjeneste deaktivert</string>
   <string name="weather_widget">Vær</string>
   <string name="omnijaws_current_text">Nå</string>
+  <string name="show_background_title">Bakgrunnsskygge</string>
   <string name="weather_config_title">Serviceinnstillinger</string>
 </resources>
