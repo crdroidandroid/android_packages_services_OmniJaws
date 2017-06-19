@@ -17,19 +17,19 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-  <string name="provider_title">Hava durumu sağlayıcısı</string>
+  <string name="provider_title">Hava durumu tedarikçisi</string>
   <string name="units_title">Birim</string>
   <string name="weather_progress_title">Konum doğrulama</string>
-  <string name="weather_select_location">Konum seç</string>
+  <string name="weather_select_location">Konum seçin</string>
   <string name="custom_location_title">Özel konum</string>
-  <string name="weather_custom_location_dialog_title">Konum gir</string>
+  <string name="weather_custom_location_dialog_title">Konum girin</string>
   <string name="weather_custom_location_title">Konum</string>
-  <string name="weather_custom_location_missing">Özel konum ayarla</string>
+  <string name="weather_custom_location_missing">Özel konum ayarlayın</string>
   <string name="weather_retrieve_location_dialog_title">Konum alınamıyor!</string>
-  <string name="weather_retrieve_location_dialog_message">Ağ konumu devre dışı.\n\nÖzel bir konum ayarlayın veya ağ konumunu etkinleştirin</string>
+  <string name="weather_retrieve_location_dialog_message">Ağ üzerinden konum belirleme devre dışı.\n\nÖzel bir konum ayarlayın veyâ ağ konumunu etkinleştirin</string>
   <string name="weather_retrieve_location_dialog_enable_button">Etkinleştir</string>
   <string name="settings_title">Ayarlar</string>
-  <string name="auto_update_title">Otomatik güncellemeler</string>
+  <string name="auto_update_title">Kendiliğinden güncellemeler</string>
   <string name="unit_metric">Metrik (\u00b0C)</string>
   <string name="unit_imperial">İngiliz standartı (\u00b0F)</string>
   <string name="update">Güncelle</string>
@@ -44,15 +44,15 @@
   <string name="weather_icon_pack_title">Hava durumu simge paketi</string>
   <string name="weather_icon_pack_playstore">Simge paketlerini bul</string>
   <string name="service_disabled">Devre dışı</string>
-  <string name="service_error">Hata</string>
-  <string name="last_update_time">Son güncelleme tarihi</string>
+  <string name="service_error">Hatâ</string>
+  <string name="last_update_time">Son güncelleme târihi</string>
   <string name="omnijaws_service_unkown">Hava durumu verisi yok</string>
-  <string name="omnijaws_service_error">Hava durumu bilgisi yüklenemedi</string>
+  <string name="omnijaws_service_error">Hava durumu verisi yüklenemedi</string>
   <string name="omnijaws_service_init">Hava durumu verisi bekleniyor...</string>
   <string name="omnijaws_service_progress">Güncelleniyor...</string>
   <string name="omnijaws_service_disabled">Hizmet devre dışı bırakıldı</string>
   <string name="weather_widget">Hava Durumu</string>
-  <string name="omnijaws_current_text">Şu an</string>
+  <string name="omnijaws_current_text">Şu ânda</string>
   <string name="show_background_title">Arka plan gölgesi</string>
   <string name="weather_config_title">Hizmet ayarları</string>
 </resources>

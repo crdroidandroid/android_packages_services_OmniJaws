@@ -28,6 +28,8 @@
   <string name="weather_retrieve_location_dialog_enable_button">Ενεργοποίηση</string>
   <string name="settings_title">Ρυθμίσεις</string>
   <string name="auto_update_title">Αυτόματες ενημερώσεις</string>
+  <string name="unit_metric">Μετρικό (\u00b0C)</string>
+  <string name="unit_imperial">Αυτοκρατορικό (\u00b0F)</string>
   <string name="update">Ενημέρωση</string>
   <string name="enable_title">Ενεργοποίηση</string>
   <string name="update_interval_title">Διάστημα μεταξύ ενημερώσεων</string>
@@ -36,4 +38,12 @@
   <string name="interval_4_hour">4 ώρες</string>
   <string name="interval_6_hour">6 ώρες</string>
   <string name="interval_12_hour">12 ώρες</string>
+  <string name="service_disabled">Ανενεργό</string>
+  <string name="service_error">Σφάλμα</string>
+  <string name="last_update_time">Ημερομηνία Τελευταίας Ενημέρωσης</string>
+  <string name="omnijaws_service_unkown">Δεν υπάρχουν δεδομένα καιρού</string>
+  <string name="omnijaws_service_error">Σφάλμα κατά τη φόρτωση δεδομένων καιρού</string>
+  <string name="omnijaws_service_init">Αναμονή για δεδομένα καιρού...</string>
+  <string name="omnijaws_service_progress">Ενημέρωση...</string>
+  <string name="omnijaws_service_disabled">Υπηρεσία απενεργοποιημένη</string>
 </resources>
