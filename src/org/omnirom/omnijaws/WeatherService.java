@@ -110,6 +110,7 @@ public class WeatherService extends Service {
         mHandler = new Handler(mHandlerThread.getLooper());
         PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
         mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
+        mWakeLock.setReferenceCounted(true);
         registerScreenStateListener();
     }
 
@@ -148,48 +149,53 @@ public class WeatherService extends Service {
             return START_STICKY;
         }
 
-        if (ACTION_ENABLE.equals(intent.getAction())) {
-            boolean enable = intent.getBooleanExtra(EXTRA_ENABLE, false);
-            if (DEBUG) Log.d(TAG, "Set enablement " + enable);
-            Config.setEnabled(this, enable);
-            if (!enable) {
-                cancelUpdate(this);
+        mWakeLock.acquire();
+        try {
+            if (ACTION_ENABLE.equals(intent.getAction())) {
+                boolean enable = intent.getBooleanExtra(EXTRA_ENABLE, false);
+                if (DEBUG) Log.d(TAG, "Set enablement " + enable);
+                Config.setEnabled(this, enable);
+                if (!enable) {
+                    cancelUpdate(this);
+                }
             }
-        }
 
-        if (!Config.isEnabled(this)) {
-            Log.w(TAG, "Service started, but not enabled ... stopping");
-            Intent errorIntent = new Intent(ACTION_ERROR);
-            errorIntent.putExtra(EXTRA_ERROR, EXTRA_ERROR_DISABLED);
-            sendBroadcast(errorIntent);
-            stopSelf();
-            return START_NOT_STICKY;
-        }
+            if (!Config.isEnabled(this)) {
+                Log.w(TAG, "Service started, but not enabled ... stopping");
+                Intent errorIntent = new Intent(ACTION_ERROR);
+                errorIntent.putExtra(EXTRA_ERROR, EXTRA_ERROR_DISABLED);
+                sendBroadcast(errorIntent);
+                stopSelf();
+                return START_NOT_STICKY;
+            }
 
-        if (ACTION_CANCEL_LOCATION_UPDATE.equals(intent.getAction())) {
-            Log.w(TAG, "Service started, but location timeout ... stopping");
-            WeatherLocationListener.cancel(this);
-            Intent errorIntent = new Intent(ACTION_ERROR);
-            errorIntent.putExtra(EXTRA_ERROR, EXTRA_ERROR_LOCATION);
-            sendBroadcast(errorIntent);
-            Config.setUpdateError(this, true);
-            return START_STICKY;
-        }
+            if (ACTION_CANCEL_LOCATION_UPDATE.equals(intent.getAction())) {
+                Log.w(TAG, "Service started, but location timeout ... stopping");
+                WeatherLocationListener.cancel(this);
+                Intent errorIntent = new Intent(ACTION_ERROR);
+                errorIntent.putExtra(EXTRA_ERROR, EXTRA_ERROR_LOCATION);
+                sendBroadcast(errorIntent);
+                Config.setUpdateError(this, true);
+                return START_STICKY;
+            }
 
-        if (!isNetworkAvailable()) {
-            if (DEBUG) Log.d(TAG, "Service started, but no network ... stopping");
-            Intent errorIntent = new Intent(ACTION_ERROR);
-            errorIntent.putExtra(EXTRA_ERROR, EXTRA_ERROR_NETWORK);
-            sendBroadcast(errorIntent);
-            Config.setUpdateError(this, true);
-            return START_STICKY;
-        }
+            if (!isNetworkAvailable()) {
+                if (DEBUG) Log.d(TAG, "Service started, but no network ... stopping");
+                Intent errorIntent = new Intent(ACTION_ERROR);
+                errorIntent.putExtra(EXTRA_ERROR, EXTRA_ERROR_NETWORK);
+                sendBroadcast(errorIntent);
+                Config.setUpdateError(this, true);
+                return START_STICKY;
+            }
 
-        if (ACTION_ALARM.equals(intent.getAction())) {
-            Config.setLastAlarmTime(this);
+            if (ACTION_ALARM.equals(intent.getAction())) {
+                Config.setLastAlarmTime(this);
+            }
+            if (DEBUG) Log.d(TAG, "updateWeather");
+            updateWeather();
+        } finally {
+            mWakeLock.release();
         }
-        if (DEBUG) Log.d(TAG, "updateWeather");
-        updateWeather();
 
         return START_STICKY;
     }
