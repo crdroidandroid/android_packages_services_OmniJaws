@@ -17,8 +17,10 @@
  */
 package org.omnirom.omnijaws;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 
@@ -207,5 +209,13 @@ public class Config {
                 .getDefaultSharedPreferences(context);
 
         prefs.edit().putBoolean(PREF_KEY_UPDATE_ERROR, value).commit();
+    }
+
+    public static boolean isSetupDone(Context context) {
+        if (context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            return true;
+        }
+        return false;
     }
 }
