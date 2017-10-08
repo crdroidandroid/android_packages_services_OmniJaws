@@ -35,6 +35,7 @@ import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.VectorDrawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.TextPaint;
@@ -369,6 +370,9 @@ public class WeatherAppWidgetProvider extends AppWidgetProvider {
     }
 
     private static BitmapDrawable overlay(Resources resources, Drawable image, String min, String max, String tempUnits) {
+        if (image instanceof VectorDrawable) {
+            image = applyTint(image);
+        }
         final Canvas canvas = new Canvas();
         canvas.setDrawFilter(new PaintFlagsDrawFilter(Paint.ANTI_ALIAS_FLAG,
                 Paint.FILTER_BITMAP_FLAG));
@@ -403,6 +407,12 @@ public class WeatherAppWidgetProvider extends AppWidgetProvider {
         canvas.drawText(str, width / 2 - bounds.width() / 2, height - textSize / 2, textPaint);
 
         return new BitmapDrawable(resources, bmp);
+    }
+
+    private static Drawable applyTint(Drawable icon) {
+        icon = icon.mutate();
+        icon.setTint(Color.WHITE);
+        return icon;
     }
 
     public static BitmapDrawable shadow(Resources resources, Drawable image) {
