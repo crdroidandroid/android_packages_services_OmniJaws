@@ -85,3 +85,8 @@ default should be .weather.
 ```
 
 An example can be found here https://github.com/maxwen/WeatherIconSample
+
+
+Icons:
+Outline weather icon  set is used with permission from  http://emske.com/25-outline-weather-icons/
+

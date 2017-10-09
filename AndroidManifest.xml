@@ -73,6 +73,14 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".outline"
+                android:label="Outline" >
+            <intent-filter>
+                <action android:name="org.omnirom.WeatherIconPack" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
         <receiver
             android:name=".widget.WeatherAppWidgetProvider"
             android:label="@string/weather_widget">
