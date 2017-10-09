@@ -313,7 +313,7 @@ public class WeatherAppWidgetProvider extends AppWidgetProvider {
         widget.setViewVisibility(R.id.current_weather_line, showLocalDetails ? View.VISIBLE : View.GONE);
         widget.setTextViewText(R.id.current_weather_city, weatherData.city);
         widget.setTextViewText(R.id.current_weather_data, weatherData.windSpeed + " " + weatherData.windUnits + " "
-                + weatherData.windDirection + " - " + weatherData.humidity);
+                + weatherData.pinWheel + " - " + weatherData.humidity);
 
         appWidgetManager.updateAppWidget(appWidgetId, widget);
     }
