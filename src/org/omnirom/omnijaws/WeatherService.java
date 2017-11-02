@@ -42,7 +42,7 @@ import android.util.Log;
 
 public class WeatherService extends Service {
     private static final String TAG = "WeatherService";
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
     private static final String ACTION_UPDATE = "org.omnirom.omnijaws.ACTION_UPDATE";
     private static final String ACTION_ALARM = "org.omnirom.omnijaws.ACTION_ALARM";
     private static final String ACTION_ENABLE = "org.omnirom.omnijaws.ACTION_ENABLE";
@@ -157,8 +157,6 @@ public class WeatherService extends Service {
                 Config.setEnabled(this, enable);
                 if (!enable) {
                     cancelUpdate(this);
-                    stopSelf();
-                    return START_NOT_STICKY;
                 }
             }
 
