@@ -43,6 +43,7 @@ public class WeatherAppWidgetConfigure extends PreferenceActivity {
     public static final String KEY_BACKGROUND_SHADOW = "show_background";
 
     private static final String DEFAULT_WEATHER_ICON_PACKAGE = "org.omnirom.omnijaws";
+    private static final String DEFAULT_WEATHER_ICON_PREFIX = "outline";
     private static final String CHRONUS_ICON_PACK_INTENT = "com.dvtonder.chronus.ICON_PACK";
     private int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
 
@@ -70,8 +71,10 @@ public class WeatherAppWidgetConfigure extends PreferenceActivity {
 
         final ListPreference iconPack = (ListPreference) findPreference(KEY_ICON_PACK) ;
 
-        String settingHeaderPackage = prefs.getString(KEY_ICON_PACK + "_" + mAppWidgetId, DEFAULT_WEATHER_ICON_PACKAGE);
-
+        String settingHeaderPackage = prefs.getString(KEY_ICON_PACK + "_" + mAppWidgetId, null);
+        if (settingHeaderPackage == null) {
+            settingHeaderPackage = DEFAULT_WEATHER_ICON_PACKAGE + "." + DEFAULT_WEATHER_ICON_PREFIX;
+        }
         List<String> entries = new ArrayList<String>();
         List<String> values = new ArrayList<String>();
         getAvailableWeatherIconPacks(entries, values);
@@ -81,7 +84,7 @@ public class WeatherAppWidgetConfigure extends PreferenceActivity {
         int valueIndex = iconPack.findIndexOfValue(settingHeaderPackage);
         if (valueIndex == -1) {
             // no longer found
-            settingHeaderPackage = DEFAULT_WEATHER_ICON_PACKAGE;
+            settingHeaderPackage = DEFAULT_WEATHER_ICON_PACKAGE + "." + DEFAULT_WEATHER_ICON_PREFIX;
             valueIndex = iconPack.findIndexOfValue(settingHeaderPackage);
         }
         iconPack.setValueIndex(valueIndex >= 0 ? valueIndex : 0);
