@@ -385,7 +385,6 @@ public class WeatherAppWidgetProvider extends AppWidgetProvider {
         textPaint.setTypeface(font);
         textPaint.setColor(resources.getColor(R.color.widget_text_color));
         textPaint.setTextAlign(Paint.Align.LEFT);
-        textPaint.setShadowLayer(5, 0, 2, Color.BLACK);
         final int textSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 14f, resources.getDisplayMetrics());
         textPaint.setTextSize(textSize);
         final int height = imageHeight + footerHeight;
@@ -406,7 +405,7 @@ public class WeatherAppWidgetProvider extends AppWidgetProvider {
         textPaint.getTextBounds(str, 0, str.length(), bounds);
         canvas.drawText(str, width / 2 - bounds.width() / 2, height - textSize / 2, textPaint);
 
-        return new BitmapDrawable(resources, bmp);
+        return shadow(resources, bmp);
     }
 
     private static Drawable applyTint(Drawable icon) {
@@ -428,6 +427,29 @@ public class WeatherAppWidgetProvider extends AppWidgetProvider {
 
         BlurMaskFilter blurFilter = new BlurMaskFilter(5,
                 BlurMaskFilter.Blur.OUTER);
+        Paint shadowPaint = new Paint();
+        shadowPaint.setColor(Color.BLACK);
+        shadowPaint.setMaskFilter(blurFilter);
+
+        int[] offsetXY = new int[2];
+        Bitmap b2 = b.extractAlpha(shadowPaint, offsetXY);
+
+        Bitmap bmResult = Bitmap.createBitmap(b.getWidth(), b.getHeight(),
+                Bitmap.Config.ARGB_8888);
+
+        canvas.setBitmap(bmResult);
+        canvas.drawBitmap(b2, offsetXY[0], offsetXY[1], null);
+        canvas.drawBitmap(b, 0, 0, null);
+
+        return new BitmapDrawable(resources, bmResult);
+    }
+
+    public static BitmapDrawable shadow(Resources resources, Bitmap b) {
+        final Canvas canvas = new Canvas();
+        canvas.setDrawFilter(new PaintFlagsDrawFilter(Paint.ANTI_ALIAS_FLAG,
+                Paint.FILTER_BITMAP_FLAG));
+
+        BlurMaskFilter blurFilter = new BlurMaskFilter(5, BlurMaskFilter.Blur.OUTER);
         Paint shadowPaint = new Paint();
         shadowPaint.setColor(Color.BLACK);
         shadowPaint.setMaskFilter(blurFilter);
