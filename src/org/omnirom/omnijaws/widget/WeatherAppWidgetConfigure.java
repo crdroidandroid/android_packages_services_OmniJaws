@@ -44,7 +44,7 @@ public class WeatherAppWidgetConfigure extends PreferenceActivity {
     public static final String KEY_WITH_FORECAST = "with_forecast";
 
     private static final String DEFAULT_WEATHER_ICON_PACKAGE = "org.omnirom.omnijaws";
-    private static final String DEFAULT_WEATHER_ICON_PREFIX = "outline";
+    private static final String DEFAULT_WEATHER_ICON_PREFIX = "google";
     private static final String CHRONUS_ICON_PACK_INTENT = "com.dvtonder.chronus.ICON_PACK";
     private int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
 
