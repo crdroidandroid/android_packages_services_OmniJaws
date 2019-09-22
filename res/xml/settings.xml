@@ -20,7 +20,8 @@
     <SwitchPreference
         android:defaultValue="true"
         android:key="enable"
-        android:title="@string/enable_title" />
+        android:title="@string/enable_title"
+        android:persistent="false" />
 
     <ListPreference
         android:entries="@array/update_interval_entries"
