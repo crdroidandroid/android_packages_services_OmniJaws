@@ -5,7 +5,7 @@
     <dimen name="weather_widget_width">300dp</dimen>
     <dimen name="weather_widget_height">45dp</dimen>
     <dimen name="min_weather_widget_resize_width">45dp</dimen>
-    <dimen name="min_weather_widget_resize_height">45dp</dimen>
+    <dimen name="min_weather_widget_resize_height">40dp</dimen>
     <dimen name="weather_refresh_icon_size">40dp</dimen>
     <dimen name="widget_padding">10dp</dimen>
 </resources>

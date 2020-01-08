@@ -34,11 +34,11 @@
         android:title="@string/last_update_time"
         android:persistent="false" />
 
-    <!--<ListPreference
+    <ListPreference
         android:entries="@array/provider_entries"
         android:entryValues="@array/provider_values"
         android:key="provider"
-    android:title="@string/provider_title" />-->
+        android:title="@string/provider_title" />
 
     <ListPreference
         android:entries="@array/units_entries"

@@ -22,6 +22,7 @@
     <string name="units_title">Unit</string>
     <string name="provider_openweathermap" translatable="false">OpenWeatherMap</string>
     <string name="provider_yahoo" translatable="false">Yahoo</string>
+    <string name="provider_metnorway" translatable="false">MET Norway</string>
     <string name="weather_progress_title">Verifying location</string>
     <string name="weather_select_location">Select location</string>
     <string name="custom_location_title">Custom location</string>
