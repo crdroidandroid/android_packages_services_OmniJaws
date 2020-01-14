@@ -7,7 +7,7 @@
     <style name="WeatherSmall" parent="@android:style/TextAppearance.DeviceDefault" >
         <item name="android:textSize">12sp</item>
         <item name="android:textStyle">normal</item>
-        <item name="android:fontFamily">sans-serif-condensed</item>
+        <item name="android:fontFamily">@*android:string/config_bodyFontFamily</item>
     </style>
 
     <style name="WeatherLarge" parent="@android:style/TextAppearance.DeviceDefault" >
@@ -34,7 +34,7 @@
     <style name="ForecastWeatherTextSmall" parent="@style/WeatherBaseText">
         <item name="android:textSize">@dimen/forecast_text_size</item>
         <item name="android:textStyle">normal</item>
-        <item name="android:fontFamily">sans-serif-condensed</item>
+        <item name="android:fontFamily">@*android:string/config_bodyFontFamily</item>
     </style>
 
     <style name="DetailedWeatherText" parent="@style/WeatherBaseText">
