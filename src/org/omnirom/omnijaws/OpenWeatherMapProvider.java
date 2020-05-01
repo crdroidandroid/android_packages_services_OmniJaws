@@ -148,7 +148,7 @@ public class OpenWeatherMapProvider extends AbstractWeatherProvider {
             WeatherInfo w = new WeatherInfo(mContext, conditions.getString("id"), localizedCityName,
                     /* condition */ weather.getString("main"),
                     /* conditionCode */ mapConditionIconToCode(
-                            weather.getString("icon"), weather.getInt("id")),
+                            weather.getString("icon"), weather.getInt("id"), false /* isForecast */),
                     /* temperature */ sanitizeTemperature(conditionData.getDouble("temp"), metric),
                     /* humidity */ (float) conditionData.getDouble("humidity"),
                     /* wind */ windSpeed,
@@ -185,7 +185,7 @@ public class OpenWeatherMapProvider extends AbstractWeatherProvider {
                         /* high */ sanitizeTemperature(conditionData.getDouble("temp_max"), metric),
                         /* condition */ data.getString("main"),
                         /* conditionCode */ mapConditionIconToCode(
-                                data.getString("icon"), data.getInt("id")),
+                                data.getString("icon"), data.getInt("id"), true /* isForecast */),
                         "NaN",
                         metric);
             } catch (JSONException e) {
@@ -265,9 +265,9 @@ public class OpenWeatherMapProvider extends AbstractWeatherProvider {
         return "en";
     }
 
-    private int mapConditionIconToCode(String icon, int conditionId) {
+    private int mapConditionIconToCode(String icon, int conditionId, boolean isForecast) {
         long ut2 = System.currentTimeMillis() / 1000L;
-        if ((mSunrise < ut2) && (mSunset > ut2)){
+        if (((mSunrise < ut2) && (mSunset > ut2)) || isForecast){
             // First, use condition ID for specific cases
             switch (conditionId) {
                 // Thunderstorms
@@ -359,96 +359,96 @@ public class OpenWeatherMapProvider extends AbstractWeatherProvider {
                 case 906: return 17; // hail
             }
         } else {
-                    // First, use condition ID for specific cases
-                    switch (conditionId) {
-                        // Thunderstorms
-                        case 202:   // thunderstorm with heavy rain
-                        case 232:   // thunderstorm with heavy drizzle
-                        case 211:   // thunderstorm
-                            return 4;
-                        case 212:   // heavy thunderstorm
-                            return 3;
-                        case 221:   // ragged thunderstorm
-                        case 231:   // thunderstorm with drizzle
-                        case 201:   // thunderstorm with rain
-                            return 47;
-                        case 230:   // thunderstorm with light drizzle
-                        case 200:   // thunderstorm with light rain
-                        case 210:   // light thunderstorm
-                            return 45;
+            // First, use condition ID for specific cases
+            switch (conditionId) {
+                // Thunderstorms
+                case 202:   // thunderstorm with heavy rain
+                case 232:   // thunderstorm with heavy drizzle
+                case 211:   // thunderstorm
+                    return 4;
+                case 212:   // heavy thunderstorm
+                    return 3;
+                case 221:   // ragged thunderstorm
+                case 231:   // thunderstorm with drizzle
+                case 201:   // thunderstorm with rain
+                    return 47;
+                case 230:   // thunderstorm with light drizzle
+                case 200:   // thunderstorm with light rain
+                case 210:   // light thunderstorm
+                    return 45;
 
-                        // Drizzle
-                        case 300:    // light intensity drizzle
-                        case 301:    // drizzle
-                        case 302:    // heavy intensity drizzle
-                        case 310:    // light intensity drizzle rain
-                        case 311:    // drizzle rain
-                        case 312:    // heavy intensity drizzle rain
-                        case 313:    // shower rain and drizzle
-                        case 314:    // heavy shower rain and drizzle
-                        case 321:    // shower drizzle
-                            return 9;
+                // Drizzle
+                case 300:    // light intensity drizzle
+                case 301:    // drizzle
+                case 302:    // heavy intensity drizzle
+                case 310:    // light intensity drizzle rain
+                case 311:    // drizzle rain
+                case 312:    // heavy intensity drizzle rain
+                case 313:    // shower rain and drizzle
+                case 314:    // heavy shower rain and drizzle
+                case 321:    // shower drizzle
+                    return 9;
 
-                        // Rain
-                        case 500:    // light rain
-                        case 501:    // moderate rain
-                        case 520:    // light intensity shower rain
-                        case 521:    // shower rain
-                        case 531:    // ragged shower rain
-                            return 11;
-                        case 502:    // heavy intensity rain
-                        case 503:    // very heavy rain
-                        case 504:    // extreme rain
-                        case 522:    // heavy intensity shower rain
-                            return 12;
-                        case 511:    // freezing rain
-                            return 10;
+                // Rain
+                case 500:    // light rain
+                case 501:    // moderate rain
+                case 520:    // light intensity shower rain
+                case 521:    // shower rain
+                case 531:    // ragged shower rain
+                    return 11;
+                case 502:    // heavy intensity rain
+                case 503:    // very heavy rain
+                case 504:    // extreme rain
+                case 522:    // heavy intensity shower rain
+                    return 12;
+                case 511:    // freezing rain
+                    return 10;
 
-                        // Snow
-                        case 600: case 620: return 14; // light snow
-                        case 601: case 621: return 16; // snow
-                        case 602: case 622: return 41; // heavy snow
-                        case 611: case 612: return 18; // sleet
-                        case 615: case 616: return 5;  // rain and snow
+                // Snow
+                case 600: case 620: return 14; // light snow
+                case 601: case 621: return 16; // snow
+                case 602: case 622: return 41; // heavy snow
+                case 611: case 612: return 18; // sleet
+                case 615: case 616: return 5;  // rain and snow
 
-                        // Atmosphere
-                        case 741:    // fog
-                            return 20;
-                        case 711:    // smoke
-                        case 762:    // volcanic ash
-                            return 22;
-                        case 701:    // mist
-                        case 721:    // haze
-                            return 21;
-                        case 731:    // sand/dust whirls
-                        case 751:    // sand
-                        case 761:    // dust
-                            return 19;
-                        case 771:    // squalls
-                            return 23;
-                        case 781:    // tornado
-                            return 0;
+                // Atmosphere
+                case 741:    // fog
+                    return 20;
+                case 711:    // smoke
+                case 762:    // volcanic ash
+                    return 22;
+                case 701:    // mist
+                case 721:    // haze
+                    return 21;
+                case 731:    // sand/dust whirls
+                case 751:    // sand
+                case 761:    // dust
+                    return 19;
+                case 771:    // squalls
+                    return 23;
+                case 781:    // tornado
+                    return 0;
 
-                        // clouds
-                        case 800:     // clear sky
-                            return 31;
-                        case 801:     // few clouds
-                            return 33;
-                        case 802:     // scattered clouds
-                            return 27;
-                        case 803:     // broken clouds
-                        case 804:     // overcast clouds
-                            return 29;
+                // clouds
+                case 800:     // clear sky
+                    return 31;
+                case 801:     // few clouds
+                    return 33;
+                case 802:     // scattered clouds
+                    return 27;
+                case 803:     // broken clouds
+                case 804:     // overcast clouds
+                    return 29;
 
-                        // Extreme
-                        case 900: return 0;  // tornado
-                        case 901: return 1;  // tropical storm
-                        case 902: return 2;  // hurricane
-                        case 903: return 25; // cold
-                        case 904: return 36; // hot
-                        case 905: return 24; // windy
-                        case 906: return 17; // hail
-                    }
+                // Extreme
+                case 900: return 0;  // tornado
+                case 901: return 1;  // tropical storm
+                case 902: return 2;  // hurricane
+                case 903: return 25; // cold
+                case 904: return 36; // hot
+                case 905: return 24; // windy
+                case 906: return 17; // hail
+            }
         }
         return -1;
     }
