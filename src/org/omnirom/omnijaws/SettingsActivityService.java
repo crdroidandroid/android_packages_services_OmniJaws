@@ -288,30 +288,14 @@ public class SettingsActivityService extends PreferenceActivity implements OnPre
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        super.onCreateOptionsMenu(menu);
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
                 finish();
                 return true;
-            case R.id.playstore:
-                launchPlaystore();
-                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
-
-    private void launchPlaystore() {
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setData(Uri.parse("market://search?q=Chronus+icons&c=apps"));
-        startActivity(intent);
     }
 
     private void checkLocationPermissions() {
