@@ -191,8 +191,6 @@ public class SettingsActivityService extends PreferenceActivity implements OnPre
                     // city ids are provider specific - so we need to recheck
                     // cause provider migth be changed while unchecked
                     new WeatherLocationTask(this, Config.getLocationName(this), this).execute();
-                } else {
-                    disableService();
                 }
             }
             return true;
