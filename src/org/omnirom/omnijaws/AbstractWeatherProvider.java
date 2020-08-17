@@ -17,19 +17,19 @@
  */
 package org.omnirom.omnijaws;
 
+import static java.net.HttpURLConnection.HTTP_OK;
+
 import java.io.IOException;
 import java.util.List;
-
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.util.EntityUtils;
 
 import android.content.Context;
 import android.location.Location;
 import android.util.Log;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 public abstract class AbstractWeatherProvider {
     private static final String TAG = "AbstractWeatherProvider";
@@ -41,20 +41,32 @@ public abstract class AbstractWeatherProvider {
     }
 
     protected String retrieve(String url) {
-        HttpGet request = new HttpGet(url);
+        HttpURLConnection request = null;
         try {
-            HttpResponse response = new DefaultHttpClient().execute(request);
-            int code = response.getStatusLine().getStatusCode();
-            if (code != HttpStatus.SC_OK) {
+            request = (HttpURLConnection) new URL(url).openConnection();
+            int code = request.getResponseCode();
+            if (code != HTTP_OK) {
                 log(TAG, "HttpStatus: " + code + " for url: " + url);
                 return null;
             }
-            HttpEntity entity = response.getEntity();
-            if (entity != null) {
-                return EntityUtils.toString(entity);
+            BufferedReader response = new BufferedReader(
+                    new InputStreamReader(request.getInputStream()));
+            String inputLine;
+            StringBuilder entity = new StringBuilder();
+            while ((inputLine = response.readLine()) != null) {
+                entity.append(inputLine);
             }
+            response.close();
+            return entity.toString();
+        } catch (MalformedURLException m) {
+            Log.e(TAG, "Got malformed url " + url);
+            // return null;
         } catch (IOException e) {
             Log.e(TAG, "Couldn't retrieve data from url " + url, e);
+        } finally {
+            if (request != null) {
+                request.disconnect();
+            }
         }
         return null;
     }

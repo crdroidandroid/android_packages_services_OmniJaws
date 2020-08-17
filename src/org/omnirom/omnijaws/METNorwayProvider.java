@@ -2,6 +2,9 @@
 
 package org.omnirom.omnijaws;
 
+import static java.net.HttpURLConnection.HTTP_NOT_AUTHORITATIVE;
+import static java.net.HttpURLConnection.HTTP_OK;
+
 import android.content.Context;
 import android.location.Address;
 import android.location.Geocoder;
@@ -10,13 +13,16 @@ import android.net.Uri;
 import android.util.Log;
 import android.text.TextUtils;
 
-import org.apache.http.client.HttpClient;
-import org.apache.http.params.CoreProtocolPNames;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.omnirom.omnijaws.WeatherInfo.DayForecast;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -28,12 +34,6 @@ import java.util.Locale;
 import java.io.IOException;
 import java.util.TimeZone;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.util.EntityUtils;
 
 public class METNorwayProvider extends AbstractWeatherProvider {
     private static final String TAG = "METNorwayProvider";
@@ -322,22 +322,32 @@ public class METNorwayProvider extends AbstractWeatherProvider {
 
     @Override
     protected String retrieve(String url) {
-        HttpGet request = new HttpGet(url);
+        HttpURLConnection request = null;
         try {
-            HttpClient client = new DefaultHttpClient();
-            client.getParams().setParameter(CoreProtocolPNames.USER_AGENT, "OmniJawsApp/1.0");
-            HttpResponse response = client.execute(request);
-            int code = response.getStatusLine().getStatusCode();
-            if (!(code == HttpStatus.SC_OK || code == HttpStatus.SC_NON_AUTHORITATIVE_INFORMATION)) {
+            request = (HttpURLConnection) new URL(url).openConnection();
+            request.setRequestProperty("User-Agent", "OmniJawsApp/1.0");
+            int code = request.getResponseCode();
+            if (!(code == HTTP_OK || code == HTTP_NOT_AUTHORITATIVE)) {
                 log(TAG, "HttpStatus: " + code + " for url: " + url);
                 return null;
             }
-            HttpEntity entity = response.getEntity();
-            if (entity != null) {
-                return EntityUtils.toString(entity);
+            BufferedReader response = new BufferedReader(
+                    new InputStreamReader(request.getInputStream()));
+            String inputLine;
+            StringBuilder entity = new StringBuilder();
+            while ((inputLine = response.readLine()) != null) {
+                entity.append(inputLine);
             }
+            response.close();
+            return entity.toString();
+        } catch (MalformedURLException m) {
+            Log.e(TAG, "Got malformed url " + url);
         } catch (IOException e) {
             Log.e(TAG, "Couldn't retrieve data from url " + url, e);
+        } finally {
+            if (request != null) {
+                request.disconnect();
+            }
         }
         return null;
     }
