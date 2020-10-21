@@ -61,7 +61,7 @@ public class WeatherService extends Service {
             "org.omnirom.omnijaws.CANCEL_LOCATION_UPDATE";
 
     private static final float LOCATION_ACCURACY_THRESHOLD_METERS = 50000;
-    public static final long LOCATION_REQUEST_TIMEOUT = 5L * 60L * 1000L; // request for at most 5 minutes
+    public static final long LOCATION_REQUEST_TIMEOUT = 60L * 1000L; // request for at most 1 minute
     private static final long OUTDATED_LOCATION_THRESHOLD_MILLIS = 10L * 60L * 1000L; // 10 minutes
     private static final long ALARM_INTERVAL_BASE = AlarmManager.INTERVAL_HOUR;
     private static final int RETRY_DELAY_MS = 5000;
