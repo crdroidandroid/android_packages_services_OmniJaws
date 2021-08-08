@@ -30,7 +30,7 @@
   <string name="weather_retrieve_location_dialog_enable_button">启用</string>
   <string name="settings_title">设置</string>
   <string name="auto_update_title">自动更新</string>
-  <string name="unit_metric">公制 - (\u00b0F)</string>
+  <string name="unit_metric">公制 - (\u00b0C)</string>
   <string name="unit_imperial">英制 - (\u00b0F)</string>
   <string name="update">更新</string>
   <string name="enable_title">启用</string>
