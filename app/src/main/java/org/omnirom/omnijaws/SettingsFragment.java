@@ -50,7 +50,7 @@ public class SettingsFragment extends PreferenceFragment implements OnPreference
         WeatherLocationTask.Callback, OmniJawsClient.OmniJawsObserver {
 
     private static final String CHRONUS_ICON_PACK_INTENT = "com.dvtonder.chronus.ICON_PACK";
-    private static final String DEFAULT_WEATHER_ICON_PACKAGE = "org.omnirom.omnijaws.outline";
+    private static final String DEFAULT_WEATHER_ICON_PACKAGE = "org.omnirom.omnijaws.google";
 
     private SharedPreferences mPrefs;
     private ListPreference mProvider;
