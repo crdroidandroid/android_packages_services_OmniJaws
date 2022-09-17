@@ -23,7 +23,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
-import org.omnirom.omnijaws.client.OmniJawsClient;
+import com.android.internal.util.crdroid.OmniJawsClient;
 
 import java.util.Calendar;
 

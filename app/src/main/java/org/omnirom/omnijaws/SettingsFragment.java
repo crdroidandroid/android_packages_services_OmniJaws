@@ -30,7 +30,7 @@ import android.os.Handler;
 import android.provider.Settings;
 import android.text.TextUtils;
 
-import org.omnirom.omnijaws.client.OmniJawsClient;
+import com.android.internal.util.crdroid.OmniJawsClient;
 import org.omnirom.omnijaws.widget.WeatherAppWidgetProvider;
 
 import java.util.ArrayList;

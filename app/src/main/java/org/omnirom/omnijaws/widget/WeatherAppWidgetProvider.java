@@ -51,7 +51,7 @@ import org.omnirom.omnijaws.Config;
 import org.omnirom.omnijaws.R;
 import org.omnirom.omnijaws.SettingsActivity;
 import org.omnirom.omnijaws.WeatherActivity;
-import org.omnirom.omnijaws.client.OmniJawsClient;
+import com.android.internal.util.crdroid.OmniJawsClient;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
