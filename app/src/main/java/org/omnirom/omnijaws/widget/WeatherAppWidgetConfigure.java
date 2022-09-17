@@ -47,7 +47,6 @@ public class WeatherAppWidgetConfigure extends PreferenceActivity implements Pre
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getActionBar().setDisplayHomeAsUpEnabled(true);
 
         Intent intent = getIntent();
         Bundle extras = intent.getExtras();

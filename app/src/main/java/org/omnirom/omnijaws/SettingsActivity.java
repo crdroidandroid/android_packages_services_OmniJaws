@@ -17,39 +17,21 @@
  */
 package org.omnirom.omnijaws;
 
-import android.app.ActionBar;
-import android.app.Activity;
 import android.os.Bundle;
-import android.view.MenuItem;
 
-public class SettingsActivity extends Activity {
+import com.android.settingslib.collapsingtoolbar.CollapsingToolbarBaseActivity;
+import com.android.settingslib.collapsingtoolbar.R;
+
+public class SettingsActivity extends CollapsingToolbarBaseActivity {
+
+    private final String TAG_OMNIJAWS = "OmniJaws";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        ActionBar actionBar = getActionBar();
-        if (actionBar != null) {
-            // android.R.id.home will be triggered in onOptionsItemSelected()
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
-    }
-
-    @Override
-    protected void onPostCreate(Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
-        getFragmentManager().beginTransaction().replace(android.R.id.content, new SettingsFragment()).commit();
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                finish();
-                return true;
-            default:
-                break;
-        }
-        return super.onOptionsItemSelected(item);
+        getFragmentManager().beginTransaction().replace(R.id.content_frame,
+                new SettingsFragment(), TAG_OMNIJAWS)
+                .commit();
     }
 }

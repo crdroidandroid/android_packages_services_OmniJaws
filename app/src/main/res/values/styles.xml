@@ -15,15 +15,6 @@
         <item name="android:textStyle">normal</item>
     </style>
 
-    <style name="Theme.Settings" parent="@android:style/Theme.DeviceDefault.Settings" >
-        <item name="android:navigationBarColor">@android:color/transparent</item>
-    </style>
-
-    <style name="Theme.Activity" parent="@android:style/Theme.DeviceDefault.NoActionBar" >
-        <item name="android:windowLightStatusBar">false</item>
-        <item name="android:windowLightNavigationBar">false</item>
-    </style>
-
     <style name="Theme.Widget" parent="@android:style/Theme.DeviceDefault.DayNight">
     </style>
 
