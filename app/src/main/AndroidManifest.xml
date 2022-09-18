@@ -28,7 +28,7 @@
         <activity
             android:name=".SettingsActivity"
             android:exported="true"
-            android:label="@string/settings_title"
+            android:label="@string/weather_config_title"
             android:theme="@style/Theme.SubSettingsBase" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
