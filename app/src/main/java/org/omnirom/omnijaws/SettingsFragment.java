@@ -29,6 +29,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
 import android.text.TextUtils;
+import android.widget.Switch;
 
 import com.android.internal.util.crdroid.OmniJawsClient;
 import org.omnirom.omnijaws.widget.WeatherAppWidgetProvider;
@@ -45,8 +46,11 @@ import androidx.preference.PreferenceManager;
 import androidx.preference.PreferenceScreen;
 import androidx.preference.SwitchPreference;
 
+import com.android.settingslib.widget.MainSwitchPreference;
+import com.android.settingslib.widget.OnMainSwitchChangeListener;
+
 public class SettingsFragment extends PreferenceFragment implements OnPreferenceChangeListener,
-        WeatherLocationTask.Callback, OmniJawsClient.OmniJawsObserver {
+        WeatherLocationTask.Callback, OmniJawsClient.OmniJawsObserver, OnMainSwitchChangeListener {
 
     private static final String CHRONUS_ICON_PACK_INTENT = "com.dvtonder.chronus.ICON_PACK";
     private static final String DEFAULT_WEATHER_ICON_PACKAGE = "org.omnirom.omnijaws.google";
@@ -55,7 +59,7 @@ public class SettingsFragment extends PreferenceFragment implements OnPreference
     private ListPreference mProvider;
     private SwitchPreference mCustomLocation;
     private ListPreference mUnits;
-    private SwitchPreference mEnable;
+    private MainSwitchPreference mEnable;
     private boolean mTriggerPermissionCheck;
     private ListPreference mUpdateInterval;
     private CustomLocationPreference mLocation;
@@ -83,9 +87,9 @@ public class SettingsFragment extends PreferenceFragment implements OnPreference
         addPreferencesFromResource(R.xml.settings);
 
         final PreferenceScreen prefScreen = getPreferenceScreen();
-        mEnable = (SwitchPreference) findPreference(Config.PREF_KEY_ENABLE);
+        mEnable = (MainSwitchPreference) findPreference(Config.PREF_KEY_ENABLE);
+        mEnable.addOnSwitchChangeListener(this);
         mEnable.setChecked(Config.isEnabled(getContext()));
-        mEnable.setOnPreferenceChangeListener(this);
 
         mCustomLocation = (SwitchPreference) findPreference(Config.PREF_KEY_CUSTOM_LOCATION);
 
@@ -231,22 +235,24 @@ public class SettingsFragment extends PreferenceFragment implements OnPreference
                     getResources().getString(R.string.service_disabled) : value);
             forceRefreshWeatherSettings();
             return true;
-        } else if (preference == mEnable) {
-            boolean value = (Boolean) newValue;
-            Config.setEnabled(getContext(), value);
-            if (value) {
-                enableService();
-                if (!mCustomLocation.isChecked()) {
-                    checkLocationEnabledInitial();
-                } else {
-                    forceRefreshWeatherSettings();
-                }
-            } else {
-                disableService();
-            }
-            return true;
         }
         return false;
+    }
+
+    @Override
+    public void onSwitchChanged(Switch switchView, boolean isChecked) {
+        mEnable.setChecked(isChecked);
+        Config.setEnabled(getContext(), isChecked);
+        if (isChecked) {
+            enableService();
+            if (!mCustomLocation.isChecked()) {
+                checkLocationEnabledInitial();
+            } else {
+                forceRefreshWeatherSettings();
+            }
+        } else {
+            disableService();
+        }
     }
 
     private void showDialog() {
