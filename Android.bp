@@ -2,6 +2,7 @@ android_app {
   name: "OmniJaws",
   manifest: "app/src/main/AndroidManifest.xml",
   platform_apis: true,
+  system_ext_specific: true,
 
   libs: [
     "org.apache.http.legacy",
