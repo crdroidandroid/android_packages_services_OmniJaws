@@ -21,7 +21,8 @@ import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.preference.PreferenceManager;
+
+import androidx.preference.PreferenceManager;
 
 public class Config {
     public static final String PREF_KEY_PROVIDER = "provider";
@@ -43,8 +44,7 @@ public class Config {
         SharedPreferences prefs = PreferenceManager
                 .getDefaultSharedPreferences(context);
 
-        switch (prefs.getString(PREF_KEY_PROVIDER, "0"))
-        {
+        switch (prefs.getString(PREF_KEY_PROVIDER, "0")) {
             case "0":
                 return new OpenWeatherMapProvider(context);
             case "1":
@@ -59,8 +59,7 @@ public class Config {
                 .getDefaultSharedPreferences(context);
 
         String provider = prefs.getString(PREF_KEY_PROVIDER, "0");
-        switch (provider)
-        {
+        switch (provider) {
             case "0":
                 return "OpenWeatherMap";
             case "1":
@@ -97,14 +96,14 @@ public class Config {
 
         prefs.edit().putString(PREF_KEY_LOCATION_ID, id).commit();
     }
-    
+
     public static String getLocationName(Context context) {
         SharedPreferences prefs = PreferenceManager
                 .getDefaultSharedPreferences(context);
 
         return prefs.getString(PREF_KEY_LOCATION_NAME, null);
     }
-    
+
     public static void setLocationName(Context context, String name) {
         SharedPreferences prefs = PreferenceManager
                 .getDefaultSharedPreferences(context);
@@ -123,7 +122,7 @@ public class Config {
         }
         return null;
     }
-    
+
     public static void setWeatherData(Context context, WeatherInfo data) {
         SharedPreferences prefs = PreferenceManager
                 .getDefaultSharedPreferences(context);
@@ -139,7 +138,7 @@ public class Config {
         prefs.edit().remove(PREF_KEY_WEATHER_DATA).commit();
         prefs.edit().remove(PREF_KEY_LAST_UPDATE).commit();
     }
-    
+
     public static long getLastUpdateTime(Context context) {
         SharedPreferences prefs = PreferenceManager
                 .getDefaultSharedPreferences(context);
