@@ -33,7 +33,7 @@
             android:name=".SettingsActivity"
             android:exported="true"
             android:label="@string/weather_config_title"
-            android:theme="@style/Theme.SubSettingsBase">
+            android:theme="@style/Theme.SubSettingsBase.Expressive">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -59,7 +59,7 @@
             android:exported="false"
             android:label="@string/location_browse_activity_title"
             android:launchMode="singleInstance"
-            android:theme="@style/Theme.SubSettingsBase" />
+            android:theme="@style/Theme.SubSettingsBase.Expressive" />
 
         <service
             android:name=".WeatherUpdateService"

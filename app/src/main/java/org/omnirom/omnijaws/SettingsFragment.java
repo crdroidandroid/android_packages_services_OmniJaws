@@ -34,6 +34,7 @@ import android.widget.CompoundButton.OnCheckedChangeListener;
 
 import com.android.internal.util.crdroid.OmniJawsClient;
 import com.android.settingslib.widget.MainSwitchPreference;
+import com.android.settingslib.widget.SettingsBasePreferenceFragment;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -50,7 +51,6 @@ import androidx.preference.EditTextPreference;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.Preference.OnPreferenceChangeListener;
-import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 import androidx.preference.PreferenceScreen;
 import androidx.preference.SwitchPreferenceCompat;
@@ -60,7 +60,7 @@ import static org.omnirom.omnijaws.LocationBrowseActivity.DATA_LOCATION_LAT;
 import static org.omnirom.omnijaws.LocationBrowseActivity.DATA_LOCATION_LON;
 import static org.omnirom.omnijaws.LocationBrowseActivity.DATA_LOCATION_NAME;
 
-public class SettingsFragment extends PreferenceFragmentCompat implements OnPreferenceChangeListener,
+public class SettingsFragment extends SettingsBasePreferenceFragment implements OnPreferenceChangeListener,
         OmniJawsClient.OmniJawsObserver, OnCheckedChangeListener {
 
     private static final String CHRONUS_ICON_PACK_INTENT = "com.dvtonder.chronus.ICON_PACK";

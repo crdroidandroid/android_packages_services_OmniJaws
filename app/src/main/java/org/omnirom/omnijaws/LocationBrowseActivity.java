@@ -36,8 +36,6 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.google.android.material.appbar.MaterialToolbar;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -79,7 +77,6 @@ public class LocationBrowseActivity extends CollapsingToolbarBaseActivity {
 
     private static final String URL_PLACES =
             "https://secure.geonames.org/searchJSON?name_startsWith=%s&lang=%s&username=omnijaws&maxRows=20";
-
 
     private class LocationBrowseItem {
         private String mCityExt;
@@ -277,5 +274,4 @@ public class LocationBrowseActivity extends CollapsingToolbarBaseActivity {
                 0, 1, Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
         return spanned;
     }
-
 }
