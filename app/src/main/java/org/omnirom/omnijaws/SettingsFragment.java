@@ -29,8 +29,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
 import android.text.TextUtils;
-import android.widget.CompoundButton;
-import android.widget.CompoundButton.OnCheckedChangeListener;
 
 import com.android.internal.util.crdroid.OmniJawsClient;
 import com.android.settingslib.widget.MainSwitchPreference;
@@ -61,7 +59,7 @@ import static org.omnirom.omnijaws.LocationBrowseActivity.DATA_LOCATION_LON;
 import static org.omnirom.omnijaws.LocationBrowseActivity.DATA_LOCATION_NAME;
 
 public class SettingsFragment extends SettingsBasePreferenceFragment implements OnPreferenceChangeListener,
-        OmniJawsClient.OmniJawsObserver, OnCheckedChangeListener {
+        OmniJawsClient.OmniJawsObserver {
 
     private static final String CHRONUS_ICON_PACK_INTENT = "com.dvtonder.chronus.ICON_PACK";
     private static final String DEFAULT_WEATHER_ICON_PACKAGE = "org.omnirom.omnijaws.google_new_light";
@@ -126,7 +124,24 @@ public class SettingsFragment extends SettingsBasePreferenceFragment implements 
         final PreferenceScreen prefScreen = getPreferenceScreen();
         mEnable = (MainSwitchPreference) findPreference(Config.PREF_KEY_ENABLE);
         mEnable.setChecked(Config.isEnabled(getContext()));
-        mEnable.addOnSwitchChangeListener(this);
+        mEnable.setOnPreferenceChangeListener((preference, newValue) -> {
+            final boolean enabled = (Boolean) newValue;
+
+            Config.setEnabled(getContext(), enabled);
+
+            if (enabled) {
+                enableService();
+                if (mCustomLocation != null && !mCustomLocation.isChecked()) {
+                    checkLocationEnabledInitial();
+                } else {
+                    forceRefreshWeatherSettings();
+                }
+            } else {
+                disableService();
+            }
+
+            return true;
+        });
 
         mCustomLocation = (SwitchPreferenceCompat) findPreference(Config.PREF_KEY_CUSTOM_LOCATION);
 
@@ -273,22 +288,6 @@ public class SettingsFragment extends SettingsBasePreferenceFragment implements 
             return true;
         }
         return false;
-    }
-
-    @Override
-    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        mEnable.setChecked(isChecked);
-        Config.setEnabled(getContext(), isChecked);
-        if (isChecked) {
-            enableService();
-            if (!mCustomLocation.isChecked()) {
-                checkLocationEnabledInitial();
-            } else {
-                forceRefreshWeatherSettings();
-            }
-        } else {
-            disableService();
-        }
     }
 
     private void showDialog() {
