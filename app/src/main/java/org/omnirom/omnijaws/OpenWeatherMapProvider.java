@@ -100,6 +100,38 @@ public class OpenWeatherMapProvider extends AbstractWeatherProvider {
                     forecasts,
                     System.currentTimeMillis());
 
+            if (conditionData.has("feels_like")) {
+                w.setFeelsLike(sanitizeTemperature(conditionData.getDouble("feels_like"), metric));
+            }
+            if (conditionData.has("pressure")) {
+                w.setPressure((float) conditionData.getDouble("pressure"));
+            }
+            if (conditionData.has("uvi")) {
+                w.setUvi((float) conditionData.getDouble("uvi"));
+            }
+            if (conditionData.has("visibility")) {
+                float vis = (float) conditionData.getDouble("visibility");
+                w.setVisibility(metric ? vis / 1000f : vis / 1609.34f);
+            }
+            if (conditionData.has("dew_point")) {
+                w.setDewPoint(sanitizeTemperature(conditionData.getDouble("dew_point"), metric));
+            }
+
+            JSONArray dailyArray = conditions.getJSONArray("daily");
+            if (dailyArray.length() > 0) {
+                JSONObject today = dailyArray.getJSONObject(0);
+                if (today.has("sunrise")) {
+                    w.setSunrise(today.getLong("sunrise") * 1000L);
+                }
+                if (today.has("sunset")) {
+                    w.setSunset(today.getLong("sunset") * 1000L);
+                }
+            }
+
+            if (conditions.has("hourly")) {
+                w.setHourlyForecasts(parseHourlyForecasts(conditions.getJSONArray("hourly"), metric));
+            }
+
             log(TAG, "Weather updated: " + w);
             return w;
         } catch (JSONException e) {
@@ -156,6 +188,32 @@ public class OpenWeatherMapProvider extends AbstractWeatherProvider {
                         "NaN",
                         metric);
                 result.add(item);
+            }
+        }
+        return result;
+    }
+
+    private ArrayList<WeatherInfo.HourlyForecast> parseHourlyForecasts(JSONArray hourly, boolean metric) {
+        ArrayList<WeatherInfo.HourlyForecast> result = new ArrayList<>();
+        int count = Math.min(hourly.length(), 24);
+        for (int i = 0; i < count; i++) {
+            try {
+                JSONObject hour = hourly.getJSONObject(i);
+                JSONObject hourWeather = hour.getJSONArray("weather").getJSONObject(0);
+                float hWindSpeed = (float) hour.getDouble("wind_speed");
+                if (metric) {
+                    hWindSpeed *= 3.6f;
+                }
+                result.add(new WeatherInfo.HourlyForecast(
+                        sanitizeTemperature(hour.getDouble("temp"), metric),
+                        mapConditionIconToCode(hourWeather.getString("icon"), hourWeather.getInt("id")),
+                        hourWeather.getString("main"),
+                        hour.getLong("dt") * 1000L,
+                        (float) hour.getDouble("humidity"),
+                        hWindSpeed,
+                        metric));
+            } catch (JSONException e) {
+                Log.w(TAG, "Invalid hourly forecast for index " + i, e);
             }
         }
         return result;

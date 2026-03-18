@@ -37,6 +37,7 @@ public class WeatherContentProvider extends ContentProvider {
     private static final int URI_TYPE_WEATHER = 1;
     private static final int URI_TYPE_SETTINGS = 2;
     private static final int URI_TYPE_CONTROL = 3;
+    private static final int URI_TYPE_HOURLY = 4;
 
     private static final String COLUMN_CURRENT_CITY_ID = "city_id";
     private static final String COLUMN_CURRENT_CITY = "city";
@@ -49,11 +50,26 @@ public class WeatherContentProvider extends ContentProvider {
     private static final String COLUMN_CURRENT_CONDITION_CODE = "condition_code";
     private static final String COLUMN_CURRENT_PIN_WHEEL = "pin_wheel";
 
+    private static final String COLUMN_CURRENT_FEELS_LIKE = "feels_like";
+    private static final String COLUMN_CURRENT_PRESSURE = "pressure";
+    private static final String COLUMN_CURRENT_UVI = "uvi";
+    private static final String COLUMN_CURRENT_VISIBILITY = "visibility";
+    private static final String COLUMN_CURRENT_DEW_POINT = "dew_point";
+    private static final String COLUMN_CURRENT_SUNRISE = "sunrise";
+    private static final String COLUMN_CURRENT_SUNSET = "sunset";
+
     private static final String COLUMN_FORECAST_LOW = "forecast_low";
     private static final String COLUMN_FORECAST_HIGH = "forecast_high";
     private static final String COLUMN_FORECAST_CONDITION = "forecast_condition";
     private static final String COLUMN_FORECAST_CONDITION_CODE = "forecast_condition_code";
     private static final String COLUMN_FORECAST_DATE = "forecast_date";
+
+    private static final String COLUMN_HOURLY_TEMPERATURE = "hourly_temperature";
+    private static final String COLUMN_HOURLY_CONDITION_CODE = "hourly_condition_code";
+    private static final String COLUMN_HOURLY_CONDITION = "hourly_condition";
+    private static final String COLUMN_HOURLY_TIMESTAMP = "hourly_timestamp";
+    private static final String COLUMN_HOURLY_HUMIDITY = "hourly_humidity";
+    private static final String COLUMN_HOURLY_WIND_SPEED = "hourly_wind_speed";
 
     private static final String COLUMN_ENABLED = "enabled";
     private static final String COLUMN_PROVIDER = "provider";
@@ -76,6 +92,13 @@ public class WeatherContentProvider extends ContentProvider {
             COLUMN_CURRENT_TIME_STAMP,
             COLUMN_CURRENT_PIN_WHEEL,
             COLUMN_CURRENT_CONDITION_CODE,
+            COLUMN_CURRENT_FEELS_LIKE,
+            COLUMN_CURRENT_PRESSURE,
+            COLUMN_CURRENT_UVI,
+            COLUMN_CURRENT_VISIBILITY,
+            COLUMN_CURRENT_DEW_POINT,
+            COLUMN_CURRENT_SUNRISE,
+            COLUMN_CURRENT_SUNSET,
             COLUMN_FORECAST_LOW,
             COLUMN_FORECAST_HIGH,
             COLUMN_FORECAST_CONDITION,
@@ -101,6 +124,7 @@ public class WeatherContentProvider extends ContentProvider {
         sUriMatcher.addURI(AUTHORITY, "weather", URI_TYPE_WEATHER);
         sUriMatcher.addURI(AUTHORITY, "settings", URI_TYPE_SETTINGS);
         sUriMatcher.addURI(AUTHORITY, "control", URI_TYPE_CONTROL);
+        sUriMatcher.addURI(AUTHORITY, "hourly", URI_TYPE_HOURLY);
     }
 
     private Context mContext;
@@ -150,7 +174,14 @@ public class WeatherContentProvider extends ContentProvider {
                         .add(COLUMN_CURRENT_TEMPERATURE, weather.getTemperature())
                         .add(COLUMN_CURRENT_TIME_STAMP, weather.getTimestamp().toString())
                         .add(COLUMN_CURRENT_PIN_WHEEL, weather.getPinWheel())
-                        .add(COLUMN_CURRENT_CONDITION_CODE, weather.getConditionCode());
+                        .add(COLUMN_CURRENT_CONDITION_CODE, weather.getConditionCode())
+                        .add(COLUMN_CURRENT_FEELS_LIKE, weather.getFeelsLike())
+                        .add(COLUMN_CURRENT_PRESSURE, weather.getPressure())
+                        .add(COLUMN_CURRENT_UVI, weather.getUvi())
+                        .add(COLUMN_CURRENT_VISIBILITY, weather.getVisibility())
+                        .add(COLUMN_CURRENT_DEW_POINT, weather.getDewPoint())
+                        .add(COLUMN_CURRENT_SUNRISE, weather.getSunrise())
+                        .add(COLUMN_CURRENT_SUNSET, weather.getSunset());
 
                 // forecast
                 for (DayForecast day : weather.getForecasts()) {
@@ -160,6 +191,20 @@ public class WeatherContentProvider extends ContentProvider {
                             .add(COLUMN_FORECAST_HIGH, day.getHigh())
                             .add(COLUMN_FORECAST_CONDITION_CODE, day.getConditionCode())
                             .add(COLUMN_FORECAST_DATE, day.date);
+                }
+                return result;
+            }
+        } else if (projectionType == URI_TYPE_HOURLY) {
+            WeatherInfo weather = sCachedWeatherInfo;
+            if (weather != null && weather.getHourlyForecasts() != null) {
+                for (WeatherInfo.HourlyForecast h : weather.getHourlyForecasts()) {
+                    result.newRow()
+                            .add(COLUMN_HOURLY_TEMPERATURE, h.temperature)
+                            .add(COLUMN_HOURLY_CONDITION_CODE, h.conditionCode)
+                            .add(COLUMN_HOURLY_CONDITION, h.condition)
+                            .add(COLUMN_HOURLY_TIMESTAMP, h.timestamp)
+                            .add(COLUMN_HOURLY_HUMIDITY, h.humidity)
+                            .add(COLUMN_HOURLY_WIND_SPEED, h.windSpeed);
                 }
                 return result;
             }

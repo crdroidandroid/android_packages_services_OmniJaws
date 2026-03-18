@@ -30,36 +30,55 @@
             android:required="false" />
 
         <activity
-            android:name=".SettingsActivity"
-            android:exported="true"
-            android:label="@string/weather_config_title"
-            android:theme="@style/Theme.SubSettingsBase.Expressive">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-
-        <activity
-            android:name=".WeatherActivity"
+            android:name=".ui.WeatherDashboardActivity"
             android:exported="true"
             android:label="@string/activity_title"
             android:launchMode="singleInstance"
-            android:theme="@style/Theme.Activity">
+            android:theme="@style/Theme.OmniJaws.Compose">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <!--<category android:name="android.intent.category.LAUNCHER" />-->
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
+        <activity-alias
+            android:name=".WeatherActivity"
+            android:exported="true"
+            android:targetActivity=".ui.WeatherDashboardActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity-alias>
+
         <activity
-            android:name=".LocationBrowseActivity"
+            android:name=".ui.WeatherSettingsActivity"
+            android:exported="true"
+            android:label="@string/weather_config_title"
+            android:theme="@style/Theme.OmniJaws.Compose">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity-alias
+            android:name=".SettingsActivity"
+            android:exported="true"
+            android:targetActivity=".ui.WeatherSettingsActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity
+            android:name=".ui.LocationPickerActivity"
             android:excludeFromRecents="true"
             android:exported="false"
             android:label="@string/location_browse_activity_title"
-            android:launchMode="singleInstance"
-            android:theme="@style/Theme.SubSettingsBase.Expressive" />
+            android:theme="@style/Theme.OmniJaws.Compose" />
 
         <service
             android:name=".WeatherUpdateService"

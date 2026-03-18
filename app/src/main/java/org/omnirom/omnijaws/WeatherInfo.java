@@ -43,6 +43,15 @@ public class WeatherInfo {
     private ArrayList<DayForecast> forecasts;
     private boolean metric;
 
+    private float feelsLike;
+    private float pressure;
+    private float uvi;
+    private float visibility;
+    private float dewPoint;
+    private long sunrise;
+    private long sunset;
+    private ArrayList<HourlyForecast> hourlyForecasts;
+
     private WeatherInfo(Context context, String id,
                         String city, String condition, int conditionCode, float temp,
                         float humidity, float wind, int windDir,
@@ -61,6 +70,14 @@ public class WeatherInfo {
         this.forecasts = forecasts;
         this.metric = metric;
         this.pinWheel = pinWheel;
+        this.feelsLike = Float.NaN;
+        this.pressure = Float.NaN;
+        this.uvi = Float.NaN;
+        this.visibility = Float.NaN;
+        this.dewPoint = Float.NaN;
+        this.sunrise = 0;
+        this.sunset = 0;
+        this.hourlyForecasts = new ArrayList<>();
     }
 
     public WeatherInfo(Context context, String id,
@@ -102,6 +119,27 @@ public class WeatherInfo {
 
         public int getConditionCode() {
             return conditionCode;
+        }
+    }
+
+    public static class HourlyForecast {
+        public final float temperature;
+        public final int conditionCode;
+        public final String condition;
+        public final long timestamp;
+        public final float humidity;
+        public final float windSpeed;
+        public boolean metric;
+
+        public HourlyForecast(float temperature, int conditionCode, String condition,
+                              long timestamp, float humidity, float windSpeed, boolean metric) {
+            this.temperature = temperature;
+            this.conditionCode = conditionCode;
+            this.condition = condition;
+            this.timestamp = timestamp;
+            this.humidity = humidity;
+            this.windSpeed = windSpeed;
+            this.metric = metric;
         }
     }
 
@@ -208,6 +246,78 @@ public class WeatherInfo {
         return temperature;
     }
 
+    public boolean isMetric() {
+        return metric;
+    }
+
+    public float getFeelsLike() {
+        return feelsLike;
+    }
+
+    public void setFeelsLike(float feelsLike) {
+        this.feelsLike = feelsLike;
+    }
+
+    public float getPressure() {
+        return pressure;
+    }
+
+    public void setPressure(float pressure) {
+        this.pressure = pressure;
+    }
+
+    public float getUvi() {
+        return uvi;
+    }
+
+    public void setUvi(float uvi) {
+        this.uvi = uvi;
+    }
+
+    public float getVisibility() {
+        return visibility;
+    }
+
+    public void setVisibility(float visibility) {
+        this.visibility = visibility;
+    }
+
+    public float getDewPoint() {
+        return dewPoint;
+    }
+
+    public void setDewPoint(float dewPoint) {
+        this.dewPoint = dewPoint;
+    }
+
+    public long getSunrise() {
+        return sunrise;
+    }
+
+    public void setSunrise(long sunrise) {
+        this.sunrise = sunrise;
+    }
+
+    public long getSunset() {
+        return sunset;
+    }
+
+    public void setSunset(long sunset) {
+        this.sunset = sunset;
+    }
+
+    public ArrayList<HourlyForecast> getHourlyForecasts() {
+        return hourlyForecasts;
+    }
+
+    public void setHourlyForecasts(ArrayList<HourlyForecast> hourlyForecasts) {
+        this.hourlyForecasts = hourlyForecasts;
+    }
+
+    public float getHumidity() {
+        return humidity;
+    }
+
     private String getTemperatureUnit() {
         return "\u00b0" + (metric ? "C" : "F");
     }
@@ -265,6 +375,15 @@ public class WeatherInfo {
         builder.append(timestamp).append('|');
         builder.append(pinWheel).append('|');
         serializeForecasts(builder);
+        builder.append('|');
+        builder.append(feelsLike).append('|');
+        builder.append(pressure).append('|');
+        builder.append(uvi).append('|');
+        builder.append(visibility).append('|');
+        builder.append(dewPoint).append('|');
+        builder.append(sunrise).append('|');
+        builder.append(sunset).append('|');
+        serializeHourlyForecasts(builder);
         return builder.toString();
     }
 
@@ -280,13 +399,26 @@ public class WeatherInfo {
         }
     }
 
+    private void serializeHourlyForecasts(StringBuilder builder) {
+        builder.append(hourlyForecasts.size());
+        for (HourlyForecast h : hourlyForecasts) {
+            builder.append(';');
+            builder.append(h.temperature).append(';');
+            builder.append(h.conditionCode).append(';');
+            builder.append(h.condition).append(';');
+            builder.append(h.timestamp).append(';');
+            builder.append(h.humidity).append(';');
+            builder.append(h.windSpeed);
+        }
+    }
+
     public static WeatherInfo fromSerializedString(Context context, String input) {
         if (input == null) {
             return null;
         }
 
         String[] parts = input.split("\\|");
-        if (parts == null || parts.length != 12) {
+        if (parts == null || (parts.length != 12 && parts.length != 20)) {
             return null;
         }
 
@@ -340,10 +472,43 @@ public class WeatherInfo {
             return null;
         }
 
-        return new WeatherInfo(context,
+        WeatherInfo w = new WeatherInfo(context,
                 /* id */ parts[0], /* city */ parts[1], /* condition */ parts[2],
                 conditionCode, temperature,
                 humidity, wind, windDirection, metric,
                 /* forecasts */ forecasts, timestamp, pinWheel);
+
+        if (parts.length == 20) {
+            try {
+                w.feelsLike = Float.parseFloat(parts[12]);
+                w.pressure = Float.parseFloat(parts[13]);
+                w.uvi = Float.parseFloat(parts[14]);
+                w.visibility = Float.parseFloat(parts[15]);
+                w.dewPoint = Float.parseFloat(parts[16]);
+                w.sunrise = Long.parseLong(parts[17]);
+                w.sunset = Long.parseLong(parts[18]);
+
+                String[] hourlyParts = parts[19].split(";");
+                int hourlyItems = Integer.parseInt(hourlyParts[0]);
+                ArrayList<HourlyForecast> hourlyForecasts = new ArrayList<>();
+                for (int item = 0; item < hourlyItems; item++) {
+                    int offset = item * 6 + 1;
+                    if (offset + 5 < hourlyParts.length) {
+                        hourlyForecasts.add(new HourlyForecast(
+                                Float.parseFloat(hourlyParts[offset]),
+                                Integer.parseInt(hourlyParts[offset + 1]),
+                                hourlyParts[offset + 2],
+                                Long.parseLong(hourlyParts[offset + 3]),
+                                Float.parseFloat(hourlyParts[offset + 4]),
+                                Float.parseFloat(hourlyParts[offset + 5]),
+                                metric));
+                    }
+                }
+                w.hourlyForecasts = hourlyForecasts;
+            } catch (Exception ignored) {
+            }
+        }
+
+        return w;
     }
 }

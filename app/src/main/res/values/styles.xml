@@ -48,6 +48,14 @@
         <item name="android:windowLightNavigationBar">false</item>
     </style>
 
+    <style name="Theme.OmniJaws.Compose" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:enforceNavigationBarContrast">false</item>
+        <item name="android:enforceStatusBarContrast">false</item>
+    </style>
+
     <style name="AppTheme.Overlay" parent="ThemeOverlay.Material3.DynamicColors.DayNight">
     </style>
 

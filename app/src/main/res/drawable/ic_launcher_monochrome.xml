@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: 2025-2026 AxionOS
+     SPDX-License-Identifier: Apache-2.0
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path
+        android:pathData="M74,62 Q86,54 74,46 Q77,32 62,34 Q54,22 46,34 Q32,32 34,46 Q22,54 34,62 Q32,76 46,74 Q54,86 62,74 Q77,76 74,62Z"
+        android:fillColor="#000000"/>
+
+    <path
+        android:pathData="M64,75 C61,75 59,73 59,71 C59,68 61,66 63,66 C64,63 66,61 69,61 C73,61 75,64 75,66 C78,66 80,68 80,71 C80,73 78,75 75,75Z"
+        android:fillColor="#000000"/>
+
+</vector>

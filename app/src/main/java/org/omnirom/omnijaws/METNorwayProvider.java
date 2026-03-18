@@ -81,6 +81,18 @@ public class METNorwayProvider extends AbstractWeatherProvider {
                     parseForecasts(timeseries, metric),
                     System.currentTimeMillis());
 
+            if (weather.has("air_pressure_at_sea_level")) {
+                w.setPressure((float) weather.getDouble("air_pressure_at_sea_level"));
+            }
+            if (weather.has("ultraviolet_index_clear_sky")) {
+                w.setUvi((float) weather.getDouble("ultraviolet_index_clear_sky"));
+            }
+            if (weather.has("dew_point_temperature")) {
+                w.setDewPoint(convertTemperature(weather.getDouble("dew_point_temperature"), metric));
+            }
+
+            w.setHourlyForecasts(parseHourlyForecasts(timeseries, metric));
+
             log(TAG, "Weather updated: " + w);
             return w;
         } catch (JSONException e) {
@@ -217,6 +229,54 @@ public class METNorwayProvider extends AbstractWeatherProvider {
             }
         }
 
+        return result;
+    }
+
+    private ArrayList<WeatherInfo.HourlyForecast> parseHourlyForecasts(JSONArray timeseries, boolean metric) {
+        ArrayList<WeatherInfo.HourlyForecast> result = new ArrayList<>();
+        int count = Math.min(timeseries.length(), 24);
+        for (int i = 0; i < count; i++) {
+            try {
+                JSONObject entry = timeseries.getJSONObject(i);
+                JSONObject details = entry.getJSONObject("data").getJSONObject("instant").getJSONObject("details");
+
+                String timeStr = entry.getString("time");
+                long ts;
+                try {
+                    ts = gmt0Format.parse(timeStr).getTime();
+                } catch (ParseException e) {
+                    ts = System.currentTimeMillis();
+                }
+
+                String sc = "";
+                int condCode = -1;
+                String condDesc = "";
+                JSONObject data = entry.getJSONObject("data");
+                if (data.has("next_1_hours")) {
+                    sc = data.getJSONObject("next_1_hours").getJSONObject("summary").getString("symbol_code");
+                } else if (data.has("next_6_hours")) {
+                    sc = data.getJSONObject("next_6_hours").getJSONObject("summary").getString("symbol_code");
+                }
+                if (!sc.isEmpty()) {
+                    condCode = arrayWeatherIconToCode[getPriorityCondition(sc)];
+                    condDesc = getWeatherCondition(sc);
+                    if (sc.contains("_night") && (condCode == 30 || condCode == 32 || condCode == 34)) {
+                        condCode -= 1;
+                    }
+                }
+
+                result.add(new WeatherInfo.HourlyForecast(
+                        convertTemperature(details.getDouble("air_temperature"), metric),
+                        condCode,
+                        condDesc,
+                        ts,
+                        (float) details.getDouble("relative_humidity"),
+                        convertWindSpeed(details.getDouble("wind_speed"), metric),
+                        metric));
+            } catch (JSONException e) {
+                Log.w(TAG, "Invalid hourly forecast for index " + i, e);
+            }
+        }
         return result;
     }
 

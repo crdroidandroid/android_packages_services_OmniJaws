@@ -6,19 +6,39 @@ android_app {
 
   srcs: [
     "app/src/main/**/*.java",
+    "app/src/main/**/*.kt",
   ],
 
   resource_dirs: [
     "app/src/main/res/",
   ],
 
+  kotlincflags: [
+    "-Xjvm-default=all",
+  ],
+
   static_libs: [
+    "ax_compose",
     "androidx.core_core",
+    "androidx.core_core-ktx",
     "androidx.preference_preference",
     "com.google.android.material_material",
     "SettingsLib",
+    "kotlin-stdlib",
+    "kotlinx-coroutines-android",
+    "androidx.activity_activity-compose",
+    "androidx.compose.foundation_foundation",
+    "androidx.compose.material3_material3",
+    "androidx.compose.material_material-icons-extended",
+    "androidx.compose.runtime_runtime",
+    "androidx.compose.ui_ui",
+    "androidx.compose.ui_ui-tooling-preview",
+    "androidx.compose.animation_animation",
+    "androidx.lifecycle_lifecycle-runtime-compose",
+    "androidx.lifecycle_lifecycle-runtime-ktx",
+    "androidx.lifecycle_lifecycle-viewmodel-compose",
   ],
-  
+
   optimize: {
     enabled: false,
   },
