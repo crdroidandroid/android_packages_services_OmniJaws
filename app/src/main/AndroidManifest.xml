@@ -265,9 +265,19 @@
         </activity>
 
         <activity
-            android:name=".nothing"
+            android:name=".nothing_light"
             android:exported="false"
-            android:label="Nothing" >
+            android:label="Nothing Light" >
+            <intent-filter>
+                <action android:name="org.omnirom.WeatherIconPack" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".nothing_dark"
+            android:exported="false"
+            android:label="Nothing Dark" >
             <intent-filter>
                 <action android:name="org.omnirom.WeatherIconPack" />
                 <category android:name="android.intent.category.DEFAULT" />
