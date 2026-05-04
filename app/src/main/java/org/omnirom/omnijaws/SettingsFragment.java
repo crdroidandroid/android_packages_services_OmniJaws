@@ -48,10 +48,14 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.preference.EditTextPreference;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
+import androidx.preference.PreferenceCategory;
 import androidx.preference.Preference.OnPreferenceChangeListener;
 import androidx.preference.PreferenceManager;
 import androidx.preference.PreferenceScreen;
 import androidx.preference.SwitchPreferenceCompat;
+import android.text.Html;
+import android.text.method.LinkMovementMethod;
+import android.widget.TextView;
 
 import static org.omnirom.omnijaws.AbstractWeatherProvider.PART_COORDINATES;
 import static org.omnirom.omnijaws.LocationBrowseActivity.DATA_LOCATION_LAT;
@@ -76,7 +80,9 @@ public class SettingsFragment extends SettingsBasePreferenceFragment implements 
     private Handler mHandler = new Handler();
     protected boolean mShowIconPack = true;
     private EditTextPreference mOwmKey;
+    private EditTextPreference mPirateWeatherKey;
     private Preference mCustomLocationActivity;
+    private Preference mApiLinksNote;
     private static final String PREF_KEY_CUSTOM_LOCATION = "weather_custom_location";
     private static final String WEATHER_ICON_PACK = "weather_icon_pack";
     private static final String PREF_KEY_UPDATE_STATUS = "update_status";
@@ -208,8 +214,36 @@ public class SettingsFragment extends SettingsBasePreferenceFragment implements 
                 getResources().getString(R.string.service_disabled) : customKey);
         mOwmKey.setOnPreferenceChangeListener(this);
 
+        mPirateWeatherKey = (EditTextPreference) findPreference(Config.PREF_KEY_PIRATE_WEATHER_KEY);
+        final String pirateKey = Config.getPirateWeatherKey(getContext());
+        mPirateWeatherKey.setSummary(TextUtils.isEmpty(pirateKey) ?
+                getResources().getString(R.string.service_disabled) : pirateKey);
+        mPirateWeatherKey.setOnPreferenceChangeListener(this);
+
         mCustomLocationActivity = findPreference(PREF_KEY_CUSTOM_LOCATION);
         mCustomLocationActivity.setSummary(Config.getLocationName(getContext()));
+
+        mApiLinksNote = findPreference("api_links_note");
+        if (mApiLinksNote != null) {
+            mApiLinksNote.setSummary(Html.fromHtml(getResources().getString(R.string.api_links_note), Html.FROM_HTML_MODE_LEGACY));
+        }
+
+        updateApiKeyFieldVisibility(mPrefs.getString(Config.PREF_KEY_PROVIDER, "1"));
+    }
+
+    private void updateApiKeyFieldVisibility(String providerValue) {
+        if (mOwmKey != null && mPirateWeatherKey != null) {
+            if ("0".equals(providerValue)) {
+                mOwmKey.setVisible(true);
+                mPirateWeatherKey.setVisible(false);
+            } else if ("2".equals(providerValue)) {
+                mOwmKey.setVisible(false);
+                mPirateWeatherKey.setVisible(true);
+            } else {
+                mOwmKey.setVisible(false);
+                mPirateWeatherKey.setVisible(false);
+            }
+        }
     }
 
     @Override
@@ -257,6 +291,7 @@ public class SettingsFragment extends SettingsBasePreferenceFragment implements 
             int idx = mProvider.findIndexOfValue(value);
             mProvider.setSummary(mProvider.getEntries()[idx]);
             mProvider.setValueIndex(idx);
+            updateApiKeyFieldVisibility(value);
             forceRefreshWeatherSettings();
             return true;
         } else if (preference == mUnits) {
@@ -283,6 +318,12 @@ public class SettingsFragment extends SettingsBasePreferenceFragment implements 
         } else if (preference == mOwmKey) {
             String value = (String) newValue;
             mOwmKey.setSummary(TextUtils.isEmpty(value) ?
+                    getResources().getString(R.string.service_disabled) : value);
+            forceRefreshWeatherSettings();
+            return true;
+        } else if (preference == mPirateWeatherKey) {
+            String value = (String) newValue;
+            mPirateWeatherKey.setSummary(TextUtils.isEmpty(value) ?
                     getResources().getString(R.string.service_disabled) : value);
             forceRefreshWeatherSettings();
             return true;

@@ -22,6 +22,7 @@
     <string name="units_title">Unit</string>
     <string name="provider_openweathermap" translatable="false">OpenWeatherMap</string>
     <string name="provider_metnorway" translatable="false">MET Norway</string>
+    <string name="provider_pirate_weather" translatable="false">Pirate Weather</string>
     <string name="weather_progress_title">Verifying location</string>
     <string name="weather_select_location">Select location</string>
     <string name="custom_location_title">Custom location</string>
@@ -63,6 +64,9 @@
     <string name="omnijaws_service_error_marker" translatable="false">*</string>
     <string name="with_forecast_title">With 4-day forecast and details</string>
     <string name="owm_key">Custom OWM key</string>
+    <string name="pirate_weather_key">Pirate Weather API Key</string>
+    <string name="api_key_note">Pirate Weather needs an API key provided to function, and a Custom OWM key is recommended for OpenWeatherMap. Press the \"Last update time\" field to force update and test your keys</string>
+    <string name="api_links_note"><![CDATA[Get API keys: <a href="https://pirate-weather.apiable.io/products/weather-data/plans">Pirate Weather</a> | <a href="https://openweathermap.org/price">OpenWeatherMap</a>]]></string>
     <string name="omnijaws_city_unkown">Unknown</string>
     <string name="activity_title">Weather</string>
     <string name="omnijaws_service_error_long">Error loading weather data</string>
