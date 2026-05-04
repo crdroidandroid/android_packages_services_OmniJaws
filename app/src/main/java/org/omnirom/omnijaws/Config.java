@@ -37,6 +37,7 @@ public class Config {
     public static final String PREF_KEY_ICON_PACK = "icon_pack";
     public static final String PREF_KEY_UPDATE_ERROR = "update_error";
     public static final String PREF_KEY_OWM_KEY = "owm_key";
+    public static final String PREF_KEY_PIRATE_WEATHER_KEY = "pirate_weather_key";
     public static final String PREF_KEY_HISTORY = "history";
     public static final String PREF_KEY_HISTORY_SIZE = "history_size";
 
@@ -49,6 +50,8 @@ public class Config {
                 return new OpenWeatherMapProvider(context);
             case "1":
                 return new METNorwayProvider(context);
+            case "2":
+                return new PirateWeatherProvider(context);
             default:
                 return new OpenWeatherMapProvider(context);
         }
@@ -64,6 +67,8 @@ public class Config {
                 return "OpenWeatherMap";
             case "1":
                 return "MET Norway";
+            case "2":
+                return "Pirate Weather";
             default:
                 return "OpenWeatherMap";
         }
@@ -216,6 +221,13 @@ public class Config {
                 .getDefaultSharedPreferences(context);
 
         return prefs.getString(PREF_KEY_OWM_KEY, null);
+    }
+
+    public static String getPirateWeatherKey(Context context) {
+        SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(context);
+
+        return prefs.getString(PREF_KEY_PIRATE_WEATHER_KEY, null);
     }
 
     public static boolean isHistoryOn(Context context) {

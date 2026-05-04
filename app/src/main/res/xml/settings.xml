@@ -54,6 +54,15 @@
         android:dependency="enable"
         android:persistent="true" />
 
+    <EditTextPreference
+        android:key="pirate_weather_key"
+        android:title="@string/pirate_weather_key"
+        android:dialogTitle="@string/pirate_weather_key"
+        android:singleLine="true"
+        android:inputType="textNoSuggestions"
+        android:dependency="enable"
+        android:persistent="true" />
+
     <ListPreference
         android:key="units"
         android:title="@string/units_title"
@@ -77,5 +86,18 @@
         android:key="weather_icon_pack"
         android:title="@string/weather_icon_pack_title"
         android:dependency="enable" />
+
+    <PreferenceCategory
+        android:key="api_notes_category"
+        android:title="">
+        <org.omnirom.omnijaws.LinkablePreference
+            android:key="api_key_note"
+            android:summary="@string/api_key_note"
+            android:selectable="false" />
+        <org.omnirom.omnijaws.LinkablePreference
+            android:key="api_links_note"
+            android:summary="@string/api_links_note"
+            android:selectable="false" />
+    </PreferenceCategory>
 
 </PreferenceScreen>

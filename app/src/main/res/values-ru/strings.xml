@@ -45,8 +45,11 @@
     <string name="service_disabled">Выключено</string>
     <string name="service_error">Ошибка</string>
     <string name="last_update_time">Время последнего обновления</string>
+    <string name="omnijaws_service_waiting">Ожидание \u2026</string>
     <string name="omnijaws_service_unkown">Нет данных погоды</string>
     <string name="omnijaws_service_error">Ошибка загрузки данных о погоде</string>
+    <string name="omnijaws_service_init">Ожидание\u2026</string>
+    <string name="omnijaws_service_progress">Обновление\u2026</string>
     <string name="omnijaws_service_disabled">Служба отключена</string>
     <string name="weather_widget">Погода</string>
     <string name="omnijaws_current_text">Только что</string>
@@ -54,5 +57,26 @@
     <string name="weather_config_title">Параметры службы</string>
     <string name="with_forecast_title">С прогнозом на 4 дня и деталями</string>
     <string name="owm_key">Пользовательский ключ OWM</string>
+    <string name="pirate_weather_key">Ключ API Pirate Weather</string>
+    <string name="api_key_note">Для работы Pirate Weather необходим API-ключ, а для OpenWeatherMap рекомендуется использовать пользовательский OWM-ключ. Нажмите на поле «Время последнего обновления», чтобы принудительно обновить и протестировать свои ключи</string>
+    <string name="api_links_note"><![CDATA[Получение ключа API: <a href="https://pirate-weather.apiable.io/products/weather-data/plans">Pirate Weather</a> | <a href="https://openweathermap.org/price">OpenWeatherMap</a>]]></string>
     <string name="omnijaws_city_unkown">Неизвестный</string>
+    <string name="activity_title">Погода</string>
+    <string name="omnijaws_service_error_long">Ошибка загрузки данных о погоде</string>
+    <string name="omnijaws_detail_header">Погода</string>
+    <string name="omnijaws_label_default">Погода</string>
+    <string name="omnijaws_service_last_update">Последнее обновление:</string>
+    <string name="omnijaws_service_error_location">Местоположение недоступно</string>
+    <string name="omnijaws_service_error_network">Нет сети</string>
+    <string name="weather_widget_desc">"Текущая погода и прогноз на 4 дня"</string>
+    <string name="theme_system">Как в системе</string>
+    <string name="theme_dark">Тёмная</string>
+    <string name="theme_light">Светлая</string>
+    <string name="color_theme_title">Тема</string>
+    <string name="bg_transparency_title">Прозрачность фона</string>
+    <string name="trans_semi">Полупрозрачный</string>
+    <string name="trans_full">Прозрачный</string>
+    <string name="trans_solid">Сплошной</string>
+    <string name="location_browse_activity_title">Выбор местоположения</string>
+    <string name="location_query_hint">Поиск местоположения</string>
 </resources>
