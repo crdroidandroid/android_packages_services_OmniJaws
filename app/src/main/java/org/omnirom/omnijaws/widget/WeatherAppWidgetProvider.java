@@ -329,45 +329,6 @@ public class WeatherAppWidgetProvider extends AppWidgetProvider {
                 && iconPack.supportsTheming
                 && iconPack.canUseLocalResources(context);
 
-        // temporary, will adapt to new dark/light later
-        boolean isPackOutline = iconPackValue != null && !iconPackValue.isEmpty()
-                && iconPackValue.equals("org.omnirom.omnijaws.outline");
-
-        switch (theme) {
-            case COLOR_THEME_SYSTEM:
-                if (isPackOutline) {
-                    smallWidgetResId = R.layout.weather_appwidget_small_tint_system;
-                    largelWidgetResId = R.layout.weather_appwidget_large_tint_system;
-                    wideWidgetResId = R.layout.weather_appwidget_wide_tint_system;
-                } else {
-                    smallWidgetResId = R.layout.weather_appwidget_small_system;
-                    largelWidgetResId = R.layout.weather_appwidget_large_system;
-                    wideWidgetResId = R.layout.weather_appwidget_wide_system;
-                }
-                break;
-            case COLOR_THEME_DARK:
-                if (isPackOutline) {
-                    smallWidgetResId = R.layout.weather_appwidget_small_tint_dark;
-                    largelWidgetResId = R.layout.weather_appwidget_large_tint_dark;
-                    wideWidgetResId = R.layout.weather_appwidget_wide_tint_dark;
-                } else {
-                    smallWidgetResId = R.layout.weather_appwidget_small_dark;
-                    largelWidgetResId = R.layout.weather_appwidget_large_dark;
-                    wideWidgetResId = R.layout.weather_appwidget_wide_dark;
-                }
-                break;
-            case COLOR_THEME_LIGHT:
-                if (isPackOutline) {
-                    smallWidgetResId = R.layout.weather_appwidget_small_tint_light;
-                    largelWidgetResId = R.layout.weather_appwidget_large_tint_light;
-                    wideWidgetResId = R.layout.weather_appwidget_wide_tint_light;
-                } else {
-                    smallWidgetResId = R.layout.weather_appwidget_small_light;
-                    largelWidgetResId = R.layout.weather_appwidget_large_light;
-                    wideWidgetResId = R.layout.weather_appwidget_wide_light;
-                }
-                break;
-        }
         RemoteViews smallView = new RemoteViews(context.getPackageName(), smallWidgetResId);
         setupRemoteView(context, appWidgetManager, appWidgetId, smallView,
                 bgTrans, iconPack, useResourceIcon, iconNightMode);

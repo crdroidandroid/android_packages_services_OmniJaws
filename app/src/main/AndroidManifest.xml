@@ -108,6 +108,9 @@
             android:name=".outline"
             android:exported="false"
             android:label="Outline">
+            <meta-data
+                android:name="org.omnirom.omnijaws.SUPPORTS_THEMES"
+                android:value="true" />
             <intent-filter>
                 <action android:name="org.omnirom.WeatherIconPack" />
                 <category android:name="android.intent.category.DEFAULT" />
