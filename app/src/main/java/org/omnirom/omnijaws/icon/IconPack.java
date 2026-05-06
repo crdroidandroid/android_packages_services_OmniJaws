@@ -75,6 +75,11 @@ public class IconPack {
                 resourcesContext.getPackageName());
     }
 
+    public static boolean supportsThemes(Context context) {
+        IconPack iconPack = fromConfig(context);
+        return iconPack != null && iconPack.supportsTheming;
+    }
+
     private static boolean readSupportsTheming(Context context, String packageName, String className) {
         try {
             ComponentName component = new ComponentName(packageName, className);

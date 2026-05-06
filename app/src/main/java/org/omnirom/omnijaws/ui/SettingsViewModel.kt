@@ -28,6 +28,7 @@ import org.omnirom.omnijaws.Config
 import org.omnirom.omnijaws.WeatherUpdateService
 import org.omnirom.omnijaws.widget.WeatherAppWidgetProvider
 import org.omnirom.omnijaws.icon.IconProvider
+import org.omnirom.omnijaws.icon.IconPack
 
 data class IconPackItem(val label: String, val value: String)
 
@@ -40,6 +41,7 @@ data class SettingsUiState(
     val locationName: String = "",
     val iconPack: String = "",
     val iconTheme: String = IconProvider.ICON_THEME_DEFAULT.toString(),
+    val iconPackSupportsTheming: Boolean = false,
     val owmKey: String = "",
     val lastUpdateTime: String = "",
     val iconPacks: List<IconPackItem> = emptyList(),
@@ -90,6 +92,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             locationName = Config.getLocationName(ctx) ?: "",
             iconPack = Config.getIconPack(ctx) ?: DEFAULT_ICON_PACK,
             iconTheme = Config.getIconTheme(ctx).toString(),
+            iconPackSupportsTheming = IconPack.supportsThemes(ctx),
             owmKey = Config.getOwmKey(ctx) ?: "",
             lastUpdateTime = queryLastUpdate(),
             iconPacks = loadIconPacks(),
@@ -147,7 +150,10 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     fun setIconPack(value: String) {
         Config.setIconPack(ctx, value)
-        _uiState.value = _uiState.value.copy(iconPack = value)
+        _uiState.value = _uiState.value.copy(
+            iconPack = value,
+            iconPackSupportsTheming = IconPack.supportsThemes(ctx)
+            )
         scheduleUpdate()
     }
 

@@ -173,19 +173,20 @@ fun WeatherSettingsScreen(
                                 onValueChange = onIconPackChanged
                             )
                         }
-
-                        item {
-                            ListPreference(
-                                title = "Icon theme",
-                                summary = state.iconThemeLabel,
-                                options = listOf(
-                                    IconProvider.ICON_THEME_SYSTEM.toString() to "Follow system",
-                                    IconProvider.ICON_THEME_LIGHT.toString() to "Light",
-                                    IconProvider.ICON_THEME_DARK.toString() to "Dark"
-                                ),
-                                value = state.iconTheme,
-                                onValueChange = onIconThemeChanged
-                            )
+                        if (state.iconPackSupportsTheming) {
+                            item {
+                                ListPreference(
+                                    title = "Icon theme",
+                                    summary = state.iconThemeLabel,
+                                    options = listOf(
+                                        IconProvider.ICON_THEME_SYSTEM.toString() to "Follow system",
+                                        IconProvider.ICON_THEME_LIGHT.toString() to "Light",
+                                        IconProvider.ICON_THEME_DARK.toString() to "Dark"
+                                    ),
+                                    value = state.iconTheme,
+                                    onValueChange = onIconThemeChanged
+                                )
+                            }
                         }
                     }
                 }

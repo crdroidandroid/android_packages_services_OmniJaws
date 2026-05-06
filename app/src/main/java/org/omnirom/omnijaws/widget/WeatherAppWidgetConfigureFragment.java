@@ -30,6 +30,7 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 
 import org.omnirom.omnijaws.icon.IconProvider;
+import org.omnirom.omnijaws.icon.IconPack;
 
 public class WeatherAppWidgetConfigureFragment extends PreferenceFragmentCompat
         implements OnPreferenceChangeListener {
@@ -77,12 +78,18 @@ public class WeatherAppWidgetConfigureFragment extends PreferenceFragmentCompat
         mBgTrans.setSummary(mBgTrans.getEntries()[idx]);
         mBgTrans.setOnPreferenceChangeListener(this);
 
-        value = prefs.getInt(KEY_ICON_THEME + "_" + mAppWidgetId, IconProvider.WIDGET_ICON_THEME_DEFAULT);
         mIconTheme = (ListPreference) findPreference(KEY_ICON_THEME);
-        mIconTheme.setValue(String.valueOf(value));
-        idx = mIconTheme.findIndexOfValue(String.valueOf(value));
-        mIconTheme.setSummary(mIconTheme.getEntries()[idx]);
-        mIconTheme.setOnPreferenceChangeListener(this);
+
+        if (!IconPack.supportsThemes(getContext())) {
+            getPreferenceScreen().removePreference(mIconTheme);
+        } else {
+            value = prefs.getInt(KEY_ICON_THEME + "_" + mAppWidgetId,
+                    IconProvider.WIDGET_ICON_THEME_DEFAULT);
+            mIconTheme.setValue(String.valueOf(value));
+            idx = mIconTheme.findIndexOfValue(String.valueOf(value));
+            mIconTheme.setSummary(mIconTheme.getEntries()[idx]);
+            mIconTheme.setOnPreferenceChangeListener(this);
+        }
     }
 
     public static void clearPrefs(Context context, int id) {
