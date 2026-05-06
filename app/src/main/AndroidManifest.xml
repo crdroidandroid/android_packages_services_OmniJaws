@@ -245,19 +245,12 @@
         </activity>
 
         <activity
-            android:name=".google_new_light"
+            android:name=".google_new"
             android:exported="false"
-            android:label="Google New Light" >
-            <intent-filter>
-                <action android:name="org.omnirom.WeatherIconPack" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-
-        <activity
-            android:name=".google_new_dark"
-            android:exported="false"
-            android:label="Google New Dark" >
+            android:label="Google New" >
+            <meta-data
+                android:name="org.omnirom.omnijaws.SUPPORTS_THEMES"
+                android:value="true" />
             <intent-filter>
                 <action android:name="org.omnirom.WeatherIconPack" />
                 <category android:name="android.intent.category.DEFAULT" />
