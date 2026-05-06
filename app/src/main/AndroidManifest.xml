@@ -265,19 +265,12 @@
         </activity>
 
         <activity
-            android:name=".nothing_light"
+            android:name=".nothing"
             android:exported="false"
-            android:label="Nothing Light" >
-            <intent-filter>
-                <action android:name="org.omnirom.WeatherIconPack" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-
-        <activity
-            android:name=".nothing_dark"
-            android:exported="false"
-            android:label="Nothing Dark" >
+            android:label="Nothing" >
+            <meta-data
+                android:name="org.omnirom.omnijaws.SUPPORTS_THEMES"
+                android:value="true" />
             <intent-filter>
                 <action android:name="org.omnirom.WeatherIconPack" />
                 <category android:name="android.intent.category.DEFAULT" />
