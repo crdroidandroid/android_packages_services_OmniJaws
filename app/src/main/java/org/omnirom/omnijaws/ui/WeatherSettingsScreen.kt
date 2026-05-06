@@ -45,6 +45,8 @@ import com.android.axion.compose.preferences.PreferenceGroup
 import com.android.axion.compose.preferences.SwitchPreference
 import com.android.axion.compose.scaffold.AxionScaffold
 
+import org.omnirom.omnijaws.icon.IconProvider
+
 @Composable
 fun WeatherSettingsScreen(
     state: SettingsUiState,
@@ -56,6 +58,7 @@ fun WeatherSettingsScreen(
     onCustomLocationChanged: (Boolean) -> Unit,
     onLocationPickerClick: () -> Unit,
     onIconPackChanged: (String) -> Unit,
+    onIconThemeChanged: (String) -> Unit,
     onOwmKeyChanged: (String) -> Unit,
     onRequestLocationPermission: () -> Unit
 ) {
@@ -168,6 +171,20 @@ fun WeatherSettingsScreen(
                                 options = state.iconPacks.map { it.value to it.label },
                                 value = state.iconPack,
                                 onValueChange = onIconPackChanged
+                            )
+                        }
+
+                        item {
+                            ListPreference(
+                                title = "Icon theme",
+                                summary = state.iconThemeLabel,
+                                options = listOf(
+                                    IconProvider.ICON_THEME_SYSTEM.toString() to "Follow system",
+                                    IconProvider.ICON_THEME_LIGHT.toString() to "Light",
+                                    IconProvider.ICON_THEME_DARK.toString() to "Dark"
+                                ),
+                                value = state.iconTheme,
+                                onValueChange = onIconThemeChanged
                             )
                         }
                     }

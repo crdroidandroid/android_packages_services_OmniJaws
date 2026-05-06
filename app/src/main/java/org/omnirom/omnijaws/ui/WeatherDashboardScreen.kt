@@ -81,6 +81,8 @@ fun WeatherDashboardScreen(
     onRefresh: () -> Unit,
     onSettingsClick: () -> Unit,
     onLocationClick: () -> Unit,
+    iconPack: String,
+    iconTheme: Int,
     getConditionIcon: (Int) -> Drawable?
 ) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
@@ -176,6 +178,8 @@ fun WeatherDashboardScreen(
                         WeatherContent(
                             weather = uiState.weatherInfo,
                             onRefresh = onRefresh,
+                            iconPack = iconPack,
+                            iconTheme = iconTheme,
                             getConditionIcon = getConditionIcon,
                             modifier = Modifier.weight(1f)
                         )
@@ -234,6 +238,8 @@ private fun DrawerContent(
 private fun WeatherContent(
     weather: OmniJawsClient.WeatherInfo,
     onRefresh: () -> Unit,
+    iconPack: String,
+    iconTheme: Int,
     getConditionIcon: (Int) -> Drawable?,
     modifier: Modifier = Modifier
 ) {
@@ -251,6 +257,8 @@ private fun WeatherContent(
         item {
             WeatherSummaryRow(
                 weather = weather,
+                iconPack = iconPack,
+                iconTheme = iconTheme,
                 getConditionIcon = getConditionIcon
             )
         }
@@ -260,6 +268,8 @@ private fun WeatherContent(
                 HourlyForecastCard(
                     hourlyForecasts = weather.hourlyForecasts,
                     tempUnits = weather.tempUnits ?: "",
+                    iconPack = iconPack,
+                    iconTheme = iconTheme,
                     getConditionIcon = getConditionIcon
                 )
             }
@@ -270,6 +280,8 @@ private fun WeatherContent(
                 DailyForecastCard(
                     forecasts = weather.forecasts,
                     currentTemp = weather.temp,
+                    iconPack = iconPack,
+                    iconTheme = iconTheme,
                     getConditionIcon = getConditionIcon
                 )
             }
@@ -347,9 +359,11 @@ private fun TopBar(
 @Composable
 private fun WeatherSummaryRow(
     weather: OmniJawsClient.WeatherInfo,
+    iconPack: String,
+    iconTheme: Int,
     getConditionIcon: (Int) -> Drawable?
 ) {
-    val icon = remember(weather.conditionCode) {
+    val icon = remember(weather.conditionCode, iconPack, iconTheme) {
         getConditionIcon(weather.conditionCode)
     }
 

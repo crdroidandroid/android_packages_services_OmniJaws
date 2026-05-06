@@ -26,10 +26,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+import org.omnirom.omnijaws.Config
+import org.omnirom.omnijaws.icon.IconProvider
+
 data class WeatherUiState(
     val weatherInfo: OmniJawsClient.WeatherInfo? = null,
     val isLoading: Boolean = true,
-    val error: Int? = null
+    val error: Int? = null,
+    val iconPack: String = "",
+    val iconTheme: Int = IconProvider.ICON_THEME_DEFAULT
 )
 
 class WeatherViewModel(application: Application) : AndroidViewModel(application) {
@@ -62,7 +67,9 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
         _uiState.value = WeatherUiState(
             weatherInfo = info,
             isLoading = false,
-            error = if (info == null) OmniJawsClient.EXTRA_ERROR_DISABLED else null
+            error = if (info == null) OmniJawsClient.EXTRA_ERROR_DISABLED else null,
+            iconPack = Config.getIconPack(context) ?: "",
+            iconTheme = Config.getIconTheme(context)
         )
     }
 
@@ -82,6 +89,6 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun getConditionIcon(conditionCode: Int): Drawable? {
-        return client.getWeatherConditionImage(getApplication(), conditionCode)
+        return IconProvider.getConditionDrawable(getApplication(), conditionCode)
     }
 }

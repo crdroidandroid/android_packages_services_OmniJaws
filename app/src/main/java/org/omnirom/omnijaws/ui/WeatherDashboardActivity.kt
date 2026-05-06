@@ -41,6 +41,8 @@ class WeatherDashboardActivity : ComponentActivity(), OmniJawsClient.OmniJawsObs
                     onRefresh = { viewModel.forceRefresh() },
                     onSettingsClick = { openSettings() },
                     onLocationClick = { openLocationPicker() },
+                    iconPack = uiState.iconPack,
+                    iconTheme = uiState.iconTheme,
                     getConditionIcon = { viewModel.getConditionIcon(it) }
                 )
             }

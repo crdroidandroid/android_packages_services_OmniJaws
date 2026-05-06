@@ -58,6 +58,8 @@ import java.util.Locale
 fun DailyForecastCard(
     forecasts: List<OmniJawsClient.DayForecast>,
     currentTemp: String?,
+    iconPack: String,
+    iconTheme: Int,
     getConditionIcon: (Int) -> Drawable?
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -93,6 +95,8 @@ fun DailyForecastCard(
                     globalMin = globalMin,
                     globalMax = globalMax,
                     currentTemp = if (index == 0) currentTempFloat else null,
+                    iconPack = iconPack,
+                    iconTheme = iconTheme,
                     getConditionIcon = getConditionIcon
                 )
             }
@@ -110,6 +114,8 @@ fun DailyForecastCard(
                             globalMin = globalMin,
                             globalMax = globalMax,
                             currentTemp = null,
+                            iconPack = iconPack,
+                            iconTheme = iconTheme,
                             getConditionIcon = getConditionIcon
                         )
                     }
@@ -149,9 +155,11 @@ private fun DailyForecastRow(
     globalMin: Float,
     globalMax: Float,
     currentTemp: Float?,
+    iconPack: String,
+    iconTheme: Int,
     getConditionIcon: (Int) -> Drawable?
 ) {
-    val icon = remember(forecast.conditionCode) { getConditionIcon(forecast.conditionCode) }
+    val icon = remember(forecast.conditionCode, iconPack, iconTheme) { getConditionIcon(forecast.conditionCode) }
     val dayName = remember(forecast.date) { formatDayName(forecast.date, isToday) }
 
     Row(

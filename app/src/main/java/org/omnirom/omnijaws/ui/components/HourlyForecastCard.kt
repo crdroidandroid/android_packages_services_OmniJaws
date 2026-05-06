@@ -52,6 +52,8 @@ import java.util.Locale
 fun HourlyForecastCard(
     hourlyForecasts: List<OmniJawsClient.HourlyForecast>,
     tempUnits: String,
+    iconPack: String,
+    iconTheme: Int,
     getConditionIcon: (Int) -> Drawable?
 ) {
     val items = hourlyForecasts.take(24)
@@ -81,6 +83,8 @@ fun HourlyForecastCard(
                     HourlyItem(
                         hourly = hourly,
                         tempUnits = tempUnits,
+                        iconPack = iconPack,
+                        iconTheme = iconTheme,
                         getConditionIcon = getConditionIcon
                     )
                 }
@@ -104,13 +108,15 @@ fun HourlyForecastCard(
 private fun HourlyItem(
     hourly: OmniJawsClient.HourlyForecast,
     tempUnits: String,
+    iconPack: String,
+    iconTheme: Int,
     getConditionIcon: (Int) -> Drawable?
 ) {
     val timeFormat = remember { SimpleDateFormat("HH", Locale.getDefault()) }
     val timeText = remember(hourly.timestamp) {
         if (hourly.timestamp <= 0) "Now" else timeFormat.format(Date(hourly.timestamp))
     }
-    val icon = remember(hourly.conditionCode) { getConditionIcon(hourly.conditionCode) }
+    val icon = remember(hourly.conditionCode, iconPack, iconTheme) { getConditionIcon(hourly.conditionCode) }
     val tempText = remember(hourly.temperature) {
         "${hourly.temperature.toInt()}°"
     }
