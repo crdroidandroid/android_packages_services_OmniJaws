@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import org.omnirom.omnijaws.Config
 import org.omnirom.omnijaws.WeatherUpdateService
 import org.omnirom.omnijaws.widget.WeatherAppWidgetProvider
+import org.omnirom.omnijaws.icon.IconProvider
 
 data class IconPackItem(val label: String, val value: String)
 
@@ -38,6 +39,7 @@ data class SettingsUiState(
     val customLocation: Boolean = false,
     val locationName: String = "",
     val iconPack: String = "",
+    val iconTheme: String = IconProvider.ICON_THEME_DEFAULT.toString(),
     val owmKey: String = "",
     val lastUpdateTime: String = "",
     val iconPacks: List<IconPackItem> = emptyList(),
@@ -61,6 +63,13 @@ data class SettingsUiState(
         "12" -> "12 hours"
         else -> "$updateInterval hours"
     }
+
+    val iconThemeLabel: String get() = when (iconTheme) {
+        IconProvider.ICON_THEME_SYSTEM.toString() -> "Follow system"
+        IconProvider.ICON_THEME_LIGHT.toString() -> "Light"
+        IconProvider.ICON_THEME_DARK.toString() -> "Dark"
+        else -> iconTheme
+    }
 }
 
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
@@ -80,6 +89,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             customLocation = prefs.getBoolean(Config.PREF_KEY_CUSTOM_LOCATION, false),
             locationName = Config.getLocationName(ctx) ?: "",
             iconPack = Config.getIconPack(ctx) ?: DEFAULT_ICON_PACK,
+            iconTheme = Config.getIconTheme(ctx).toString(),
             owmKey = Config.getOwmKey(ctx) ?: "",
             lastUpdateTime = queryLastUpdate(),
             iconPacks = loadIconPacks(),
@@ -139,6 +149,12 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         Config.setIconPack(ctx, value)
         _uiState.value = _uiState.value.copy(iconPack = value)
         scheduleUpdate()
+    }
+
+    fun setIconTheme(value: String) {
+        Config.setIconTheme(ctx, value.toInt())
+        _uiState.value = _uiState.value.copy(iconTheme = value)
+        WeatherAppWidgetProvider.updateAllWidgets(ctx)
     }
 
     fun setOwmKey(value: String) {

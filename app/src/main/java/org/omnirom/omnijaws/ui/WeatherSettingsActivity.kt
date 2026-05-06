@@ -84,6 +84,7 @@ class WeatherSettingsActivity : ComponentActivity(), OmniJawsClient.OmniJawsObse
                         )
                     },
                     onIconPackChanged = { viewModel.setIconPack(it) },
+                    onIconThemeChanged = { viewModel.setIconTheme(it) },
                     onOwmKeyChanged = { viewModel.setOwmKey(it) },
                     onRequestLocationPermission = { requestLocationPermissionIfNeeded() }
                 )

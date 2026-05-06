@@ -68,6 +68,18 @@
         <item>3</item>
     </string-array>
 
+    <string-array name="app_icon_theme_entries" translatable="false">
+        <item>@string/theme_light</item>
+        <item>@string/theme_dark</item>
+        <item>@string/theme_system</item>
+    </string-array>
+
+    <string-array name="app_icon_theme_values" translatable="false">
+        <item>3</item>
+        <item>2</item>
+        <item>1</item>
+    </string-array>
+
     <string-array name="widget_icon_theme_entries" translatable="false">
         <item>@string/theme_follow_app</item>
         <item>@string/theme_light</item>
