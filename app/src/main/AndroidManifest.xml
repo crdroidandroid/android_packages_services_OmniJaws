@@ -283,6 +283,7 @@
             android:label="@string/weather_widget">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="android.intent.action.CONFIGURATION_CHANGED" />
                 <action android:name="android.intent.action.LOCALE_CHANGED" />
             </intent-filter>
             <meta-data

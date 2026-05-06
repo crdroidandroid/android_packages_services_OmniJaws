@@ -75,7 +75,10 @@
     <string name="theme_system">Follow System</string>
     <string name="theme_dark">Dark</string>
     <string name="theme_light">Light</string>
+    <string name="theme_follow_widget">Follow widget</string>
+    <string name="theme_follow_app">Follow app</string>
     <string name="color_theme_title">Theme</string>
+    <string name="icon_theme_title">Icon theme</string>
     <string name="bg_transparency_title">Transparency</string>
     <string name="trans_semi">Semi-transparent</string>
     <string name="trans_full">Transparent</string>

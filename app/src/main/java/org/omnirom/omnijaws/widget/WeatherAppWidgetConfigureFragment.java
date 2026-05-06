@@ -29,14 +29,17 @@ import androidx.preference.Preference.OnPreferenceChangeListener;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 
+import org.omnirom.omnijaws.icon.IconProvider;
+
 public class WeatherAppWidgetConfigureFragment extends PreferenceFragmentCompat
         implements OnPreferenceChangeListener {
 
     public static final String KEY_COLOR_THEME = "color_theme";
-    public static final int COLOR_THEME_LIGHT = 3;
-    public static final int COLOR_THEME_DARK = 2;
-    public static final int COLOR_THEME_SYSTEM = 1;
+    public static final String KEY_ICON_THEME = "widget_icon_theme";
     public static final int COLOR_THEME_TRANSPARENT = 0;
+    public static final int COLOR_THEME_SYSTEM = 1;
+    public static final int COLOR_THEME_DARK = 2;
+    public static final int COLOR_THEME_LIGHT = 3;
     public static final int COLOR_THEME_DEFAULT = COLOR_THEME_SYSTEM;
 
     public static final String KEY_BG_TRANS = "bg_transparency";
@@ -48,6 +51,7 @@ public class WeatherAppWidgetConfigureFragment extends PreferenceFragmentCompat
     private int mAppWidgetId;
     private ListPreference mColorTheme;
     private ListPreference mBgTrans;
+    private ListPreference mIconTheme;
 
     public WeatherAppWidgetConfigureFragment(int appWidgetId) {
         super();
@@ -72,6 +76,13 @@ public class WeatherAppWidgetConfigureFragment extends PreferenceFragmentCompat
         idx = mBgTrans.findIndexOfValue(String.valueOf(value));
         mBgTrans.setSummary(mBgTrans.getEntries()[idx]);
         mBgTrans.setOnPreferenceChangeListener(this);
+
+        value = prefs.getInt(KEY_ICON_THEME + "_" + mAppWidgetId, IconProvider.WIDGET_ICON_THEME_DEFAULT);
+        mIconTheme = (ListPreference) findPreference(KEY_ICON_THEME);
+        mIconTheme.setValue(String.valueOf(value));
+        idx = mIconTheme.findIndexOfValue(String.valueOf(value));
+        mIconTheme.setSummary(mIconTheme.getEntries()[idx]);
+        mIconTheme.setOnPreferenceChangeListener(this);
     }
 
     public static void clearPrefs(Context context, int id) {
@@ -79,6 +90,7 @@ public class WeatherAppWidgetConfigureFragment extends PreferenceFragmentCompat
         prefs.edit()
                 .remove(KEY_COLOR_THEME + "_" + id)
                 .remove(KEY_BG_TRANS + "_" + id)
+                .remove(KEY_ICON_THEME + "_" + id)
                 .apply();
     }
 
@@ -86,11 +98,15 @@ public class WeatherAppWidgetConfigureFragment extends PreferenceFragmentCompat
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         int oldThemeValue = prefs.getInt(KEY_COLOR_THEME + "_" + oldId, COLOR_THEME_DEFAULT);
         int oldBgValue = prefs.getInt(KEY_BG_TRANS + "_" + oldId, BG_TRANS_DEFAULT);
+        int oldIconThemeValue = prefs.getInt(KEY_ICON_THEME + "_" + oldId, IconProvider.WIDGET_ICON_THEME_DEFAULT);
+
         prefs.edit()
                 .putInt(KEY_COLOR_THEME + "_" + newId, oldThemeValue)
                 .remove(KEY_COLOR_THEME + "_" + oldId)
                 .putInt(KEY_BG_TRANS + "_" + newId, oldBgValue)
                 .remove(KEY_BG_TRANS + "_" + oldId)
+                .putInt(KEY_ICON_THEME + "_" + newId, oldIconThemeValue)
+                .remove(KEY_ICON_THEME + "_" + oldId)
                 .apply();
     }
 
@@ -102,6 +118,7 @@ public class WeatherAppWidgetConfigureFragment extends PreferenceFragmentCompat
             prefs.edit().putInt(KEY_COLOR_THEME + "_" + mAppWidgetId, Integer.valueOf(newTheme)).apply();
             int idx = mColorTheme.findIndexOfValue(newTheme);
             mColorTheme.setSummary(mColorTheme.getEntries()[idx]);
+            WeatherAppWidgetProvider.updateAfterConfigure(getContext(), mAppWidgetId);
             return true;
         } else if (preference.equals(mBgTrans)) {
             String newTheme = (String) newValue;
@@ -109,6 +126,14 @@ public class WeatherAppWidgetConfigureFragment extends PreferenceFragmentCompat
             prefs.edit().putInt(KEY_BG_TRANS + "_" + mAppWidgetId, Integer.valueOf(newTheme)).apply();
             int idx = mBgTrans.findIndexOfValue(newTheme);
             mBgTrans.setSummary(mBgTrans.getEntries()[idx]);
+            return true;
+        } else if (preference.equals(mIconTheme)) {
+            String newTheme = (String) newValue;
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+            prefs.edit().putInt(KEY_ICON_THEME + "_" + mAppWidgetId, Integer.valueOf(newTheme)).commit();
+            int idx = mIconTheme.findIndexOfValue(newTheme);
+            mIconTheme.setSummary(mIconTheme.getEntries()[idx]);
+            WeatherAppWidgetProvider.updateAfterConfigure(getContext(), mAppWidgetId);
             return true;
         }
         return false;
