@@ -197,7 +197,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         for (r in pm.queryIntentActivities(intent, 0)) {
             val label = r.activityInfo.loadLabel(pm)?.toString() ?: r.activityInfo.packageName
             val value = r.activityInfo.name
-            if (r.activityInfo.packageName == "org.omnirom.omnijaws" && value.contains("google_new_light")) {
+            if (value == DEFAULT_ICON_PACK) {
                 defaultList.add(IconPackItem(label, value))
             } else {
                 result.add(IconPackItem(label, value))
@@ -214,6 +214,6 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     }
 
     companion object {
-        const val DEFAULT_ICON_PACK = "org.omnirom.omnijaws.google_new_light"
+        val DEFAULT_ICON_PACK = Config.DEFAULT_ICON_PACK
     }
 }

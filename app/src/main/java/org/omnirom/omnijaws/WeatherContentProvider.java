@@ -150,6 +150,8 @@ public class WeatherContentProvider extends ContentProvider {
         if (DEBUG) Log.i(TAG, "query: " + uri.toString());
 
         if (projectionType == URI_TYPE_SETTINGS) {
+            final String iconPack = Config.getIconPack(mContext);
+
             result.newRow()
                     .add(COLUMN_ENABLED, Config.isEnabled(mContext) ? 1 : 0)
                     .add(COLUMN_PROVIDER, Config.getProviderId(mContext))
@@ -157,7 +159,7 @@ public class WeatherContentProvider extends ContentProvider {
                     .add(COLUMN_UNITS, Config.isMetric(mContext) ? 0 : 1)
                     .add(COLUMN_LOCATION, Config.isCustomLocation(mContext) ? Config.getLocationName(mContext) : "")
                     .add(COLUMN_SETUP, !Config.isSetupDone(mContext) && sCachedWeatherInfo == null ? 0 : 1)
-                    .add(COLUMN_ICON_PACK, Config.getIconPack(mContext) != null ? Config.getIconPack(mContext) : "");
+                    .add(COLUMN_ICON_PACK, iconPack);
 
             return result;
         } else if (projectionType == URI_TYPE_WEATHER) {
@@ -257,5 +259,10 @@ public class WeatherContentProvider extends ContentProvider {
         sCachedWeatherInfo = Config.getWeatherData(context);
         context.getContentResolver().notifyChange(
                 Uri.parse("content://" + WeatherContentProvider.AUTHORITY + "/weather"), null);
+    }
+
+    public static void notifySettingsChanged(Context context) {
+        context.getContentResolver().notifyChange(
+                Uri.parse("content://" + WeatherContentProvider.AUTHORITY + "/settings"), null);
     }
 }

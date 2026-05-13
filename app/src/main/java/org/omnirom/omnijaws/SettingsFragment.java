@@ -62,7 +62,7 @@ public class SettingsFragment extends SettingsBasePreferenceFragment implements 
         OmniJawsClient.OmniJawsObserver {
 
     private static final String CHRONUS_ICON_PACK_INTENT = "com.dvtonder.chronus.ICON_PACK";
-    private static final String DEFAULT_WEATHER_ICON_PACKAGE = "org.omnirom.omnijaws.google_new_light";
+    private static final String DEFAULT_WEATHER_ICON_PACKAGE = Config.DEFAULT_ICON_PACK;
 
     private SharedPreferences mPrefs;
     private ListPreference mProvider;
@@ -365,8 +365,7 @@ public class SettingsFragment extends SettingsBasePreferenceFragment implements 
         PackageManager packageManager = getContext().getPackageManager();
         i.setAction("org.omnirom.WeatherIconPack");
         for (ResolveInfo r : packageManager.queryIntentActivities(i, 0)) {
-            String packageName = r.activityInfo.packageName;
-            if (packageName.equals(DEFAULT_WEATHER_ICON_PACKAGE)) {
+            if (r.activityInfo.name.equals(DEFAULT_WEATHER_ICON_PACKAGE)) {
                 values.add(0, r.activityInfo.name);
             } else {
                 values.add(r.activityInfo.name);
@@ -375,7 +374,7 @@ public class SettingsFragment extends SettingsBasePreferenceFragment implements 
             if (label == null) {
                 label = r.activityInfo.packageName;
             }
-            if (packageName.equals(DEFAULT_WEATHER_ICON_PACKAGE)) {
+            if (r.activityInfo.name.equals(DEFAULT_WEATHER_ICON_PACKAGE)) {
                 entries.add(0, label);
             } else {
                 entries.add(label);

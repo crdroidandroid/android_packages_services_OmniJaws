@@ -43,6 +43,10 @@ public class Config {
     public static final String PREF_KEY_HISTORY = "history";
     public static final String PREF_KEY_HISTORY_SIZE = "history_size";
 
+    public static final String DEFAULT_ICON_PACK = "org.omnirom.omnijaws.google_new";
+    private static final String LEGACY_DEFAULT_ICON_PACK =
+            "org.omnirom.omnijaws.google_new_light";
+
     public static AbstractWeatherProvider getProvider(Context context) {
         SharedPreferences prefs = PreferenceManager
                 .getDefaultSharedPreferences(context);
@@ -182,14 +186,22 @@ public class Config {
         SharedPreferences prefs = PreferenceManager
                 .getDefaultSharedPreferences(context);
 
-        return prefs.getString(PREF_KEY_ICON_PACK, null);
+        return normalizeIconPack(prefs.getString(PREF_KEY_ICON_PACK, DEFAULT_ICON_PACK));
     }
 
     public static void setIconPack(Context context, String value) {
         SharedPreferences prefs = PreferenceManager
                 .getDefaultSharedPreferences(context);
 
-        prefs.edit().putString(PREF_KEY_ICON_PACK, value).commit();
+        prefs.edit().putString(PREF_KEY_ICON_PACK, normalizeIconPack(value)).commit();
+        WeatherContentProvider.notifySettingsChanged(context);
+    }
+
+    public static String normalizeIconPack(String value) {
+        if (value == null || value.isEmpty() || LEGACY_DEFAULT_ICON_PACK.equals(value)) {
+            return DEFAULT_ICON_PACK;
+        }
+        return value;
     }
 
     public static int getIconTheme(Context context) {
@@ -204,6 +216,7 @@ public class Config {
                 .getDefaultSharedPreferences(context);
 
         prefs.edit().putInt(PREF_KEY_ICON_THEME, value).commit();
+        WeatherContentProvider.notifySettingsChanged(context);
     }
 
     public static boolean isUpdateError(Context context) {
