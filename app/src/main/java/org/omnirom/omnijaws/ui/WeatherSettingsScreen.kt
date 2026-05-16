@@ -15,20 +15,26 @@
  */
 package org.omnirom.omnijaws.ui
 
+import android.text.style.URLSpan
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Cloud
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.MyLocation
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Update
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -37,15 +43,25 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.core.text.HtmlCompat
 import com.android.axion.compose.preferences.ClickablePreference
 import com.android.axion.compose.preferences.ListPreference
 import com.android.axion.compose.preferences.PreferenceGroup
 import com.android.axion.compose.preferences.SwitchPreference
 import com.android.axion.compose.scaffold.AxionScaffold
 
+import org.omnirom.omnijaws.R
 import org.omnirom.omnijaws.icon.IconProvider
+
+private const val URL_TAG = "URL"
 
 @Composable
 fun WeatherSettingsScreen(
@@ -60,6 +76,7 @@ fun WeatherSettingsScreen(
     onIconPackChanged: (String) -> Unit,
     onIconThemeChanged: (String) -> Unit,
     onOwmKeyChanged: (String) -> Unit,
+    onPirateWeatherKeyChanged: (String) -> Unit,
     onRequestLocationPermission: () -> Unit
 ) {
     AxionScaffold(
@@ -91,7 +108,11 @@ fun WeatherSettingsScreen(
                         ListPreference(
                             title = "Weather provider",
                             summary = state.providerLabel,
-                            options = listOf("0" to "OpenWeatherMap", "1" to "MET Norway"),
+                            options = listOf(
+                                "0" to "OpenWeatherMap",
+                                "1" to "MET Norway",
+                                "2" to "Pirate Weather"
+                            ),
                             value = state.provider,
                             onValueChange = onProviderChanged
                         )
@@ -191,14 +212,33 @@ fun WeatherSettingsScreen(
                     }
                 }
 
-                if (state.provider == "0") {
+                // API section is only relevant for providers that require an API key.
+                // MET Norway (provider == "1") does not need one, so the whole section is hidden.
+                if (state.provider == "0" || state.provider == "2") {
                     PreferenceGroup(title = "API") {
+                        if (state.provider == "0") {
+                            item {
+                                EditTextPreference(
+                                    title = "OpenWeatherMap API key",
+                                    value = state.owmKey,
+                                    onValueChange = onOwmKeyChanged
+                                )
+                            }
+                        }
+                        if (state.provider == "2") {
+                            item {
+                                EditTextPreference(
+                                    title = "Pirate Weather API key",
+                                    value = state.pirateWeatherKey,
+                                    onValueChange = onPirateWeatherKeyChanged
+                                )
+                            }
+                        }
                         item {
-                            EditTextPreference(
-                                title = "OpenWeatherMap API key",
-                                value = state.owmKey,
-                                onValueChange = onOwmKeyChanged
-                            )
+                            PlainNotePreference(text = stringResource(R.string.api_key_note))
+                        }
+                        item {
+                            HtmlNotePreference(html = stringResource(R.string.api_links_note))
                         }
                     }
                 }
@@ -247,6 +287,72 @@ private fun EditTextPreference(
                 TextButton(onClick = { showDialog = false }) {
                     Text("Cancel")
                 }
+            }
+        )
+    }
+}
+
+@Composable
+private fun PlainNotePreference(text: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Info,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun HtmlNotePreference(html: String) {
+    val linkColor = MaterialTheme.colorScheme.primary
+    val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+    val uriHandler = LocalUriHandler.current
+
+    val annotated = remember(html, linkColor) {
+        val spanned = HtmlCompat.fromHtml(html, HtmlCompat.FROM_HTML_MODE_LEGACY)
+        buildAnnotatedString {
+            append(spanned.toString())
+            val urlSpans = spanned.getSpans(0, spanned.length, URLSpan::class.java)
+            for (span in urlSpans) {
+                val start = spanned.getSpanStart(span)
+                val end = spanned.getSpanEnd(span)
+                if (start in 0..end && end <= length) {
+                    addStyle(
+                        SpanStyle(
+                            color = linkColor,
+                            textDecoration = TextDecoration.Underline
+                        ),
+                        start, end
+                    )
+                    addStringAnnotation(URL_TAG, span.url, start, end)
+                }
+            }
+        }
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        ClickableText(
+            text = annotated,
+            style = MaterialTheme.typography.bodyMedium.copy(color = onSurfaceVariant),
+            onClick = { offset ->
+                annotated.getStringAnnotations(URL_TAG, offset, offset)
+                    .firstOrNull()?.let { runCatching { uriHandler.openUri(it.item) } }
             }
         )
     }

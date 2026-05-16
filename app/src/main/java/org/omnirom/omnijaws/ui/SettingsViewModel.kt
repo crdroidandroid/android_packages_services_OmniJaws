@@ -43,6 +43,7 @@ data class SettingsUiState(
     val iconTheme: String = IconProvider.ICON_THEME_DEFAULT.toString(),
     val iconPackSupportsTheming: Boolean = false,
     val owmKey: String = "",
+    val pirateWeatherKey: String = "",
     val lastUpdateTime: String = "",
     val iconPacks: List<IconPackItem> = emptyList(),
     val hasLocationPermission: Boolean = false
@@ -50,6 +51,7 @@ data class SettingsUiState(
     val providerLabel: String get() = when (provider) {
         "0" -> "OpenWeatherMap"
         "1" -> "MET Norway"
+        "2" -> "Pirate Weather"
         else -> provider
     }
     val unitsLabel: String get() = when (units) {
@@ -94,6 +96,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             iconTheme = Config.getIconTheme(ctx).toString(),
             iconPackSupportsTheming = IconPack.supportsThemes(ctx),
             owmKey = Config.getOwmKey(ctx) ?: "",
+            pirateWeatherKey = Config.getPirateWeatherKey(ctx) ?: "",
             lastUpdateTime = queryLastUpdate(),
             iconPacks = loadIconPacks(),
             hasLocationPermission = ctx.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
@@ -167,6 +170,13 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx)
         prefs.edit().putString(Config.PREF_KEY_OWM_KEY, value).commit()
         _uiState.value = _uiState.value.copy(owmKey = value)
+        scheduleUpdate()
+    }
+
+    fun setPirateWeatherKey(value: String) {
+        val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx)
+        prefs.edit().putString(Config.PREF_KEY_PIRATE_WEATHER_KEY, value).commit()
+        _uiState.value = _uiState.value.copy(pirateWeatherKey = value)
         scheduleUpdate()
     }
 
