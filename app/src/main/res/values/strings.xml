@@ -1,108 +1,99 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Copyright (C) 2016 The OmniROM Project
-
-  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 2 of the License, or
-  (at your option) any later version.
-
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+     SPDX-FileCopyrightText: crDroid Android Project
+     SPDX-FileCopyrightText: The OmniROM Project
+     SPDX-License-Identifier: Apache-2.0
 -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
 
+    <!-- App -->
     <string name="app_name" translatable="false">OmniJaws</string>
-    <string name="provider_title">Weather provider</string>
-    <string name="units_title">Unit</string>
+    <string name="activity_title">Weather</string>
+
+    <!-- Weather Providers -->
     <string name="provider_openweathermap" translatable="false">OpenWeatherMap</string>
     <string name="provider_metnorway" translatable="false">MET Norway</string>
     <string name="provider_pirate_weather" translatable="false">Pirate Weather</string>
-    <string name="weather_progress_title">Verifying location</string>
-    <string name="weather_select_location">Select location</string>
-    <string name="custom_location_title">Custom location</string>
-    <string name="weather_custom_location_dialog_title">Enter location</string>
-    <string name="weather_custom_location_title">Location</string>
-    <string name="weather_custom_location_missing">Set custom location</string>
-    <string name="weather_retrieve_location_dialog_title">Cannot retrieve location!</string>
-    <string name="weather_retrieve_location_dialog_message">Network geolocation is disabled.\n\nSet a custom location or enable network location</string>
-    <string name="weather_retrieve_location_dialog_enable_button">Enable</string>
-    <string name="settings_title">Settings</string>
-    <string name="auto_update_title">Automatic updates</string>
+
+    <!-- Settings -->
+    <string name="weather_config_title">Service settings</string>
+    <string name="category_general">General</string>
+    <string name="category_appearance">Appearance</string>
+    <string name="category_api">API</string>
+    <string name="enable_title">Enable</string>
+    <string name="provider_title">Weather provider</string>
+    <string name="units_title">Unit</string>
     <string name="unit_metric">Metric (\u00b0C)</string>
     <string name="unit_imperial">Imperial (\u00b0F)</string>
-    <string name="update">Update</string>
-    <string name="enable_title">Enable</string>
     <string name="update_interval_title">Update interval</string>
     <string name="interval_1_hour">1 hour</string>
     <string name="interval_2_hour">2 hours</string>
     <string name="interval_4_hour">4 hours</string>
     <string name="interval_6_hour">6 hours</string>
     <string name="interval_12_hour">12 hours</string>
-    <string name="weather_tile_title">Weather</string>
-    <string name="weather_icon_pack_title">Condition icon pack</string>
-    <string name="weather_icon_pack_playstore">Find icon packs</string>
-    <string name="service_disabled">Disabled</string>
-    <string name="service_error">Error</string>
     <string name="last_update_time">Last update time</string>
-    <string name="omnijaws_service_waiting">Waiting \u2026</string>
-    <string name="omnijaws_service_unkown">No weather data</string>
-    <string name="omnijaws_service_error">Error loading weather data</string>
-    <string name="omnijaws_service_init">Waiting\u2026</string>
-    <string name="omnijaws_service_progress">Updating\u2026</string>
-    <string name="omnijaws_service_disabled">Service disabled</string>
-    <string name="weather_widget">Weather</string>
-    <string name="omnijaws_current_text">Now</string>
-    <string name="show_background_title">Background shadow</string>
-    <string name="weather_config_title">Service settings</string>
-    <string name="weather_config_summary"></string>
-    <string name="omnijaws_service_error_marker" translatable="false">*</string>
-    <string name="with_forecast_title">With 4-day forecast and details</string>
-    <string name="owm_key">Custom OWM key</string>
-    <string name="pirate_weather_key">Pirate Weather API Key</string>
-    <string name="api_key_note">Pirate Weather needs an API key provided to function, and a Custom OWM key is recommended for OpenWeatherMap. Press the \"Last update time\" field to force update and test your keys</string>
-    <string name="api_links_note"><![CDATA[Get API keys: <a href="https://pirate-weather.apiable.io/products/weather-data/plans">Pirate Weather</a> | <a href="https://openweathermap.org/price">OpenWeatherMap</a>]]></string>
-    <string name="omnijaws_city_unkown">Unknown</string>
-    <string name="activity_title">Weather</string>
-    <string name="omnijaws_service_error_long">Error loading weather data</string>
-    <string name="omnijaws_detail_header">Weather</string>
-    <string name="omnijaws_label_default">Weather</string>
-    <string name="omnijaws_service_last_update">Last update:</string>
-    <string name="omnijaws_service_error_location">No location available</string>
-    <string name="omnijaws_service_error_network">No network found</string>
-    <string name="weather_widget_desc">"Actual weather and 4-day forecast"</string>
-    <string name="theme_system">Follow System</string>
-    <string name="theme_dark">Dark</string>
-    <string name="theme_light">Light</string>
-    <string name="theme_follow_widget">Follow widget</string>
-    <string name="theme_follow_app">Follow app</string>
-    <string name="color_theme_title">Theme</string>
-    <string name="icon_theme_title">Icon theme</string>
-    <string name="bg_transparency_title">Transparency</string>
-    <string name="trans_semi">Semi-transparent</string>
-    <string name="trans_full">Transparent</string>
-    <string name="trans_solid">Solid</string>
-    <string name="location_browse_activity_title">Select location</string>
-    <string name="location_query_hint">Search for a location</string>
-
-    <!-- Settings -->
-    <string name="category_general">General</string>
-    <string name="category_appearance">Appearance</string>
-    <string name="category_api">API</string>
     <string name="weather_last_update_never">Never</string>
+    <string name="custom_location_title">Custom location</string>
     <string name="custom_location_summary">Use a manually selected location</string>
+    <string name="weather_custom_location_title">Location</string>
+    <string name="weather_custom_location_missing">Set custom location</string>
     <string name="grant_location_permission_title">Grant location permission</string>
     <string name="grant_location_permission_summary">Required for automatic location</string>
+    <string name="weather_icon_pack_title">Condition icon pack</string>
+    <string name="icon_theme_title">Icon theme</string>
+    <string name="theme_system">Follow System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
 
-    <!-- Dashboard screen -->
+    <!-- OWM / Pirate Weather API -->
+    <string name="owm_key">Custom OWM key</string>
+    <string name="pirate_weather_key">Pirate Weather API Key</string>
+    <string name="service_disabled">Disabled</string>
+    <string name="api_key_note">Pirate Weather needs an API key provided to function, and a Custom OWM key is recommended for OpenWeatherMap. Press the \"Last update time\" field to force update and test your keys</string>
+    <string name="api_links_note"><![CDATA[Get API keys: <a href="https://pirate-weather.apiable.io/products/weather-data/plans">Pirate Weather</a> | <a href="https://openweathermap.org/price">OpenWeatherMap</a>]]></string>
+
+    <!-- Dashboard -->
     <string name="menu">Menu</string>
+    <string name="update">Update</string>
+    <string name="settings_title">Settings</string>
     <string name="temperature_low">Low</string>
     <string name="temperature_high">High</string>
     <string name="dashboard_error_subtitle">Check settings or try refreshing</string>
     <string name="dashboard_provider_attribution">Weather data provided by %1$s</string>
+
+    <!-- Service -->
+    <string name="omnijaws_service_unkown">No weather data</string>
+    <string name="omnijaws_service_waiting">Waiting \u2026</string>
+    <string name="omnijaws_service_init">Waiting\u2026</string>
+    <string name="omnijaws_service_progress">Updating\u2026</string>
+    <string name="omnijaws_service_error">Error loading weather data</string>
+    <string name="omnijaws_service_error_marker" translatable="false">*</string>
+    <string name="omnijaws_service_last_update">Last update:</string>
+    <string name="omnijaws_city_unkown">Unknown</string>
+    <string name="omnijaws_detail_header">Weather</string>
+    <string name="omnijaws_label_default">Weather</string>
+    <string name="service_error">Error</string>
+
+    <!-- Location -->
+    <string name="location_browse_activity_title">Select location</string>
+    <string name="location_query_hint">Search for a location</string>
+    <string name="weather_select_location">Select location</string>
+    <string name="weather_progress_title">Verifying location</string>
+    <string name="weather_custom_location_dialog_title">Enter location</string>
+
+    <!-- Widget -->
+    <string name="weather_widget">Weather</string>
+    <string name="weather_widget_desc">"Actual weather and 4-day forecast"</string>
+    <string name="weather_tile_title">Weather</string>
+    <string name="omnijaws_service_disabled">Service disabled</string>
+    <string name="omnijaws_service_error_long">Error loading weather data</string>
+    <string name="omnijaws_service_error_location">No location available</string>
+    <string name="omnijaws_service_error_network">No network found</string>
+    <string name="color_theme_title">Theme</string>
+    <string name="theme_follow_widget">Follow widget</string>
+    <string name="theme_follow_app">Follow app</string>
+    <string name="bg_transparency_title">Transparency</string>
+    <string name="trans_semi">Semi-transparent</string>
+    <string name="trans_full">Transparent</string>
+    <string name="trans_solid">Solid</string>
 </resources>

@@ -59,8 +59,8 @@ import com.android.internal.util.crdroid.OmniJawsClient;
 
 import org.omnirom.omnijaws.Config;
 import org.omnirom.omnijaws.R;
-import org.omnirom.omnijaws.SettingsActivity;
-import org.omnirom.omnijaws.WeatherActivity;
+import org.omnirom.omnijaws.ui.WeatherSettingsActivity;
+import org.omnirom.omnijaws.ui.WeatherDashboardActivity;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -173,13 +173,13 @@ public class WeatherAppWidgetProvider extends AppWidgetProvider {
     }
 
     private static PendingIntent getSettingsIntent(Context context) {
-        Intent configureIntent = new Intent(context, SettingsActivity.class);
+        Intent configureIntent = new Intent(context, WeatherSettingsActivity.class);
         return PendingIntent.getActivity(context, 0, configureIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
     private static PendingIntent getWeatherActivityIntent(Context context) {
-        Intent configureIntent = new Intent(context, WeatherActivity.class);
+        Intent configureIntent = new Intent(context, WeatherDashboardActivity.class);
         return PendingIntent.getActivity(context, 0, configureIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
@@ -269,8 +269,6 @@ public class WeatherAppWidgetProvider extends AppWidgetProvider {
 
         String currentData = getWeatherDataString(weatherData.temp, null, weatherData.tempUnits);
         setImageView(context, widget, iconPack, R.id.current_image, weatherData.conditionCode, useResourceIcon, iconNightMode);
-        widget.setTextViewText(R.id.current_text,
-                context.getResources().getText(R.string.omnijaws_current_text));
         widget.setTextViewText(R.id.current_data, currentData);
         widget.setTextViewText(R.id.current_weather_city, weatherData.city);
         widget.setImageViewResource(R.id.current_humidity_image,

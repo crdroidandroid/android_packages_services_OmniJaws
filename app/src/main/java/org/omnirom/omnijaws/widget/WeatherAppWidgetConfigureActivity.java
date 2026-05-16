@@ -25,7 +25,6 @@ import android.view.View;
 
 import org.omnirom.omnijaws.BaseActivity;
 import org.omnirom.omnijaws.R;
-import org.omnirom.omnijaws.SettingsFragment;
 
 import androidx.core.view.WindowCompat;
 
