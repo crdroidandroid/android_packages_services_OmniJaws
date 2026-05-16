@@ -66,10 +66,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.android.internal.util.crdroid.OmniJawsClient
 import kotlinx.coroutines.launch
+import org.omnirom.omnijaws.R
 import org.omnirom.omnijaws.ui.components.DailyForecastCard
 import org.omnirom.omnijaws.ui.components.DetailCardsGrid
 import org.omnirom.omnijaws.ui.components.DrawablePainter
@@ -140,13 +142,13 @@ fun WeatherDashboardScreen(
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
-                                    text = "Weather data unavailable",
+                                    text = stringResource(R.string.omnijaws_service_unkown),
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = "Check settings or try refreshing",
+                                    text = stringResource(R.string.dashboard_error_subtitle),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.outline
                                 )
@@ -159,7 +161,7 @@ fun WeatherDashboardScreen(
                                             modifier = Modifier.size(18.dp)
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Refresh")
+                                        Text(stringResource(R.string.update))
                                     }
                                     FilledTonalButton(onClick = onSettingsClick) {
                                         Icon(
@@ -168,7 +170,7 @@ fun WeatherDashboardScreen(
                                             modifier = Modifier.size(18.dp)
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Settings")
+                                        Text(stringResource(R.string.settings_title))
                                     }
                                 }
                             }
@@ -201,7 +203,7 @@ private fun DrawerContent(
     ) {
         Spacer(modifier = Modifier.height(24.dp))
         Text(
-            text = "Weather",
+            text = stringResource(R.string.activity_title),
             style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier.padding(horizontal = 28.dp, vertical = 16.dp)
         )
@@ -219,14 +221,14 @@ private fun DrawerContent(
 
         NavigationDrawerItem(
             icon = { Icon(Icons.Outlined.MyLocation, contentDescription = null) },
-            label = { Text("Location") },
+            label = { Text(stringResource(R.string.weather_custom_location_title)) },
             selected = false,
             onClick = onLocationClick,
             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
         )
         NavigationDrawerItem(
             icon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
-            label = { Text("Settings") },
+            label = { Text(stringResource(R.string.settings_title)) },
             selected = false,
             onClick = onSettingsClick,
             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
@@ -294,7 +296,10 @@ private fun WeatherContent(
         item {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Weather data provided by ${weather.provider ?: ""}",
+                text = stringResource(
+                    R.string.dashboard_provider_attribution,
+                    weather.provider ?: ""
+                ),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
@@ -321,7 +326,7 @@ private fun TopBar(
         IconButton(onClick = onMenuClick) {
             Icon(
                 imageVector = Icons.Outlined.Menu,
-                contentDescription = "Menu"
+                contentDescription = stringResource(R.string.menu)
             )
         }
         Spacer(modifier = Modifier.weight(1f))
@@ -343,13 +348,13 @@ private fun TopBar(
         IconButton(onClick = onRefreshClick) {
             Icon(
                 imageVector = Icons.Outlined.Refresh,
-                contentDescription = "Refresh"
+                contentDescription = stringResource(R.string.update)
             )
         }
         IconButton(onClick = onSettingsClick) {
             Icon(
                 imageVector = Icons.Outlined.Settings,
-                contentDescription = "Settings"
+                contentDescription = stringResource(R.string.settings_title)
             )
         }
     }
@@ -408,7 +413,7 @@ private fun WeatherSummaryRow(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Outlined.ArrowDownward,
-                            contentDescription = "Low",
+                            contentDescription = stringResource(R.string.temperature_low),
                             modifier = Modifier.size(14.dp),
                             tint = MaterialTheme.colorScheme.primary
                         )
@@ -420,7 +425,7 @@ private fun WeatherSummaryRow(
                         Spacer(modifier = Modifier.width(8.dp))
                         Icon(
                             imageVector = Icons.Outlined.ArrowUpward,
-                            contentDescription = "High",
+                            contentDescription = stringResource(R.string.temperature_high),
                             modifier = Modifier.size(14.dp),
                             tint = MaterialTheme.colorScheme.error
                         )

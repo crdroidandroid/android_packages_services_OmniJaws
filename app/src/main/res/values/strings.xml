@@ -89,4 +89,20 @@
     <string name="trans_solid">Solid</string>
     <string name="location_browse_activity_title">Select location</string>
     <string name="location_query_hint">Search for a location</string>
+
+    <!-- Settings -->
+    <string name="category_general">General</string>
+    <string name="category_appearance">Appearance</string>
+    <string name="category_api">API</string>
+    <string name="weather_last_update_never">Never</string>
+    <string name="custom_location_summary">Use a manually selected location</string>
+    <string name="grant_location_permission_title">Grant location permission</string>
+    <string name="grant_location_permission_summary">Required for automatic location</string>
+
+    <!-- Dashboard screen -->
+    <string name="menu">Menu</string>
+    <string name="temperature_low">Low</string>
+    <string name="temperature_high">High</string>
+    <string name="dashboard_error_subtitle">Check settings or try refreshing</string>
+    <string name="dashboard_provider_attribution">Weather data provided by %1$s</string>
 </resources>
