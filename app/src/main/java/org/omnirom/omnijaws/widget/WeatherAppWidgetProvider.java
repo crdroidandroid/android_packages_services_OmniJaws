@@ -327,6 +327,25 @@ public class WeatherAppWidgetProvider extends AppWidgetProvider {
                 && iconPack.supportsTheming
                 && iconPack.canUseLocalResources(context);
 
+        switch (theme) {
+            case COLOR_THEME_SYSTEM:
+                smallWidgetResId = R.layout.weather_appwidget_small_system;
+                largelWidgetResId = R.layout.weather_appwidget_large_system;
+                wideWidgetResId = R.layout.weather_appwidget_wide_system;
+                break;
+            case COLOR_THEME_DARK:
+                smallWidgetResId = R.layout.weather_appwidget_small_dark;
+                largelWidgetResId = R.layout.weather_appwidget_large_dark;
+                wideWidgetResId = R.layout.weather_appwidget_wide_dark;
+                break;
+            case COLOR_THEME_LIGHT:
+                smallWidgetResId = R.layout.weather_appwidget_small_light;
+                largelWidgetResId = R.layout.weather_appwidget_large_light;
+                wideWidgetResId = R.layout.weather_appwidget_wide_light;
+                break;
+        }
+
+
         RemoteViews smallView = new RemoteViews(context.getPackageName(), smallWidgetResId);
         setupRemoteView(context, appWidgetManager, appWidgetId, smallView,
                 bgTrans, iconPack, useResourceIcon, iconNightMode);
