@@ -290,6 +290,10 @@ class WeatherAppWidgetProvider : AppWidgetProvider() {
             )
             widget.setTextViewText(R.id.current_wind_direction, weatherData.pinWheel)
 
+            tintSymbol(widget, R.id.current_wind_image)
+            tintSymbol(widget, R.id.current_wind_direction_image)
+            tintSymbol(widget, R.id.current_humidity_image)
+
             val alpha = when (bgTrans) {
                 WidgetConfig.BG_TRANS_FULL -> 0f
                 WidgetConfig.BG_TRANS_SOLID -> 1f
@@ -420,6 +424,10 @@ class WeatherAppWidgetProvider : AppWidgetProvider() {
             widget.setViewVisibility(R.id.current_weather_line, View.VISIBLE)
             widget.setViewVisibility(R.id.current_condition_line, View.VISIBLE)
             widget.setViewVisibility(R.id.info_container, View.GONE)
+        }
+
+        private fun tintSymbol(widget: RemoteViews, viewId: Int) {
+            widget.setColorAttr(viewId, "setColorFilter", android.R.attr.textColorPrimary)
         }
 
         private fun getBitmapDrawable(context: Context, image: Drawable): BitmapDrawable {
