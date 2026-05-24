@@ -103,7 +103,7 @@ public class METNorwayProvider extends AbstractWeatherProvider {
     }
 
     private ArrayList<DayForecast> parseForecasts(JSONArray timeseries, boolean metric) throws JSONException {
-        ArrayList<DayForecast> result = new ArrayList<>(5);
+        ArrayList<DayForecast> result = new ArrayList<>();
         int count = timeseries.length();
 
         if (count == 0) {
@@ -122,7 +122,7 @@ public class METNorwayProvider extends AbstractWeatherProvider {
 
         boolean endDay = (whileIndex == 0) && isEndDay(convertTimeZone(timeseries.getJSONObject(whileIndex).getString("time")));
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < count; i++) {
             DayForecast item;
             try {
                 // temp = temperature
@@ -203,18 +203,12 @@ public class METNorwayProvider extends AbstractWeatherProvider {
                         day,
                         metric);
             } catch (JSONException e) {
-                Log.w(TAG, "Invalid forecast for day " + i + " creating dummy", e);
-                item = new DayForecast(
-                        /* low */ 0,
-                        /* high */ 0,
-                        /* condition */ "",
-                        /* conditionCode */ -1,
-                        "NaN",
-                        metric);
+                Log.w(TAG, "Invalid forecast for day " + i, e);
+                continue;
             }
             result.add(item);
         }
-        // clients assume there are 5  entries - so fill with dummy if needed
+        // clients assume there are atleast 5 entries - so fill with dummy if needed
         if (result.size() < 5) {
             for (int i = result.size(); i < 5; i++) {
                 Log.w(TAG, "Missing forecast for day " + i + " creating dummy");

@@ -134,14 +134,8 @@ public class PirateWeatherProvider extends AbstractWeatherProvider {
                         day,
                         metric);
             } catch (JSONException e) {
-                Log.w(TAG, "Invalid forecast for day " + i + " creating dummy", e);
-                item = new DayForecast(
-                        /* low */ 0,
-                        /* high */ 0,
-                        /* condition */ "",
-                        /* conditionCode */ -1,
-                        "NaN",
-                        metric);
+                Log.w(TAG, "Invalid forecast for day " + i, e);
+                continue;
             }
             result.add(item);
         }
