@@ -82,9 +82,8 @@
     <string name="weather_custom_location_dialog_title">Enter location</string>
 
     <!-- Widget -->
-    <string name="weather_widget">Weather</string>
-    <string name="weather_widget_desc">"Actual weather and 4-day forecast"</string>
-    <string name="weather_tile_title">Weather</string>
+    <string name="weather_widget">Weather widget</string>
+    <string name="weather_widget_desc">"Current weather and multi-day forecast"</string>
     <string name="omnijaws_service_disabled">Service disabled</string>
     <string name="omnijaws_service_error_long">Error loading weather data</string>
     <string name="omnijaws_service_error_location">No location available</string>
