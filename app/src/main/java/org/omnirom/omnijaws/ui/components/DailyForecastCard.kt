@@ -63,10 +63,15 @@ fun DailyForecastCard(
     getConditionIcon: (Int) -> Drawable?
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val visibleCount = if (expanded) forecasts.size else 3.coerceAtMost(forecasts.size)
 
-    val allLows = forecasts.mapNotNull { it.low?.toFloatOrNull() }
-    val allHighs = forecasts.mapNotNull { it.high?.toFloatOrNull() }
+    val validForecasts = remember(forecasts) { forecasts.filter { it.isValid() } }
+    if (validForecasts.isEmpty()) return
+
+    // Rows that are always visible (first 3, or fewer if there isn't enough data)
+    val collapsedCount = 3.coerceAtMost(validForecasts.size)
+
+    val allLows = validForecasts.mapNotNull { it.low?.toFloatOrNull() }
+    val allHighs = validForecasts.mapNotNull { it.high?.toFloatOrNull() }
     val globalMin = allLows.minOrNull() ?: 0f
     val globalMax = allHighs.maxOrNull() ?: 100f
     val currentTempFloat = currentTemp?.toFloatOrNull()
@@ -88,7 +93,8 @@ fun DailyForecastCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            forecasts.take(visibleCount).forEachIndexed { index, forecast ->
+            // Always-visible rows
+            validForecasts.take(collapsedCount).forEachIndexed { index, forecast ->
                 DailyForecastRow(
                     forecast = forecast,
                     isToday = index == 0,
@@ -101,13 +107,14 @@ fun DailyForecastCard(
                 )
             }
 
+            // Remaining rows, revealed only when expanded
             AnimatedVisibility(
                 visible = expanded,
                 enter = expandVertically(),
                 exit = shrinkVertically()
             ) {
                 Column {
-                    forecasts.drop(visibleCount.coerceAtMost(3)).forEach { forecast ->
+                    validForecasts.drop(collapsedCount).forEach { forecast ->
                         DailyForecastRow(
                             forecast = forecast,
                             isToday = false,
@@ -122,7 +129,7 @@ fun DailyForecastCard(
                 }
             }
 
-            if (forecasts.size > 3) {
+            if (validForecasts.size > collapsedCount) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -276,4 +283,9 @@ private fun formatDayName(dateStr: String?, isToday: Boolean): String {
     } catch (e: Exception) {
         dateStr
     }
+}
+
+private fun OmniJawsClient.DayForecast.isValid(): Boolean {
+    val d = date
+    return !d.isNullOrBlank() && !d.equals("NaN", ignoreCase = true)
 }
