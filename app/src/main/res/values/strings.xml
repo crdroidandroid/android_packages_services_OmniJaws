@@ -61,6 +61,49 @@
     <string name="dashboard_error_subtitle">Check settings or try refreshing</string>
     <string name="dashboard_provider_attribution">Weather data provided by %1$s</string>
 
+    <!-- Forecast card -->
+    <string name="forecast_card_title">Multi-day forecast</string>
+    <string name="forecast_show_more">Show more</string>
+    <string name="forecast_show_less">Show less</string>
+    <string name="forecast_today">Today</string>
+
+    <!-- Detail card titles -->
+    <string name="detail_feels_like">Feels like</string>
+    <string name="detail_uv_index">UV index</string>
+    <string name="detail_humidity">Humidity</string>
+    <string name="detail_wind">Wind</string>
+    <string name="detail_pressure">Pressure</string>
+    <string name="detail_visibility">Visibility</string>
+    <string name="detail_sunrise_sunset">Sunrise &amp; Sunset</string>
+    <string name="detail_dew_point">Dew point</string>
+
+    <!-- UV index levels -->
+    <string name="uv_level_low">Low</string>
+    <string name="uv_level_moderate">Moderate</string>
+    <string name="uv_level_high">High</string>
+    <string name="uv_level_very_high">Very High</string>
+    <string name="uv_level_extreme">Extreme</string>
+
+    <!-- Visibility levels -->
+    <string name="visibility_level_clear">Clear</string>
+    <string name="visibility_level_good">Good</string>
+    <string name="visibility_level_moderate">Moderate</string>
+    <string name="visibility_level_poor">Poor</string>
+    <!-- %1$s is the visibility level, e.g. "km · Clear" -->
+    <string name="visibility_subtitle">km \u00b7 %1$s</string>
+
+    <!-- Dew point levels -->
+    <string name="dew_point_dry">Dry</string>
+    <string name="dew_point_comfortable">Comfortable</string>
+    <string name="dew_point_slightly_humid">Slightly humid</string>
+    <string name="dew_point_humid">Humid</string>
+
+    <!-- Pressure unit symbol -->
+    <string name="unit_hpa" translatable="false">hPa</string>
+
+    <!-- Daylight duration, e.g. "11h 23m". %1$d = hours, %2$d = minutes -->
+    <string name="daylight_duration_format">%1$dh %2$dm</string>
+
     <!-- Service -->
     <string name="omnijaws_service_unkown">No weather data</string>
     <string name="omnijaws_service_waiting">Waiting \u2026</string>

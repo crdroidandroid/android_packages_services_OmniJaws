@@ -52,9 +52,12 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.android.internal.util.crdroid.OmniJawsClient
+import org.omnirom.omnijaws.R
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -176,7 +179,7 @@ private fun DetailCard(
 private fun FeelsLikeCard(feelsLike: Float, tempUnits: String, modifier: Modifier) {
     DetailCard(
         icon = Icons.Outlined.DeviceThermostat,
-        title = "Feels like",
+        title = stringResource(R.string.detail_feels_like),
         modifier = modifier
     ) {
         Text(
@@ -190,19 +193,19 @@ private fun FeelsLikeCard(feelsLike: Float, tempUnits: String, modifier: Modifie
 
 @Composable
 private fun UvIndexCard(uvi: Float, modifier: Modifier) {
-    val level = remember(uvi) {
+    val levelRes = remember(uvi) {
         when {
-            uvi <= 2 -> "Low"
-            uvi <= 5 -> "Moderate"
-            uvi <= 7 -> "High"
-            uvi <= 10 -> "Very High"
-            else -> "Extreme"
+            uvi <= 2 -> R.string.uv_level_low
+            uvi <= 5 -> R.string.uv_level_moderate
+            uvi <= 7 -> R.string.uv_level_high
+            uvi <= 10 -> R.string.uv_level_very_high
+            else -> R.string.uv_level_extreme
         }
     }
 
     DetailCard(
         icon = Icons.Outlined.WbSunny,
-        title = "UV index",
+        title = stringResource(R.string.detail_uv_index),
         modifier = modifier
     ) {
         Text(
@@ -212,7 +215,7 @@ private fun UvIndexCard(uvi: Float, modifier: Modifier) {
             color = MaterialTheme.colorScheme.onSurface
         )
         Text(
-            text = level,
+            text = stringResource(levelRes),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -254,7 +257,7 @@ private fun UvBar(uvi: Float, modifier: Modifier) {
 private fun HumidityCard(humidity: String, modifier: Modifier) {
     DetailCard(
         icon = Icons.Outlined.WaterDrop,
-        title = "Humidity",
+        title = stringResource(R.string.detail_humidity),
         modifier = modifier
     ) {
         Text(
@@ -276,7 +279,7 @@ private fun WindCard(
 ) {
     DetailCard(
         icon = Icons.Outlined.Air,
-        title = "Wind",
+        title = stringResource(R.string.detail_wind),
         modifier = modifier
     ) {
         Text(
@@ -340,7 +343,7 @@ private fun WindCompass(degrees: Int, modifier: Modifier) {
 private fun PressureCard(pressure: Float, modifier: Modifier) {
     DetailCard(
         icon = Icons.Outlined.Compress,
-        title = "Pressure",
+        title = stringResource(R.string.detail_pressure),
         modifier = modifier
     ) {
         Text(
@@ -350,7 +353,7 @@ private fun PressureCard(pressure: Float, modifier: Modifier) {
             color = MaterialTheme.colorScheme.onSurface
         )
         Text(
-            text = "hPa",
+            text = stringResource(R.string.unit_hpa),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -359,18 +362,18 @@ private fun PressureCard(pressure: Float, modifier: Modifier) {
 
 @Composable
 private fun VisibilityCard(visibility: Float, modifier: Modifier) {
-    val level = remember(visibility) {
+    val levelRes = remember(visibility) {
         when {
-            visibility >= 10 -> "Clear"
-            visibility >= 4 -> "Good"
-            visibility >= 1 -> "Moderate"
-            else -> "Poor"
+            visibility >= 10 -> R.string.visibility_level_clear
+            visibility >= 4 -> R.string.visibility_level_good
+            visibility >= 1 -> R.string.visibility_level_moderate
+            else -> R.string.visibility_level_poor
         }
     }
 
     DetailCard(
         icon = Icons.Outlined.Visibility,
-        title = "Visibility",
+        title = stringResource(R.string.detail_visibility),
         modifier = modifier
     ) {
         Text(
@@ -380,7 +383,7 @@ private fun VisibilityCard(visibility: Float, modifier: Modifier) {
             color = MaterialTheme.colorScheme.onSurface
         )
         Text(
-            text = "km · $level",
+            text = stringResource(R.string.visibility_subtitle, stringResource(levelRes)),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -389,19 +392,20 @@ private fun VisibilityCard(visibility: Float, modifier: Modifier) {
 
 @Composable
 private fun SunriseSunsetCard(sunrise: Long, sunset: Long, modifier: Modifier) {
+    val context = LocalContext.current
     val timeFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
     val sunriseTime = remember(sunrise) { timeFormat.format(Date(sunrise)) }
     val sunsetTime = remember(sunset) { timeFormat.format(Date(sunset)) }
-    val daylightHours = remember(sunrise, sunset) {
+    val daylightHours = remember(sunrise, sunset, context) {
         val diff = sunset - sunrise
         val hours = diff / 3600000
         val minutes = (diff % 3600000) / 60000
-        "${hours}h ${minutes}m"
+        context.getString(R.string.daylight_duration_format, hours, minutes)
     }
 
     DetailCard(
         icon = Icons.Outlined.WbTwilight,
-        title = "Sunrise & Sunset",
+        title = stringResource(R.string.detail_sunrise_sunset),
         modifier = modifier
     ) {
         Text(
@@ -488,9 +492,18 @@ private fun SunArc(sunrise: Long, sunset: Long, modifier: Modifier) {
 
 @Composable
 private fun DewPointCard(dewPoint: Float, tempUnits: String, modifier: Modifier) {
+    val levelRes = remember(dewPoint) {
+        when {
+            dewPoint < 10 -> R.string.dew_point_dry
+            dewPoint < 16 -> R.string.dew_point_comfortable
+            dewPoint < 21 -> R.string.dew_point_slightly_humid
+            else -> R.string.dew_point_humid
+        }
+    }
+
     DetailCard(
         icon = Icons.Outlined.WaterDrop,
-        title = "Dew point",
+        title = stringResource(R.string.detail_dew_point),
         modifier = modifier
     ) {
         Text(
@@ -500,14 +513,7 @@ private fun DewPointCard(dewPoint: Float, tempUnits: String, modifier: Modifier)
             color = MaterialTheme.colorScheme.onSurface
         )
         Text(
-            text = remember(dewPoint) {
-                when {
-                    dewPoint < 10 -> "Dry"
-                    dewPoint < 16 -> "Comfortable"
-                    dewPoint < 21 -> "Slightly humid"
-                    else -> "Humid"
-                }
-            },
+            text = stringResource(levelRes),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

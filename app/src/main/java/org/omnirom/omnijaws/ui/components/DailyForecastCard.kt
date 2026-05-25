@@ -48,8 +48,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.android.internal.util.crdroid.OmniJawsClient
+import org.omnirom.omnijaws.R
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -85,7 +87,7 @@ fun DailyForecastCard(
     ) {
         Column(modifier = Modifier.padding(vertical = 16.dp)) {
             Text(
-                text = "Daily forecast",
+                text = stringResource(R.string.forecast_card_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(horizontal = 20.dp)
@@ -139,7 +141,11 @@ fun DailyForecastCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = if (expanded) "Show less" else "Show more",
+                        text = if (expanded) {
+                            stringResource(R.string.forecast_show_less)
+                        } else {
+                            stringResource(R.string.forecast_show_more)
+                        },
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -167,7 +173,10 @@ private fun DailyForecastRow(
     getConditionIcon: (Int) -> Drawable?
 ) {
     val icon = remember(forecast.conditionCode, iconPack, iconTheme) { getConditionIcon(forecast.conditionCode) }
-    val dayName = remember(forecast.date) { formatDayName(forecast.date, isToday) }
+    val todayLabel = stringResource(R.string.forecast_today)
+    val dayName = remember(forecast.date, isToday, todayLabel) {
+        formatDayName(forecast.date, isToday, todayLabel)
+    }
 
     Row(
         modifier = Modifier
@@ -273,8 +282,8 @@ private fun TemperatureBar(
     }
 }
 
-private fun formatDayName(dateStr: String?, isToday: Boolean): String {
-    if (isToday) return "Today"
+private fun formatDayName(dateStr: String?, isToday: Boolean, todayLabel: String): String {
+    if (isToday) return todayLabel
     if (dateStr == null) return ""
     return try {
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
