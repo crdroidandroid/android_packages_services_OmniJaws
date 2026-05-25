@@ -287,5 +287,12 @@ private fun formatDayName(dateStr: String?, isToday: Boolean): String {
 
 private fun OmniJawsClient.DayForecast.isValid(): Boolean {
     val d = date
-    return !d.isNullOrBlank() && !d.equals("NaN", ignoreCase = true)
+    if (d.isNullOrBlank() || d.equals("NaN", ignoreCase = true)) return false
+
+    val lowVal = low?.toFloatOrNull()
+    val highVal = high?.toFloatOrNull()
+    if (lowVal == null || highVal == null) return false
+    if (!lowVal.isFinite() || !highVal.isFinite()) return false
+
+    return true
 }
