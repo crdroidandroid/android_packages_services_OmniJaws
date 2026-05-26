@@ -61,6 +61,49 @@
     <string name="dashboard_error_subtitle">Проверьте настройки или попробуйте обновить</string>
     <string name="dashboard_provider_attribution">Данные о погоде получены от %1$s</string>
 
+    <!-- Forecast card -->
+    <string name="forecast_card_title">Многодневный прогноз</string>
+    <string name="forecast_show_more">Больше</string>
+    <string name="forecast_show_less">Меньше</string>
+    <string name="forecast_today">Сегодня</string>
+
+    <!-- Detail card titles -->
+    <string name="detail_feels_like">Ощущается</string>
+    <string name="detail_uv_index">УФ-индекс</string>
+    <string name="detail_humidity">Влажность</string>
+    <string name="detail_wind">Ветер</string>
+    <string name="detail_pressure">Давление</string>
+    <string name="detail_visibility">Видимость</string>
+    <string name="detail_sunrise_sunset">Восход и закат</string>
+    <string name="detail_dew_point">Точка росы</string>
+
+    <!-- UV index levels -->
+    <string name="uv_level_low">Низкий</string>
+    <string name="uv_level_moderate">Умеренный</string>
+    <string name="uv_level_high">Высокий</string>
+    <string name="uv_level_very_high">Очень высокий</string>
+    <string name="uv_level_extreme">Экстремальный</string>
+
+    <!-- Visibility levels -->
+    <string name="visibility_level_clear">Отличная</string>
+    <string name="visibility_level_good">Хорошая</string>
+    <string name="visibility_level_moderate">Умеренная</string>
+    <string name="visibility_level_poor">Низкая</string>
+    <!-- %1$s is the visibility level, e.g. "km · Clear" -->
+    <string name="visibility_subtitle">км \u00b7 %1$s</string>
+
+    <!-- Dew point levels -->
+    <string name="dew_point_dry">Сухо</string>
+    <string name="dew_point_comfortable">Комфортно</string>
+    <string name="dew_point_slightly_humid">Слегка влажно</string>
+    <string name="dew_point_humid">Влажно</string>
+
+    <!-- Pressure unit symbol -->
+    <string name="unit_hpa" translatable="false">гПа</string>
+
+    <!-- Daylight duration, e.g. "11h 23m". %1$d = hours, %2$d = minutes -->
+    <string name="daylight_duration_format">%1$dч %2$dм</string>
+
     <!-- Service -->
     <string name="omnijaws_service_unkown">Нет данных погоды</string>
     <string name="omnijaws_service_waiting">Ожидание \u2026</string>
