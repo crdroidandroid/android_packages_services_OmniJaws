@@ -120,6 +120,20 @@ class WeatherAppWidgetProvider : AppWidgetProvider() {
         private const val TAG = "WeatherAppWidgetProvider"
         private const val LOGGING = false
         private const val EXTRA_ERROR_DISABLED = 2
+        private const val FORECAST_DAYS = 5
+
+        private val FORECAST_IMAGE_IDS = intArrayOf(
+            R.id.forecast_image_0, R.id.forecast_image_1, R.id.forecast_image_2,
+            R.id.forecast_image_3, R.id.forecast_image_4
+        )
+        private val FORECAST_TEXT_IDS = intArrayOf(
+            R.id.forecast_text_0, R.id.forecast_text_1, R.id.forecast_text_2,
+            R.id.forecast_text_3, R.id.forecast_text_4
+        )
+        private val FORECAST_DATA_IDS = intArrayOf(
+            R.id.forecast_data_0, R.id.forecast_data_1, R.id.forecast_data_2,
+            R.id.forecast_data_3, R.id.forecast_data_4
+        )
 
         @JvmStatic
         fun updateAfterConfigure(context: Context, appWidgetId: Int) {
@@ -187,12 +201,16 @@ class WeatherAppWidgetProvider : AppWidgetProvider() {
             }
 
             val weatherData = OmniJawsClient.get().weatherInfo
+            val forecasts = weatherData?.forecasts
 
             initWidget(widget)
             widget.setOnClickPendingIntent(R.id.weather_data, getWeatherActivityIntent(context))
 
-            if (weatherData == null) {
-                Log.e(TAG, "updateWeather weatherData == null")
+            if (weatherData == null || forecasts == null || forecasts.isEmpty()) {
+                Log.e(
+                    TAG, "updateWeather weatherData == null or forecasts missing " +
+                            "(forecasts = ${forecasts?.size ?: "null"})"
+                )
                 widget.setViewVisibility(R.id.forecast_line, View.GONE)
                 widget.setViewVisibility(R.id.current_weather_line, View.GONE)
                 widget.setViewVisibility(R.id.current_condition_line, View.GONE)
@@ -206,69 +224,30 @@ class WeatherAppWidgetProvider : AppWidgetProvider() {
 
             val sdf = SimpleDateFormat("EE")
             val cal = Calendar.getInstance()
-            var dayShort = sdf.format(Date(cal.timeInMillis))
-            var forecastData = getWeatherDataString(
-                weatherData.forecasts[0].low, weatherData.forecasts[0].high, weatherData.tempUnits
-            )
 
-            setImageView(
-                context, widget, iconPack, R.id.forecast_image_0,
-                weatherData.forecasts[0].conditionCode, useResourceIcon, iconNightMode
-            )
-            widget.setTextViewText(R.id.forecast_text_0, dayShort)
-            widget.setTextViewText(R.id.forecast_data_0, forecastData)
+            val days = minOf(FORECAST_DAYS, forecasts.size)
+            for (i in 0 until days) {
+                val day = forecasts[i]
+                val dayShort = sdf.format(Date(cal.timeInMillis))
+                val forecastData = getWeatherDataString(day.low, day.high, weatherData.tempUnits)
 
-            cal.add(Calendar.DATE, 1)
-            dayShort = sdf.format(Date(cal.timeInMillis))
-            forecastData = getWeatherDataString(
-                weatherData.forecasts[1].low, weatherData.forecasts[1].high, weatherData.tempUnits
-            )
+                setImageView(
+                    context, widget, iconPack, FORECAST_IMAGE_IDS[i],
+                    day.conditionCode, useResourceIcon, iconNightMode
+                )
+                widget.setTextViewText(FORECAST_TEXT_IDS[i], dayShort)
+                widget.setTextViewText(FORECAST_DATA_IDS[i], forecastData)
+                widget.setViewVisibility(FORECAST_IMAGE_IDS[i], View.VISIBLE)
+                widget.setViewVisibility(FORECAST_TEXT_IDS[i], View.VISIBLE)
+                widget.setViewVisibility(FORECAST_DATA_IDS[i], View.VISIBLE)
 
-            setImageView(
-                context, widget, iconPack, R.id.forecast_image_1,
-                weatherData.forecasts[1].conditionCode, useResourceIcon, iconNightMode
-            )
-            widget.setTextViewText(R.id.forecast_text_1, dayShort)
-            widget.setTextViewText(R.id.forecast_data_1, forecastData)
-
-            cal.add(Calendar.DATE, 1)
-            dayShort = sdf.format(Date(cal.timeInMillis))
-            forecastData = getWeatherDataString(
-                weatherData.forecasts[2].low, weatherData.forecasts[2].high, weatherData.tempUnits
-            )
-
-            setImageView(
-                context, widget, iconPack, R.id.forecast_image_2,
-                weatherData.forecasts[2].conditionCode, useResourceIcon, iconNightMode
-            )
-            widget.setTextViewText(R.id.forecast_text_2, dayShort)
-            widget.setTextViewText(R.id.forecast_data_2, forecastData)
-
-            cal.add(Calendar.DATE, 1)
-            dayShort = sdf.format(Date(cal.timeInMillis))
-            forecastData = getWeatherDataString(
-                weatherData.forecasts[3].low, weatherData.forecasts[3].high, weatherData.tempUnits
-            )
-
-            setImageView(
-                context, widget, iconPack, R.id.forecast_image_3,
-                weatherData.forecasts[3].conditionCode, useResourceIcon, iconNightMode
-            )
-            widget.setTextViewText(R.id.forecast_text_3, dayShort)
-            widget.setTextViewText(R.id.forecast_data_3, forecastData)
-
-            cal.add(Calendar.DATE, 1)
-            dayShort = sdf.format(Date(cal.timeInMillis))
-            forecastData = getWeatherDataString(
-                weatherData.forecasts[4].low, weatherData.forecasts[4].high, weatherData.tempUnits
-            )
-
-            setImageView(
-                context, widget, iconPack, R.id.forecast_image_4,
-                weatherData.forecasts[4].conditionCode, useResourceIcon, iconNightMode
-            )
-            widget.setTextViewText(R.id.forecast_text_4, dayShort)
-            widget.setTextViewText(R.id.forecast_data_4, forecastData)
+                cal.add(Calendar.DATE, 1)
+            }
+            for (i in days until FORECAST_DAYS) {
+                widget.setViewVisibility(FORECAST_IMAGE_IDS[i], View.INVISIBLE)
+                widget.setViewVisibility(FORECAST_TEXT_IDS[i], View.INVISIBLE)
+                widget.setViewVisibility(FORECAST_DATA_IDS[i], View.INVISIBLE)
+            }
 
             val currentData = getWeatherDataString(weatherData.temp, null, weatherData.tempUnits)
             setImageView(
