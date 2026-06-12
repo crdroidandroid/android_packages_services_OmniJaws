@@ -116,6 +116,15 @@ public class WeatherContentProvider extends ContentProvider {
             COLUMN_ICON_PACK
     };
 
+    private static final String[] PROJECTION_DEFAULT_HOURLY = new String[] {
+            COLUMN_HOURLY_TEMPERATURE,
+            COLUMN_HOURLY_CONDITION_CODE,
+            COLUMN_HOURLY_CONDITION,
+            COLUMN_HOURLY_TIMESTAMP,
+            COLUMN_HOURLY_HUMIDITY,
+            COLUMN_HOURLY_WIND_SPEED
+    };
+
     public static final String AUTHORITY = "org.omnirom.omnijaws.provider";
 
     private static final UriMatcher sUriMatcher;
@@ -224,6 +233,9 @@ public class WeatherContentProvider extends ContentProvider {
 
             case URI_TYPE_SETTINGS:
                 return PROJECTION_DEFAULT_SETTINGS;
+
+            case URI_TYPE_HOURLY:
+                return PROJECTION_DEFAULT_HOURLY;
         }
     }
 
