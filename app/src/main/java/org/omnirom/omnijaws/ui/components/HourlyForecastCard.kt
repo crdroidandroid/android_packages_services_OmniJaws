@@ -18,17 +18,17 @@ package org.omnirom.omnijaws.ui.components
 import android.graphics.drawable.Drawable
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -37,16 +37,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.android.internal.util.crdroid.OmniJawsClient
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+private val ITEM_WIDTH = 64.dp
+private val ITEM_SPACING = 4.dp
+private val ROW_HORIZONTAL_PADDING = 12.dp
 
 @Composable
 fun HourlyForecastCard(
@@ -75,30 +79,35 @@ fun HourlyForecastCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            val scrollState = rememberScrollState()
+            val contentWidth = ITEM_WIDTH * items.size + ITEM_SPACING * (items.size - 1)
+
+            Column(
+                modifier = Modifier
+                    .horizontalScroll(scrollState)
+                    .padding(horizontal = ROW_HORIZONTAL_PADDING)
             ) {
-                items(items) { hourly ->
-                    HourlyItem(
-                        hourly = hourly,
-                        tempUnits = tempUnits,
-                        iconPack = iconPack,
-                        iconTheme = iconTheme,
-                        getConditionIcon = getConditionIcon
+                Row(horizontalArrangement = Arrangement.spacedBy(ITEM_SPACING)) {
+                    items.forEach { hourly ->
+                        HourlyItem(
+                            hourly = hourly,
+                            tempUnits = tempUnits,
+                            iconPack = iconPack,
+                            iconTheme = iconTheme,
+                            getConditionIcon = getConditionIcon
+                        )
+                    }
+                }
+
+                if (items.size > 1) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    TemperatureGraph(
+                        temps = items.map { it.temperature },
+                        modifier = Modifier
+                            .width(contentWidth)
+                            .height(48.dp)
                     )
                 }
-            }
-
-            if (items.size > 1) {
-                Spacer(modifier = Modifier.height(8.dp))
-                TemperatureGraph(
-                    temps = items.map { it.temperature },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .padding(horizontal = 20.dp)
-                )
             }
         }
     }
@@ -155,21 +164,27 @@ private fun TemperatureGraph(
     modifier: Modifier = Modifier
 ) {
     val lineColor = MaterialTheme.colorScheme.primary
+    val density = LocalDensity.current
+    val itemWidthPx = with(density) { ITEM_WIDTH.toPx() }
+    val cellStepPx = with(density) { (ITEM_WIDTH + ITEM_SPACING).toPx() }
 
     Canvas(modifier = modifier) {
         if (temps.size < 2) return@Canvas
 
-        val minTemp = temps.min()
-        val maxTemp = temps.max()
+        val finite = temps.filter { it.isFinite() }
+        if (finite.size < 2) return@Canvas
+
+        val minTemp = finite.min()
+        val maxTemp = finite.max()
         val range = (maxTemp - minTemp).coerceAtLeast(1f)
-        val stepX = size.width / (temps.size - 1)
         val paddingY = 8f
 
         val path = Path()
         temps.forEachIndexed { index, temp ->
-            val x = index * stepX
+            if (!temp.isFinite()) return@forEachIndexed
+            val x = index * cellStepPx + itemWidthPx / 2f
             val y = paddingY + (1f - (temp - minTemp) / range) * (size.height - 2 * paddingY)
-            if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
+            if (path.isEmpty) path.moveTo(x, y) else path.lineTo(x, y)
         }
 
         drawPath(
