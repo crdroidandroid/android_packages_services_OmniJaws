@@ -17,16 +17,15 @@ package org.omnirom.omnijaws.ui.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -48,6 +47,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -65,73 +66,61 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DetailCardsGrid(weather: OmniJawsClient.WeatherInfo) {
-    FlowRow(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        maxItemsInEachRow = 2
-    ) {
-        val cardModifier = Modifier.weight(1f)
-
+    val cards = buildList<@Composable (Modifier) -> Unit> {
         if (!weather.feelsLike.isNaN()) {
-            FeelsLikeCard(
-                feelsLike = weather.feelsLike,
-                tempUnits = weather.tempUnits ?: "",
-                modifier = cardModifier
-            )
+            add { m ->
+                FeelsLikeCard(weather.feelsLike, weather.tempUnits ?: "", m)
+            }
         }
-
         if (!weather.uvi.isNaN()) {
-            UvIndexCard(
-                uvi = weather.uvi,
-                modifier = cardModifier
+            add { m -> UvIndexCard(weather.uvi, m) }
+        }
+        add { m -> HumidityCard(weather.humidity ?: "", m) }
+        add { m ->
+            WindCard(
+                speed = weather.windSpeed ?: "",
+                direction = weather.pinWheel ?: "",
+                windUnits = weather.windUnits ?: "",
+                windDeg = weather.windDirection?.replace("°", "")?.toIntOrNull() ?: 0,
+                modifier = m
             )
         }
-
-        HumidityCard(
-            humidity = weather.humidity ?: "",
-            modifier = cardModifier
-        )
-
-        WindCard(
-            speed = weather.windSpeed ?: "",
-            direction = weather.pinWheel ?: "",
-            windUnits = weather.windUnits ?: "",
-            windDeg = weather.windDirection?.replace("°", "")?.toIntOrNull() ?: 0,
-            modifier = cardModifier
-        )
-
         if (!weather.pressure.isNaN()) {
-            PressureCard(
-                pressure = weather.pressure,
-                modifier = cardModifier
-            )
+            add { m -> PressureCard(weather.pressure, m) }
         }
-
         if (!weather.visibility.isNaN()) {
-            VisibilityCard(
-                visibility = weather.visibility,
-                modifier = cardModifier
-            )
+            add { m -> VisibilityCard(weather.visibility, m) }
         }
-
         if (weather.sunrise > 0 && weather.sunset > 0) {
-            SunriseSunsetCard(
-                sunrise = weather.sunrise,
-                sunset = weather.sunset,
-                modifier = cardModifier
-            )
+            add { m -> SunriseSunsetCard(weather.sunrise, weather.sunset, m) }
         }
-
         if (!weather.dewPoint.isNaN()) {
-            DewPointCard(
-                dewPoint = weather.dewPoint,
-                tempUnits = weather.tempUnits ?: "",
-                modifier = cardModifier
-            )
+            add { m ->
+                DewPointCard(weather.dewPoint, weather.tempUnits ?: "", m)
+            }
+        }
+    }
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        cards.chunked(2).forEach { pair ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Max),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                pair.forEach { card ->
+                    card(Modifier.weight(1f).fillMaxHeight())
+                }
+                if (pair.size == 1) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
         }
     }
 }
@@ -153,6 +142,7 @@ private fun DetailCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .fillMaxHeight()
                 .padding(16.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -254,7 +244,67 @@ private fun UvBar(uvi: Float, modifier: Modifier) {
 }
 
 @Composable
+private fun ProgressBar(
+    fraction: Float,
+    activeBrush: Brush,
+    modifier: Modifier
+) {
+    val trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
+    val f = fraction.coerceIn(0f, 1f)
+    Canvas(modifier = modifier) {
+        val y = size.height / 2
+        drawLine(
+            color = trackColor,
+            start = Offset(0f, y),
+            end = Offset(size.width, y),
+            strokeWidth = size.height,
+            cap = StrokeCap.Round
+        )
+        if (f > 0f) {
+            drawLine(
+                brush = activeBrush,
+                start = Offset(0f, y),
+                end = Offset(size.width * f, y),
+                strokeWidth = size.height,
+                cap = StrokeCap.Round
+            )
+        }
+    }
+}
+
+@Composable
+private fun ScaleBar(
+    fraction: Float,
+    gradient: List<Color>,
+    modifier: Modifier
+) {
+    val markerColor = MaterialTheme.colorScheme.onSurface
+    val f = fraction.coerceIn(0f, 1f)
+    Canvas(modifier = modifier) {
+        val y = size.height / 2
+        val barHeight = 6.dp.toPx()
+        drawLine(
+            brush = Brush.horizontalGradient(gradient),
+            start = Offset(0f, y),
+            end = Offset(size.width, y),
+            strokeWidth = barHeight,
+            cap = StrokeCap.Round
+        )
+        val markerX = (size.width * f).coerceIn(0f, size.width)
+        drawCircle(markerColor, 5.dp.toPx(), Offset(markerX, y))
+        drawCircle(Color.White, 3.dp.toPx(), Offset(markerX, y))
+    }
+}
+
+@Composable
 private fun HumidityCard(humidity: String, modifier: Modifier) {
+    val percent = remember(humidity) {
+        humidity.filter { it.isDigit() }.toIntOrNull()
+    }
+    val humidityBrush = Brush.horizontalGradient(
+        listOf(Color(0xFF81D4FA), Color(0xFF0288D1))
+    )
+
     DetailCard(
         icon = Icons.Outlined.WaterDrop,
         title = stringResource(R.string.detail_humidity),
@@ -266,6 +316,14 @@ private fun HumidityCard(humidity: String, modifier: Modifier) {
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onSurface
         )
+        if (percent != null) {
+            Spacer(modifier = Modifier.weight(1f))
+            ProgressBar(
+                fraction = percent / 100f,
+                activeBrush = humidityBrush,
+                modifier = Modifier.fillMaxWidth().height(6.dp)
+            )
+        }
     }
 }
 
@@ -307,6 +365,7 @@ private fun WindCard(
 private fun WindCompass(degrees: Int, modifier: Modifier) {
     val outlineColor = MaterialTheme.colorScheme.outline
     val primaryColor = MaterialTheme.colorScheme.primary
+    val faintColor = MaterialTheme.colorScheme.onSurfaceVariant
 
     Canvas(modifier = modifier) {
         val cx = size.width / 2
@@ -330,10 +389,27 @@ private fun WindCompass(degrees: Int, modifier: Modifier) {
             drawLine(outlineColor, Offset(startX, startY), Offset(endX, endY), 1.5.dp.toPx())
         }
 
-        val arrowAngle = (degrees - 90) * PI / 180
-        val arrowTipX = cx + (radius - 8.dp.toPx()) * cos(arrowAngle).toFloat()
-        val arrowTipY = cy + (radius - 8.dp.toPx()) * sin(arrowAngle).toFloat()
-        drawCircle(primaryColor, 4.dp.toPx(), Offset(arrowTipX, arrowTipY))
+        drawCircle(faintColor, 1.5.dp.toPx(), Offset(cx, cy - radius))
+
+        val angle = (degrees - 90) * PI / 180
+        val tipLen = radius - 8.dp.toPx()
+        val tipX = cx + tipLen * cos(angle).toFloat()
+        val tipY = cy + tipLen * sin(angle).toFloat()
+
+        val tailLen = radius - 14.dp.toPx()
+        val tailX = cx - tailLen * cos(angle).toFloat()
+        val tailY = cy - tailLen * sin(angle).toFloat()
+        drawLine(outlineColor, Offset(cx, cy), Offset(tailX, tailY), 2.dp.toPx(), cap = StrokeCap.Round)
+
+        drawLine(primaryColor, Offset(cx, cy), Offset(tipX, tipY), 2.5.dp.toPx(), cap = StrokeCap.Round)
+        val headLen = 7.dp.toPx()
+        val headSpread = (20 * PI / 180)
+        val leftX = tipX - headLen * cos(angle - headSpread).toFloat()
+        val leftY = tipY - headLen * sin(angle - headSpread).toFloat()
+        val rightX = tipX - headLen * cos(angle + headSpread).toFloat()
+        val rightY = tipY - headLen * sin(angle + headSpread).toFloat()
+        drawLine(primaryColor, Offset(tipX, tipY), Offset(leftX, leftY), 2.5.dp.toPx(), cap = StrokeCap.Round)
+        drawLine(primaryColor, Offset(tipX, tipY), Offset(rightX, rightY), 2.5.dp.toPx(), cap = StrokeCap.Round)
 
         drawCircle(outlineColor, 2.dp.toPx(), Offset(cx, cy))
     }
@@ -341,6 +417,20 @@ private fun WindCompass(degrees: Int, modifier: Modifier) {
 
 @Composable
 private fun PressureCard(pressure: Float, modifier: Modifier) {
+    val levelRes = remember(pressure) {
+        when {
+            pressure < 1009 -> R.string.pressure_level_low
+            pressure > 1022 -> R.string.pressure_level_high
+            else -> R.string.pressure_level_normal
+        }
+    }
+    val fraction = remember(pressure) { ((pressure - 980f) / 60f).coerceIn(0f, 1f) }
+    val gradient = listOf(
+        MaterialTheme.colorScheme.tertiary,
+        MaterialTheme.colorScheme.primary,
+        MaterialTheme.colorScheme.error
+    )
+
     DetailCard(
         icon = Icons.Outlined.Compress,
         title = stringResource(R.string.detail_pressure),
@@ -353,9 +443,15 @@ private fun PressureCard(pressure: Float, modifier: Modifier) {
             color = MaterialTheme.colorScheme.onSurface
         )
         Text(
-            text = stringResource(R.string.unit_hpa),
+            text = "${stringResource(R.string.unit_hpa)} · ${stringResource(levelRes)}",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        ScaleBar(
+            fraction = fraction,
+            gradient = gradient,
+            modifier = Modifier.fillMaxWidth().height(10.dp)
         )
     }
 }
@@ -492,14 +588,33 @@ private fun SunArc(sunrise: Long, sunset: Long, modifier: Modifier) {
 
 @Composable
 private fun DewPointCard(dewPoint: Float, tempUnits: String, modifier: Modifier) {
-    val levelRes = remember(dewPoint) {
-        when {
-            dewPoint < 10 -> R.string.dew_point_dry
-            dewPoint < 16 -> R.string.dew_point_comfortable
-            dewPoint < 21 -> R.string.dew_point_slightly_humid
-            else -> R.string.dew_point_humid
+    val isFahrenheit = tempUnits.contains("F", ignoreCase = true)
+    val levelRes = remember(dewPoint, isFahrenheit) {
+        if (isFahrenheit) {
+            when {
+                dewPoint < 50 -> R.string.dew_point_dry
+                dewPoint < 61 -> R.string.dew_point_comfortable
+                dewPoint < 70 -> R.string.dew_point_slightly_humid
+                else -> R.string.dew_point_humid
+            }
+        } else {
+            when {
+                dewPoint < 10 -> R.string.dew_point_dry
+                dewPoint < 16 -> R.string.dew_point_comfortable
+                dewPoint < 21 -> R.string.dew_point_slightly_humid
+                else -> R.string.dew_point_humid
+            }
         }
     }
+    val fraction = remember(dewPoint, isFahrenheit) {
+        if (isFahrenheit) ((dewPoint - 32f) / 47f).coerceIn(0f, 1f)   // 32..79 F
+        else ((dewPoint - 0f) / 26f).coerceIn(0f, 1f)                 // 0..26 C
+    }
+    val gradient = listOf(
+        Color(0xFFFFB74D),
+        Color(0xFF66BB6A),
+        Color(0xFF29B6F6)
+    )
 
     DetailCard(
         icon = Icons.Outlined.WaterDrop,
@@ -516,6 +631,12 @@ private fun DewPointCard(dewPoint: Float, tempUnits: String, modifier: Modifier)
             text = stringResource(levelRes),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        ScaleBar(
+            fraction = fraction,
+            gradient = gradient,
+            modifier = Modifier.fillMaxWidth().height(10.dp)
         )
     }
 }

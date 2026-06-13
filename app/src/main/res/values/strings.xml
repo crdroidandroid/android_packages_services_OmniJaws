@@ -101,6 +101,11 @@
     <!-- Pressure unit symbol -->
     <string name="unit_hpa" translatable="false">hPa</string>
 
+    <!-- Pressure level descriptors -->
+    <string name="pressure_level_low">Low</string>
+    <string name="pressure_level_normal">Normal</string>
+    <string name="pressure_level_high">High</string>
+
     <!-- Daylight duration, e.g. "11h 23m". %1$d = hours, %2$d = minutes -->
     <string name="daylight_duration_format">%1$dh %2$dm</string>
 
