@@ -71,7 +71,7 @@ fun DetailCardsGrid(weather: OmniJawsClient.WeatherInfo) {
     val cards = buildList<@Composable (Modifier) -> Unit> {
         if (!weather.feelsLike.isNaN()) {
             add { m ->
-                FeelsLikeCard(weather.feelsLike, weather.tempUnits ?: "", m)
+                FeelsLikeCard(weather.feelsLike, weather.temp, weather.tempUnits ?: "", m)
             }
         }
         if (!weather.uvi.isNaN()) {
@@ -166,7 +166,18 @@ private fun DetailCard(
 }
 
 @Composable
-private fun FeelsLikeCard(feelsLike: Float, tempUnits: String, modifier: Modifier) {
+private fun FeelsLikeCard(
+    feelsLike: Float,
+    actualTemp: String?,
+    tempUnits: String,
+    modifier: Modifier
+) {
+    val actual = remember(actualTemp) { actualTemp?.trim()?.toFloatOrNull() }
+    val isFahrenheit = tempUnits.contains("F", ignoreCase = true)
+    val minT = if (isFahrenheit) 14f else -10f
+    val maxT = if (isFahrenheit) 104f else 40f
+    fun frac(t: Float) = ((t - minT) / (maxT - minT)).coerceIn(0f, 1f)
+
     DetailCard(
         icon = Icons.Outlined.DeviceThermostat,
         title = stringResource(R.string.detail_feels_like),
@@ -178,6 +189,59 @@ private fun FeelsLikeCard(feelsLike: Float, tempUnits: String, modifier: Modifie
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onSurface
         )
+        if (actual != null) {
+            val delta = (feelsLike - actual).toInt()
+            val deltaText = when {
+                delta > 0 -> "Δ +$delta°"
+                delta < 0 -> "Δ $delta°"
+                else -> "Δ 0°"
+            }
+            Text(
+                text = deltaText,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        FeelsLikeBar(
+            feelsFraction = frac(feelsLike),
+            actualFraction = actual?.let { frac(it) },
+            modifier = Modifier.fillMaxWidth().height(10.dp)
+        )
+    }
+}
+
+@Composable
+private fun FeelsLikeBar(
+    feelsFraction: Float,
+    actualFraction: Float?,
+    modifier: Modifier
+) {
+    val gradient = listOf(
+        Color(0xFF42A5F5), // cold
+        Color(0xFF66BB6A), // mild
+        Color(0xFFFFA726), // warm
+        Color(0xFFEF5350)  // hot
+    )
+    val markerColor = MaterialTheme.colorScheme.onSurface
+    val f = feelsFraction.coerceIn(0f, 1f)
+
+    Canvas(modifier = modifier) {
+        val y = size.height / 2
+        drawLine(
+            brush = Brush.horizontalGradient(gradient),
+            start = Offset(0f, y),
+            end = Offset(size.width, y),
+            strokeWidth = 6.dp.toPx(),
+            cap = StrokeCap.Round
+        )
+        actualFraction?.let { af ->
+            val ax = (size.width * af.coerceIn(0f, 1f)).coerceIn(0f, size.width)
+            drawCircle(markerColor, 4.dp.toPx(), Offset(ax, y), style = Stroke(width = 2.dp.toPx()))
+        }
+        val fx = (size.width * f).coerceIn(0f, size.width)
+        drawCircle(markerColor, 5.dp.toPx(), Offset(fx, y))
+        drawCircle(Color.White, 3.dp.toPx(), Offset(fx, y))
     }
 }
 
