@@ -56,6 +56,7 @@ data class SettingsUiState(
         "0" -> "OpenWeatherMap"
         "1" -> "MET Norway"
         "2" -> "Pirate Weather"
+        "3" -> "Open-Meteo"
         else -> provider
     }
     val unitsLabel: String get() = when (units) {

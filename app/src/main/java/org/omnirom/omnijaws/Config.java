@@ -59,6 +59,8 @@ public class Config {
                 return new METNorwayProvider(context);
             case "2":
                 return new PirateWeatherProvider(context);
+            case "3":
+                return new OpenMeteoProvider(context);
             default:
                 return new OpenWeatherMapProvider(context);
         }
@@ -76,6 +78,8 @@ public class Config {
                 return "MET Norway";
             case "2":
                 return "Pirate Weather";
+            case "3":
+                return "Open-Meteo";
             default:
                 return "OpenWeatherMap";
         }

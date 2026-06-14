@@ -111,7 +111,8 @@ fun WeatherSettingsScreen(
                             options = listOf(
                                 "0" to stringResource(R.string.provider_openweathermap),
                                 "1" to stringResource(R.string.provider_metnorway),
-                                "2" to stringResource(R.string.provider_pirate_weather)
+                                "2" to stringResource(R.string.provider_pirate_weather),
+                                "3" to stringResource(R.string.provider_openmeteo)
                             ),
                             value = state.provider,
                             onValueChange = onProviderChanged
@@ -264,6 +265,7 @@ private fun providerLabel(value: String): String = when (value) {
     "0" -> stringResource(R.string.provider_openweathermap)
     "1" -> stringResource(R.string.provider_metnorway)
     "2" -> stringResource(R.string.provider_pirate_weather)
+    "3" -> stringResource(R.string.provider_openmeteo)
     else -> value
 }
 

@@ -14,6 +14,7 @@
     <string name="provider_openweathermap" translatable="false">OpenWeatherMap</string>
     <string name="provider_metnorway" translatable="false">MET Norway</string>
     <string name="provider_pirate_weather" translatable="false">Pirate Weather</string>
+    <string name="provider_openmeteo" translatable="false">Open-Meteo</string>
 
     <!-- Settings -->
     <string name="weather_config_title">Service settings</string>
