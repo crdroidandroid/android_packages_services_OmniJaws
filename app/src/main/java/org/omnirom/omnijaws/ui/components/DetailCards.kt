@@ -466,6 +466,12 @@ private fun VisibilityCard(visibility: Float, modifier: Modifier) {
             else -> R.string.visibility_level_poor
         }
     }
+    val fraction = remember(visibility) { (visibility / 10f).coerceIn(0f, 1f) }
+    val gradient = listOf(
+        Color(0xFF607D8B),
+        Color(0xFF90A4AE),
+        Color(0xFF4FC3F7)
+    )
 
     DetailCard(
         icon = Icons.Outlined.Visibility,
@@ -482,6 +488,12 @@ private fun VisibilityCard(visibility: Float, modifier: Modifier) {
             text = stringResource(R.string.visibility_subtitle, stringResource(levelRes)),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        ScaleBar(
+            fraction = fraction,
+            gradient = gradient,
+            modifier = Modifier.fillMaxWidth().height(10.dp)
         )
     }
 }
