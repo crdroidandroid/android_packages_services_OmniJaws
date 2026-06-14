@@ -95,7 +95,12 @@ public class PirateWeatherProvider extends AbstractWeatherProvider {
                     forecasts,
                     System.currentTimeMillis());
 
+            if (conditionData.has("visibility")) {
+                w.setVisibility((float) conditionData.getDouble("visibility"));
+            }
+
             log(TAG, "Weather updated: " + w);
+
             return w;
         } catch (JSONException e) {
             Log.w(TAG, "Received malformed weather data (selection = " + selection + ")", e);
