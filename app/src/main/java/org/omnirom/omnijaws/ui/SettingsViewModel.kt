@@ -20,10 +20,14 @@ import android.app.Application
 import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.android.internal.util.crdroid.OmniJawsClient
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.omnirom.omnijaws.Config
 import org.omnirom.omnijaws.WeatherUpdateService
 import org.omnirom.omnijaws.widget.WeatherAppWidgetProvider
@@ -84,23 +88,28 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     private val ctx get() = getApplication<Application>()
 
     fun loadSettings() {
-        val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx)
-        _uiState.value = SettingsUiState(
-            enabled = Config.isEnabled(ctx),
-            provider = prefs.getString(Config.PREF_KEY_PROVIDER, "1") ?: "1",
-            units = prefs.getString(Config.PREF_KEY_UNITS, "0") ?: "0",
-            updateInterval = prefs.getString(Config.PREF_KEY_UPDATE_INTERVAL, "2") ?: "2",
-            customLocation = prefs.getBoolean(Config.PREF_KEY_CUSTOM_LOCATION, false),
-            locationName = Config.getLocationName(ctx) ?: "",
-            iconPack = Config.getIconPack(ctx) ?: DEFAULT_ICON_PACK,
-            iconTheme = Config.getIconTheme(ctx).toString(),
-            iconPackSupportsTheming = IconPack.supportsThemes(ctx),
-            owmKey = Config.getOwmKey(ctx) ?: "",
-            pirateWeatherKey = Config.getPirateWeatherKey(ctx) ?: "",
-            lastUpdateTime = queryLastUpdate(),
-            iconPacks = loadIconPacks(),
-            hasLocationPermission = ctx.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        )
+        viewModelScope.launch {
+            val state = withContext(Dispatchers.IO) {
+                val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx)
+                SettingsUiState(
+                    enabled = Config.isEnabled(ctx),
+                    provider = prefs.getString(Config.PREF_KEY_PROVIDER, "1") ?: "1",
+                    units = prefs.getString(Config.PREF_KEY_UNITS, "0") ?: "0",
+                    updateInterval = prefs.getString(Config.PREF_KEY_UPDATE_INTERVAL, "2") ?: "2",
+                    customLocation = prefs.getBoolean(Config.PREF_KEY_CUSTOM_LOCATION, false),
+                    locationName = Config.getLocationName(ctx) ?: "",
+                    iconPack = Config.getIconPack(ctx) ?: DEFAULT_ICON_PACK,
+                    iconTheme = Config.getIconTheme(ctx).toString(),
+                    iconPackSupportsTheming = IconPack.supportsThemes(ctx),
+                    owmKey = Config.getOwmKey(ctx) ?: "",
+                    pirateWeatherKey = Config.getPirateWeatherKey(ctx) ?: "",
+                    lastUpdateTime = queryLastUpdate(),
+                    iconPacks = loadIconPacks(),
+                    hasLocationPermission = hasLocationPermission()
+                )
+            }
+            _uiState.value = state
+        }
     }
 
     fun setEnabled(enabled: Boolean) {
@@ -117,30 +126,34 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     fun setProvider(value: String) {
         val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx)
-        prefs.edit().putString(Config.PREF_KEY_PROVIDER, value).commit()
+        prefs.edit().putString(Config.PREF_KEY_PROVIDER, value).apply()
         _uiState.value = _uiState.value.copy(provider = value)
         scheduleUpdate()
     }
 
     fun setUnits(value: String) {
         val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx)
-        prefs.edit().putString(Config.PREF_KEY_UNITS, value).commit()
+        prefs.edit().putString(Config.PREF_KEY_UNITS, value).apply()
         _uiState.value = _uiState.value.copy(units = value)
         scheduleUpdate()
     }
 
     fun setUpdateInterval(value: String) {
         val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx)
-        prefs.edit().putString(Config.PREF_KEY_UPDATE_INTERVAL, value).commit()
+        prefs.edit().putString(Config.PREF_KEY_UPDATE_INTERVAL, value).apply()
         _uiState.value = _uiState.value.copy(updateInterval = value)
         scheduleUpdate()
     }
 
     fun setCustomLocation(enabled: Boolean) {
         val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx)
-        prefs.edit().putBoolean(Config.PREF_KEY_CUSTOM_LOCATION, enabled).commit()
+        prefs.edit().putBoolean(Config.PREF_KEY_CUSTOM_LOCATION, enabled).apply()
         _uiState.value = _uiState.value.copy(customLocation = enabled)
-        scheduleUpdate()
+        if (enabled) {
+            if (Config.getLocationId(ctx) != null) scheduleUpdate()
+        } else {
+            if (hasLocationPermission()) scheduleUpdate()
+        }
     }
 
     fun setLocationResult(name: String, lat: Double, lon: Double) {
@@ -168,25 +181,33 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     fun setOwmKey(value: String) {
         val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx)
-        prefs.edit().putString(Config.PREF_KEY_OWM_KEY, value).commit()
+        prefs.edit().putString(Config.PREF_KEY_OWM_KEY, value).apply()
         _uiState.value = _uiState.value.copy(owmKey = value)
         scheduleUpdate()
     }
 
     fun setPirateWeatherKey(value: String) {
         val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx)
-        prefs.edit().putString(Config.PREF_KEY_PIRATE_WEATHER_KEY, value).commit()
+        prefs.edit().putString(Config.PREF_KEY_PIRATE_WEATHER_KEY, value).apply()
         _uiState.value = _uiState.value.copy(pirateWeatherKey = value)
         scheduleUpdate()
     }
 
     fun onPermissionResult(granted: Boolean) {
         _uiState.value = _uiState.value.copy(hasLocationPermission = granted)
-        if (granted) scheduleUpdate()
+        if (granted && !_uiState.value.customLocation) scheduleUpdate()
+    }
+
+    private fun hasLocationPermission(): Boolean {
+        return ctx.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                ctx.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
     }
 
     fun refreshUpdateStatus() {
-        _uiState.value = _uiState.value.copy(lastUpdateTime = queryLastUpdate())
+        viewModelScope.launch {
+            val last = withContext(Dispatchers.IO) { queryLastUpdate() }
+            _uiState.value = _uiState.value.copy(lastUpdateTime = last)
+        }
     }
 
     private fun scheduleUpdate() {

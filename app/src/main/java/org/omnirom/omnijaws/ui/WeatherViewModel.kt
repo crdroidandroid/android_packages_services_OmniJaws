@@ -21,10 +21,14 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.android.internal.util.crdroid.OmniJawsClient
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 import org.omnirom.omnijaws.Config
 import org.omnirom.omnijaws.icon.IconProvider
@@ -49,28 +53,41 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
 
     fun queryWeather() {
         val context = getApplication<Application>()
-        client.queryWeather(context)
-        val info = client.getWeatherInfo()
-        if (info != null) {
-            Log.d(TAG, "Weather data: city=${info.city} temp=${info.temp} condition=${info.condition}")
-            Log.d(TAG, "  humidity=${info.humidity} windSpeed=${info.windSpeed} pinWheel=${info.pinWheel}")
-            Log.d(TAG, "  feelsLike=${info.feelsLike} isNaN=${info.feelsLike.isNaN()}")
-            Log.d(TAG, "  pressure=${info.pressure} isNaN=${info.pressure.isNaN()}")
-            Log.d(TAG, "  uvi=${info.uvi} isNaN=${info.uvi.isNaN()}")
-            Log.d(TAG, "  visibility=${info.visibility} isNaN=${info.visibility.isNaN()}")
-            Log.d(TAG, "  dewPoint=${info.dewPoint} isNaN=${info.dewPoint.isNaN()}")
-            Log.d(TAG, "  sunrise=${info.sunrise} sunset=${info.sunset}")
-            Log.d(TAG, "  forecasts=${info.forecasts?.size} hourly=${info.hourlyForecasts?.size}")
-        } else {
-            Log.d(TAG, "Weather data: null")
+        viewModelScope.launch {
+            val info = withContext(Dispatchers.IO) {
+                client.queryWeather(context)
+                client.getWeatherInfo()
+            }
+            if (info != null) {
+                Log.d(TAG, "Weather data: city=${info.city} temp=${info.temp} condition=${info.condition}")
+                Log.d(TAG, "  humidity=${info.humidity} windSpeed=${info.windSpeed} pinWheel=${info.pinWheel}")
+                Log.d(TAG, "  feelsLike=${info.feelsLike} isNaN=${info.feelsLike.isNaN()}")
+                Log.d(TAG, "  pressure=${info.pressure} isNaN=${info.pressure.isNaN()}")
+                Log.d(TAG, "  uvi=${info.uvi} isNaN=${info.uvi.isNaN()}")
+                Log.d(TAG, "  visibility=${info.visibility} isNaN=${info.visibility.isNaN()}")
+                Log.d(TAG, "  dewPoint=${info.dewPoint} isNaN=${info.dewPoint.isNaN()}")
+                Log.d(TAG, "  sunrise=${info.sunrise} sunset=${info.sunset}")
+                Log.d(TAG, "  forecasts=${info.forecasts?.size} hourly=${info.hourlyForecasts?.size}")
+            } else {
+                Log.d(TAG, "Weather data: null")
+            }
+
+            val previousError = _uiState.value.error
+            val resolvedError = when {
+                info != null -> null
+                !Config.isEnabled(context) -> OmniJawsClient.EXTRA_ERROR_DISABLED
+                previousError != null -> previousError
+                else -> OmniJawsClient.EXTRA_ERROR_DISABLED
+            }
+
+            _uiState.value = WeatherUiState(
+                weatherInfo = info,
+                isLoading = false,
+                error = resolvedError,
+                iconPack = Config.getIconPack(context) ?: "",
+                iconTheme = Config.getIconTheme(context)
+            )
         }
-        _uiState.value = WeatherUiState(
-            weatherInfo = info,
-            isLoading = false,
-            error = if (info == null) OmniJawsClient.EXTRA_ERROR_DISABLED else null,
-            iconPack = Config.getIconPack(context) ?: "",
-            iconTheme = Config.getIconTheme(context)
-        )
     }
 
     fun onWeatherError(errorReason: Int) {
@@ -80,12 +97,14 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
     fun forceRefresh() {
         _uiState.value = _uiState.value.copy(isLoading = true)
         val context = getApplication<Application>()
-        val values = ContentValues()
-        values.put("update", true)
-        context.contentResolver.update(
-            Uri.parse("content://org.omnirom.omnijaws.provider/control"),
-            values, null, null
-        )
+        viewModelScope.launch(Dispatchers.IO) {
+            val values = ContentValues()
+            values.put("update", true)
+            context.contentResolver.update(
+                Uri.parse("content://org.omnirom.omnijaws.provider/control"),
+                values, null, null
+            )
+        }
     }
 
     fun getConditionIcon(conditionCode: Int): Drawable? {
