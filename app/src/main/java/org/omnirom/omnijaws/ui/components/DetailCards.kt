@@ -569,7 +569,7 @@ private fun SunriseSunsetCard(sunrise: Long, sunset: Long, modifier: Modifier) {
     val sunriseTime = remember(sunrise) { timeFormat.format(Date(sunrise)) }
     val sunsetTime = remember(sunset) { timeFormat.format(Date(sunset)) }
     val daylightHours = remember(sunrise, sunset, context) {
-        val diff = sunset - sunrise
+        val diff = (sunset - sunrise).coerceAtLeast(0L)
         val hours = diff / 3600000
         val minutes = (diff % 3600000) / 60000
         context.getString(R.string.daylight_duration_format, hours, minutes)
@@ -614,51 +614,76 @@ private fun SunriseSunsetCard(sunrise: Long, sunset: Long, modifier: Modifier) {
 
 @Composable
 private fun SunArc(sunrise: Long, sunset: Long, modifier: Modifier) {
-    val arcColor = MaterialTheme.colorScheme.primary
     val trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
-    val dotColor = MaterialTheme.colorScheme.primary
+    val horizonColor = MaterialTheme.colorScheme.outlineVariant
+    val sunColor = MaterialTheme.colorScheme.primary
+    val nightSunColor = MaterialTheme.colorScheme.onSurfaceVariant
 
     val now = remember { System.currentTimeMillis() }
-    val progress = remember(now, sunrise, sunset) {
-        if (now < sunrise) 0f
-        else if (now > sunset) 1f
-        else ((now - sunrise).toFloat() / (sunset - sunrise).toFloat()).coerceIn(0f, 1f)
-    }
+    val dayLength = (sunset - sunrise).coerceAtLeast(1L)
+    val isDay = now in sunrise..sunset
+    val progress = ((now - sunrise).toFloat() / dayLength).coerceIn(0f, 1f)
+
+    val skyGradient = listOf(
+        Color(0xFFFFB74D),
+        Color(0xFFFFD54F),
+        Color(0xFFFF8A65)
+    )
 
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
         val arcPad = 4.dp.toPx()
+        val belowHorizon = 8.dp.toPx()
+        val baseY = h - belowHorizon
+        val domeH = baseY - arcPad
 
-        val path = Path()
-        val steps = 50
+        fun arcX(t: Float) = arcPad + (w - 2 * arcPad) * t
+        fun arcY(t: Float) = baseY - domeH * sin(PI * t).toFloat()
+
+        drawLine(
+            color = horizonColor,
+            start = Offset(0f, baseY),
+            end = Offset(w, baseY),
+            strokeWidth = 1.dp.toPx()
+        )
+        drawCircle(horizonColor, 2.dp.toPx(), Offset(arcX(0f), baseY))
+        drawCircle(horizonColor, 2.dp.toPx(), Offset(arcX(1f), baseY))
+
+        val steps = 60
+        val track = Path()
         for (i in 0..steps) {
             val t = i.toFloat() / steps
-            val angle = PI * (1 - t)
-            val x = arcPad + (w - 2 * arcPad) * t
-            val y = h - (h - arcPad) * sin(angle).toFloat()
-            if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+            if (i == 0) track.moveTo(arcX(t), arcY(t)) else track.lineTo(arcX(t), arcY(t))
         }
+        drawPath(track, trackColor, style = Stroke(1.5.dp.toPx(), cap = StrokeCap.Round))
 
-        drawPath(path, trackColor, style = Stroke(1.5.dp.toPx(), cap = StrokeCap.Round))
-
-        if (progress > 0f) {
-            val activePath = Path()
-            val activeSteps = (steps * progress).toInt()
-            for (i in 0..activeSteps) {
-                val t = i.toFloat() / steps
-                val angle = PI * (1 - t)
-                val x = arcPad + (w - 2 * arcPad) * t
-                val y = h - (h - arcPad) * sin(angle).toFloat()
-                if (i == 0) activePath.moveTo(x, y) else activePath.lineTo(x, y)
+        if (isDay) {
+            if (progress > 0f) {
+                val activeSteps = (steps * progress).toInt().coerceAtLeast(1)
+                val active = Path()
+                for (i in 0..activeSteps) {
+                    val t = i.toFloat() / steps
+                    if (i == 0) active.moveTo(arcX(t), arcY(t)) else active.lineTo(arcX(t), arcY(t))
+                }
+                drawPath(
+                    active,
+                    brush = Brush.horizontalGradient(skyGradient),
+                    style = Stroke(2.5.dp.toPx(), cap = StrokeCap.Round)
+                )
             }
-            drawPath(activePath, arcColor, style = Stroke(2.dp.toPx(), cap = StrokeCap.Round))
+            val sx = arcX(progress)
+            val sy = arcY(progress)
+            drawCircle(sunColor.copy(alpha = 0.22f), 9.dp.toPx(), Offset(sx, sy))
+            drawCircle(sunColor, 4.5.dp.toPx(), Offset(sx, sy))
+        } else {
+            val sx = if (now < sunrise) arcX(0f) else arcX(1f)
+            val sy = baseY + belowHorizon / 2f
+            drawCircle(
+                nightSunColor.copy(alpha = 0.5f), 4.dp.toPx(), Offset(sx, sy),
+                style = Stroke(width = 1.5.dp.toPx())
+            )
         }
-
-        val dotAngle = PI * (1 - progress)
-        val dotX = arcPad + (w - 2 * arcPad) * progress
-        val dotY = h - (h - arcPad) * sin(dotAngle).toFloat()
-        drawCircle(dotColor, 4.dp.toPx(), Offset(dotX, dotY))
     }
 }
 
