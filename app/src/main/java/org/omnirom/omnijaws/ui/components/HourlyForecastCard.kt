@@ -42,8 +42,10 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.android.internal.util.crdroid.OmniJawsClient
+import org.omnirom.omnijaws.R
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -71,7 +73,7 @@ fun HourlyForecastCard(
     ) {
         Column(modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)) {
             Text(
-                text = "Hourly forecast",
+                text = stringResource(R.string.forecast_card_hourly_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(horizontal = 20.dp)

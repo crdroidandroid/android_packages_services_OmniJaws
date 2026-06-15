@@ -63,6 +63,7 @@
     <string name="dashboard_provider_attribution">Weather data provided by %1$s</string>
 
     <!-- Forecast card -->
+    <string name="forecast_card_hourly_title">Hourly forecast</string>
     <string name="forecast_card_title">Multi-day forecast</string>
     <string name="forecast_show_more">Show more</string>
     <string name="forecast_show_less">Show less</string>
