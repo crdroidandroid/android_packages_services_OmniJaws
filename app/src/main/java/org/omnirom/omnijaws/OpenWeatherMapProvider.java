@@ -322,7 +322,8 @@ public class OpenWeatherMapProvider extends AbstractWeatherProvider {
                 return 41; // heavy snow
             case 611:
             case 612:
-                return 18; // sleet
+            case 613:
+                return 18; // sleet (incl. shower sleet)
             case 615:
             case 616:
                 return 5;  // rain and snow
