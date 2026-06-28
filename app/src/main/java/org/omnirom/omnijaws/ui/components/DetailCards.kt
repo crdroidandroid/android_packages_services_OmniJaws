@@ -180,7 +180,7 @@ private fun FeelsLikeCard(
 
     DetailCard(
         icon = Icons.Outlined.DeviceThermostat,
-        title = stringResource(R.string.detail_feels_like),
+        title = stringResource(R.string.omnijaws_detail_feels_like),
         modifier = modifier
     ) {
         Text(
@@ -249,17 +249,17 @@ private fun FeelsLikeBar(
 private fun UvIndexCard(uvi: Float, modifier: Modifier) {
     val levelRes = remember(uvi) {
         when {
-            uvi <= 2 -> R.string.uv_level_low
-            uvi <= 5 -> R.string.uv_level_moderate
-            uvi <= 7 -> R.string.uv_level_high
-            uvi <= 10 -> R.string.uv_level_very_high
-            else -> R.string.uv_level_extreme
+            uvi <= 2 -> R.string.omnijaws_uv_level_low
+            uvi <= 5 -> R.string.omnijaws_uv_level_moderate
+            uvi <= 7 -> R.string.omnijaws_uv_level_high
+            uvi <= 10 -> R.string.omnijaws_uv_level_very_high
+            else -> R.string.omnijaws_uv_level_extreme
         }
     }
 
     DetailCard(
         icon = Icons.Outlined.WbSunny,
-        title = stringResource(R.string.detail_uv_index),
+        title = stringResource(R.string.omnijaws_detail_uv_index),
         modifier = modifier
     ) {
         Text(
@@ -371,7 +371,7 @@ private fun HumidityCard(humidity: String, modifier: Modifier) {
 
     DetailCard(
         icon = Icons.Outlined.WaterDrop,
-        title = stringResource(R.string.detail_humidity),
+        title = stringResource(R.string.omnijaws_detail_humidity),
         modifier = modifier
     ) {
         Text(
@@ -401,7 +401,7 @@ private fun WindCard(
 ) {
     DetailCard(
         icon = Icons.Outlined.Air,
-        title = stringResource(R.string.detail_wind),
+        title = stringResource(R.string.omnijaws_detail_wind),
         modifier = modifier
     ) {
         Text(
@@ -483,9 +483,9 @@ private fun WindCompass(degrees: Int, modifier: Modifier) {
 private fun PressureCard(pressure: Float, modifier: Modifier) {
     val levelRes = remember(pressure) {
         when {
-            pressure < 1009 -> R.string.pressure_level_low
-            pressure > 1022 -> R.string.pressure_level_high
-            else -> R.string.pressure_level_normal
+            pressure < 1009 -> R.string.omnijaws_pressure_level_low
+            pressure > 1022 -> R.string.omnijaws_pressure_level_high
+            else -> R.string.omnijaws_pressure_level_normal
         }
     }
     val fraction = remember(pressure) { ((pressure - 980f) / 60f).coerceIn(0f, 1f) }
@@ -497,7 +497,7 @@ private fun PressureCard(pressure: Float, modifier: Modifier) {
 
     DetailCard(
         icon = Icons.Outlined.Compress,
-        title = stringResource(R.string.detail_pressure),
+        title = stringResource(R.string.omnijaws_detail_pressure),
         modifier = modifier
     ) {
         Text(
@@ -507,7 +507,7 @@ private fun PressureCard(pressure: Float, modifier: Modifier) {
             color = MaterialTheme.colorScheme.onSurface
         )
         Text(
-            text = "${stringResource(R.string.unit_hpa)} · ${stringResource(levelRes)}",
+            text = "${stringResource(R.string.omnijaws_unit_hpa)} · ${stringResource(levelRes)}",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -524,10 +524,10 @@ private fun PressureCard(pressure: Float, modifier: Modifier) {
 private fun VisibilityCard(visibility: Float, modifier: Modifier) {
     val levelRes = remember(visibility) {
         when {
-            visibility >= 10 -> R.string.visibility_level_clear
-            visibility >= 4 -> R.string.visibility_level_good
-            visibility >= 1 -> R.string.visibility_level_moderate
-            else -> R.string.visibility_level_poor
+            visibility >= 10 -> R.string.omnijaws_visibility_level_clear
+            visibility >= 4 -> R.string.omnijaws_visibility_level_good
+            visibility >= 1 -> R.string.omnijaws_visibility_level_moderate
+            else -> R.string.omnijaws_visibility_level_poor
         }
     }
     val fraction = remember(visibility) { (visibility / 10f).coerceIn(0f, 1f) }
@@ -539,7 +539,7 @@ private fun VisibilityCard(visibility: Float, modifier: Modifier) {
 
     DetailCard(
         icon = Icons.Outlined.Visibility,
-        title = stringResource(R.string.detail_visibility),
+        title = stringResource(R.string.omnijaws_detail_visibility),
         modifier = modifier
     ) {
         Text(
@@ -549,7 +549,7 @@ private fun VisibilityCard(visibility: Float, modifier: Modifier) {
             color = MaterialTheme.colorScheme.onSurface
         )
         Text(
-            text = stringResource(R.string.visibility_subtitle, stringResource(levelRes)),
+            text = stringResource(R.string.omnijaws_visibility_subtitle, stringResource(levelRes)),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -572,12 +572,12 @@ private fun SunriseSunsetCard(sunrise: Long, sunset: Long, modifier: Modifier) {
         val diff = (sunset - sunrise).coerceAtLeast(0L)
         val hours = diff / 3600000
         val minutes = (diff % 3600000) / 60000
-        context.getString(R.string.daylight_duration_format, hours, minutes)
+        context.getString(R.string.omnijaws_daylight_duration_format, hours, minutes)
     }
 
     DetailCard(
         icon = Icons.Outlined.WbTwilight,
-        title = stringResource(R.string.detail_sunrise_sunset),
+        title = stringResource(R.string.omnijaws_detail_sunrise_sunset),
         modifier = modifier
     ) {
         Text(
@@ -693,17 +693,17 @@ private fun DewPointCard(dewPoint: Float, tempUnits: String, modifier: Modifier)
     val levelRes = remember(dewPoint, isFahrenheit) {
         if (isFahrenheit) {
             when {
-                dewPoint < 50 -> R.string.dew_point_dry
-                dewPoint < 61 -> R.string.dew_point_comfortable
-                dewPoint < 70 -> R.string.dew_point_slightly_humid
-                else -> R.string.dew_point_humid
+                dewPoint < 50 -> R.string.omnijaws_dew_point_dry
+                dewPoint < 61 -> R.string.omnijaws_dew_point_comfortable
+                dewPoint < 70 -> R.string.omnijaws_dew_point_slightly_humid
+                else -> R.string.omnijaws_dew_point_humid
             }
         } else {
             when {
-                dewPoint < 10 -> R.string.dew_point_dry
-                dewPoint < 16 -> R.string.dew_point_comfortable
-                dewPoint < 21 -> R.string.dew_point_slightly_humid
-                else -> R.string.dew_point_humid
+                dewPoint < 10 -> R.string.omnijaws_dew_point_dry
+                dewPoint < 16 -> R.string.omnijaws_dew_point_comfortable
+                dewPoint < 21 -> R.string.omnijaws_dew_point_slightly_humid
+                else -> R.string.omnijaws_dew_point_humid
             }
         }
     }
@@ -719,7 +719,7 @@ private fun DewPointCard(dewPoint: Float, tempUnits: String, modifier: Modifier)
 
     DetailCard(
         icon = Icons.Outlined.WaterDrop,
-        title = stringResource(R.string.detail_dew_point),
+        title = stringResource(R.string.omnijaws_detail_dew_point),
         modifier = modifier
     ) {
         Text(

@@ -80,7 +80,7 @@ fun WeatherSettingsScreen(
     onRequestLocationPermission: () -> Unit
 ) {
     AxionScaffold(
-        title = stringResource(R.string.weather_config_title),
+        title = stringResource(R.string.omnijaws_weather_config_title),
         onBackClick = onBack
     ) { padding ->
         Column(
@@ -94,7 +94,7 @@ fun WeatherSettingsScreen(
             PreferenceGroup {
                 item {
                     SwitchPreference(
-                        title = stringResource(R.string.enable_title),
+                        title = stringResource(R.string.omnijaws_enable_title),
                         checked = state.enabled,
                         onCheckedChange = onEnableChanged,
                         icon = Icons.Outlined.Cloud
@@ -103,16 +103,16 @@ fun WeatherSettingsScreen(
             }
 
             if (state.enabled) {
-                PreferenceGroup(title = stringResource(R.string.category_general)) {
+                PreferenceGroup(title = stringResource(R.string.omnijaws_category_general)) {
                     item {
                         ListPreference(
-                            title = stringResource(R.string.provider_title),
+                            title = stringResource(R.string.omnijaws_provider_title),
                             summary = providerLabel(state.provider),
                             options = listOf(
-                                "0" to stringResource(R.string.provider_openweathermap),
-                                "1" to stringResource(R.string.provider_metnorway),
-                                "2" to stringResource(R.string.provider_pirate_weather),
-                                "3" to stringResource(R.string.provider_openmeteo)
+                                "0" to stringResource(R.string.omnijaws_provider_openweathermap),
+                                "1" to stringResource(R.string.omnijaws_provider_metnorway),
+                                "2" to stringResource(R.string.omnijaws_provider_pirate_weather),
+                                "3" to stringResource(R.string.omnijaws_provider_openmeteo)
                             ),
                             value = state.provider,
                             onValueChange = onProviderChanged
@@ -120,11 +120,11 @@ fun WeatherSettingsScreen(
                     }
                     item {
                         ListPreference(
-                            title = stringResource(R.string.units_title),
+                            title = stringResource(R.string.omnijaws_units_title),
                             summary = unitsLabel(state.units),
                             options = listOf(
-                                "0" to stringResource(R.string.unit_metric),
-                                "1" to stringResource(R.string.unit_imperial)
+                                "0" to stringResource(R.string.omnijaws_unit_metric),
+                                "1" to stringResource(R.string.omnijaws_unit_imperial)
                             ),
                             value = state.units,
                             onValueChange = onUnitsChanged
@@ -132,14 +132,14 @@ fun WeatherSettingsScreen(
                     }
                     item {
                         ListPreference(
-                            title = stringResource(R.string.update_interval_title),
+                            title = stringResource(R.string.omnijaws_update_interval_title),
                             summary = intervalLabel(state.updateInterval),
                             options = listOf(
-                                "1" to stringResource(R.string.interval_1_hour),
-                                "2" to stringResource(R.string.interval_2_hour),
-                                "4" to stringResource(R.string.interval_4_hour),
-                                "6" to stringResource(R.string.interval_6_hour),
-                                "12" to stringResource(R.string.interval_12_hour)
+                                "1" to stringResource(R.string.omnijaws_interval_1_hour),
+                                "2" to stringResource(R.string.omnijaws_interval_2_hour),
+                                "4" to stringResource(R.string.omnijaws_interval_4_hour),
+                                "6" to stringResource(R.string.omnijaws_interval_6_hour),
+                                "12" to stringResource(R.string.omnijaws_interval_12_hour)
                             ),
                             value = state.updateInterval,
                             onValueChange = onIntervalChanged
@@ -147,9 +147,9 @@ fun WeatherSettingsScreen(
                     }
                     item {
                         ClickablePreference(
-                            title = stringResource(R.string.last_update_time),
+                            title = stringResource(R.string.omnijaws_last_update_time),
                             summary = state.lastUpdateTime.ifEmpty {
-                                stringResource(R.string.weather_last_update_never)
+                                stringResource(R.string.omnijaws_weather_last_update_never)
                             },
                             icon = Icons.Outlined.Update,
                             onClick = {}
@@ -157,11 +157,11 @@ fun WeatherSettingsScreen(
                     }
                 }
 
-                PreferenceGroup(title = stringResource(R.string.weather_custom_location_title)) {
+                PreferenceGroup(title = stringResource(R.string.omnijaws_weather_custom_location_title)) {
                     item {
                         SwitchPreference(
-                            title = stringResource(R.string.custom_location_title),
-                            summary = stringResource(R.string.custom_location_summary),
+                            title = stringResource(R.string.omnijaws_custom_location_title),
+                            summary = stringResource(R.string.omnijaws_custom_location_summary),
                             checked = state.customLocation,
                             onCheckedChange = onCustomLocationChanged,
                             icon = Icons.Outlined.MyLocation
@@ -170,9 +170,9 @@ fun WeatherSettingsScreen(
                     if (state.customLocation) {
                         item {
                             ClickablePreference(
-                                title = stringResource(R.string.weather_custom_location_title),
+                                title = stringResource(R.string.omnijaws_weather_custom_location_title),
                                 summary = state.locationName.ifEmpty {
-                                    stringResource(R.string.weather_custom_location_missing)
+                                    stringResource(R.string.omnijaws_weather_custom_location_missing)
                                 },
                                 icon = Icons.Outlined.LocationOn,
                                 onClick = onLocationPickerClick
@@ -182,8 +182,8 @@ fun WeatherSettingsScreen(
                     if (!state.customLocation && !state.hasLocationPermission) {
                         item {
                             ClickablePreference(
-                                title = stringResource(R.string.grant_location_permission_title),
-                                summary = stringResource(R.string.grant_location_permission_summary),
+                                title = stringResource(R.string.omnijaws_grant_location_permission_title),
+                                summary = stringResource(R.string.omnijaws_grant_location_permission_summary),
                                 icon = Icons.Outlined.Security,
                                 onClick = onRequestLocationPermission
                             )
@@ -192,10 +192,10 @@ fun WeatherSettingsScreen(
                 }
 
                 if (state.iconPacks.isNotEmpty()) {
-                    PreferenceGroup(title = stringResource(R.string.category_appearance)) {
+                    PreferenceGroup(title = stringResource(R.string.omnijaws_category_appearance)) {
                         item {
                             ListPreference(
-                                title = stringResource(R.string.weather_icon_pack_title),
+                                title = stringResource(R.string.omnijaws_weather_icon_pack_title),
                                 summary = state.iconPacks.firstOrNull { it.value == state.iconPack }?.label,
                                 options = state.iconPacks.map { it.value to it.label },
                                 value = state.iconPack,
@@ -205,15 +205,15 @@ fun WeatherSettingsScreen(
                         if (state.iconPackSupportsTheming) {
                             item {
                                 ListPreference(
-                                    title = stringResource(R.string.icon_theme_title),
+                                    title = stringResource(R.string.omnijaws_icon_theme_title),
                                     summary = iconThemeLabel(state.iconTheme),
                                     options = listOf(
                                         IconProvider.ICON_THEME_SYSTEM.toString() to
-                                            stringResource(R.string.theme_system),
+                                            stringResource(R.string.omnijaws_theme_system),
                                         IconProvider.ICON_THEME_LIGHT.toString() to
-                                            stringResource(R.string.theme_light),
+                                            stringResource(R.string.omnijaws_theme_light),
                                         IconProvider.ICON_THEME_DARK.toString() to
-                                            stringResource(R.string.theme_dark)
+                                            stringResource(R.string.omnijaws_theme_dark)
                                     ),
                                     value = state.iconTheme,
                                     onValueChange = onIconThemeChanged
@@ -226,13 +226,13 @@ fun WeatherSettingsScreen(
                 // API section is only relevant for providers that require an API key.
                 // MET Norway (provider == "1") does not need one, so the whole section is hidden.
                 if (state.provider == "0" || state.provider == "2") {
-                    PreferenceGroup(title = stringResource(R.string.category_api)) {
+                    PreferenceGroup(title = stringResource(R.string.omnijaws_category_api)) {
                         if (state.provider == "0") {
                             item {
                                 EditTextPreference(
-                                    title = stringResource(R.string.owm_key),
+                                    title = stringResource(R.string.omnijaws_owm_key),
                                     value = state.owmKey,
-                                    emptyText = stringResource(R.string.service_disabled),
+                                    emptyText = stringResource(R.string.omnijaws_provider_disabled),
                                     onValueChange = onOwmKeyChanged
                                 )
                             }
@@ -240,18 +240,18 @@ fun WeatherSettingsScreen(
                         if (state.provider == "2") {
                             item {
                                 EditTextPreference(
-                                    title = stringResource(R.string.pirate_weather_key),
+                                    title = stringResource(R.string.omnijaws_pirate_weather_key),
                                     value = state.pirateWeatherKey,
-                                    emptyText = stringResource(R.string.service_disabled),
+                                    emptyText = stringResource(R.string.omnijaws_provider_disabled),
                                     onValueChange = onPirateWeatherKeyChanged
                                 )
                             }
                         }
                         item {
-                            PlainNotePreference(text = stringResource(R.string.api_key_note))
+                            PlainNotePreference(text = stringResource(R.string.omnijaws_api_key_note))
                         }
                         item {
-                            HtmlNotePreference(html = stringResource(R.string.api_links_note))
+                            HtmlNotePreference(html = stringResource(R.string.omnijaws_api_links_note))
                         }
                     }
                 }
@@ -262,35 +262,35 @@ fun WeatherSettingsScreen(
 
 @Composable
 private fun providerLabel(value: String): String = when (value) {
-    "0" -> stringResource(R.string.provider_openweathermap)
-    "1" -> stringResource(R.string.provider_metnorway)
-    "2" -> stringResource(R.string.provider_pirate_weather)
-    "3" -> stringResource(R.string.provider_openmeteo)
+    "0" -> stringResource(R.string.omnijaws_provider_openweathermap)
+    "1" -> stringResource(R.string.omnijaws_provider_metnorway)
+    "2" -> stringResource(R.string.omnijaws_provider_pirate_weather)
+    "3" -> stringResource(R.string.omnijaws_provider_openmeteo)
     else -> value
 }
 
 @Composable
 private fun unitsLabel(value: String): String = when (value) {
-    "0" -> stringResource(R.string.unit_metric)
-    "1" -> stringResource(R.string.unit_imperial)
+    "0" -> stringResource(R.string.omnijaws_unit_metric)
+    "1" -> stringResource(R.string.omnijaws_unit_imperial)
     else -> value
 }
 
 @Composable
 private fun intervalLabel(value: String): String = when (value) {
-    "1" -> stringResource(R.string.interval_1_hour)
-    "2" -> stringResource(R.string.interval_2_hour)
-    "4" -> stringResource(R.string.interval_4_hour)
-    "6" -> stringResource(R.string.interval_6_hour)
-    "12" -> stringResource(R.string.interval_12_hour)
+    "1" -> stringResource(R.string.omnijaws_interval_1_hour)
+    "2" -> stringResource(R.string.omnijaws_interval_2_hour)
+    "4" -> stringResource(R.string.omnijaws_interval_4_hour)
+    "6" -> stringResource(R.string.omnijaws_interval_6_hour)
+    "12" -> stringResource(R.string.omnijaws_interval_12_hour)
     else -> value
 }
 
 @Composable
 private fun iconThemeLabel(value: String): String = when (value) {
-    IconProvider.ICON_THEME_SYSTEM.toString() -> stringResource(R.string.theme_system)
-    IconProvider.ICON_THEME_LIGHT.toString() -> stringResource(R.string.theme_light)
-    IconProvider.ICON_THEME_DARK.toString() -> stringResource(R.string.theme_dark)
+    IconProvider.ICON_THEME_SYSTEM.toString() -> stringResource(R.string.omnijaws_theme_system)
+    IconProvider.ICON_THEME_LIGHT.toString() -> stringResource(R.string.omnijaws_theme_light)
+    IconProvider.ICON_THEME_DARK.toString() -> stringResource(R.string.omnijaws_theme_dark)
     else -> value
 }
 

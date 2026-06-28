@@ -54,6 +54,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.android.axion.compose.scaffold.AxionScaffold
 import com.android.axion.compose.theme.AxionTheme
@@ -64,6 +65,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import org.omnirom.omnijaws.NetworkUtils
+import org.omnirom.omnijaws.R
 import java.util.Locale
 
 class LocationPickerActivity : ComponentActivity() {
@@ -123,7 +125,7 @@ private fun LocationPickerScreen(
     var searchJob by remember { mutableStateOf<Job?>(null) }
 
     AxionScaffold(
-        title = "Search location",
+        title = stringResource(R.string.omnijaws_location_query_hint),
         onBackClick = onBack
     ) { padding ->
         Column(
@@ -155,7 +157,7 @@ private fun LocationPickerScreen(
                         onSearch = {},
                         expanded = false,
                         onExpandedChange = {},
-                        placeholder = { Text("City name") },
+                        placeholder = { Text(stringResource(R.string.omnijaws_location_city_name)) },
                         leadingIcon = {
                             Icon(Icons.Outlined.Search, contentDescription = null)
                         }

@@ -148,7 +148,7 @@ fun WeatherDashboardScreen(
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = stringResource(R.string.dashboard_error_subtitle),
+                                    text = stringResource(R.string.omnijaws_dashboard_error_subtitle),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.outline
                                 )
@@ -161,7 +161,7 @@ fun WeatherDashboardScreen(
                                             modifier = Modifier.size(18.dp)
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text(stringResource(R.string.update))
+                                        Text(stringResource(R.string.omnijaws_update_title))
                                     }
                                     FilledTonalButton(onClick = onSettingsClick) {
                                         Icon(
@@ -170,7 +170,7 @@ fun WeatherDashboardScreen(
                                             modifier = Modifier.size(18.dp)
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text(stringResource(R.string.settings_title))
+                                        Text(stringResource(R.string.omnijaws_settings_title))
                                     }
                                 }
                             }
@@ -203,7 +203,7 @@ private fun DrawerContent(
     ) {
         Spacer(modifier = Modifier.height(24.dp))
         Text(
-            text = stringResource(R.string.activity_title),
+            text = stringResource(R.string.omnijaws_activity_title),
             style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier.padding(horizontal = 28.dp, vertical = 16.dp)
         )
@@ -221,14 +221,14 @@ private fun DrawerContent(
 
         NavigationDrawerItem(
             icon = { Icon(Icons.Outlined.MyLocation, contentDescription = null) },
-            label = { Text(stringResource(R.string.weather_custom_location_title)) },
+            label = { Text(stringResource(R.string.omnijaws_weather_custom_location_title)) },
             selected = false,
             onClick = onLocationClick,
             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
         )
         NavigationDrawerItem(
             icon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
-            label = { Text(stringResource(R.string.settings_title)) },
+            label = { Text(stringResource(R.string.omnijaws_settings_title)) },
             selected = false,
             onClick = onSettingsClick,
             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
@@ -297,7 +297,7 @@ private fun WeatherContent(
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = stringResource(
-                    R.string.dashboard_provider_attribution,
+                    R.string.omnijaws_dashboard_provider_attribution,
                     weather.provider ?: ""
                 ),
                 style = MaterialTheme.typography.labelSmall,
@@ -326,7 +326,7 @@ private fun TopBar(
         IconButton(onClick = onMenuClick) {
             Icon(
                 imageVector = Icons.Outlined.Menu,
-                contentDescription = stringResource(R.string.menu)
+                contentDescription = stringResource(R.string.omnijaws_menu_title)
             )
         }
         Spacer(modifier = Modifier.weight(1f))
@@ -348,13 +348,13 @@ private fun TopBar(
         IconButton(onClick = onRefreshClick) {
             Icon(
                 imageVector = Icons.Outlined.Refresh,
-                contentDescription = stringResource(R.string.update)
+                contentDescription = stringResource(R.string.omnijaws_update_title)
             )
         }
         IconButton(onClick = onSettingsClick) {
             Icon(
                 imageVector = Icons.Outlined.Settings,
-                contentDescription = stringResource(R.string.settings_title)
+                contentDescription = stringResource(R.string.omnijaws_settings_title)
             )
         }
     }
@@ -413,7 +413,7 @@ private fun WeatherSummaryRow(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Outlined.ArrowDownward,
-                            contentDescription = stringResource(R.string.temperature_low),
+                            contentDescription = stringResource(R.string.omnijaws_temperature_low),
                             modifier = Modifier.size(14.dp),
                             tint = MaterialTheme.colorScheme.primary
                         )
@@ -425,7 +425,7 @@ private fun WeatherSummaryRow(
                         Spacer(modifier = Modifier.width(8.dp))
                         Icon(
                             imageVector = Icons.Outlined.ArrowUpward,
-                            contentDescription = stringResource(R.string.temperature_high),
+                            contentDescription = stringResource(R.string.omnijaws_temperature_high),
                             modifier = Modifier.size(14.dp),
                             tint = MaterialTheme.colorScheme.error
                         )

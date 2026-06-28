@@ -16,7 +16,7 @@
 -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:configure="org.omnirom.omnijaws.widget.WeatherAppWidgetConfigureActivity"
-    android:description="@string/weather_widget_desc"
+    android:description="@string/omnijaws_weather_widget_desc"
     android:initialLayout="@layout/weather_appwidget_wide"
     android:maxResizeWidth="@dimen/max_weather_widget_resize_width"
     android:maxResizeHeight="@dimen/max_weather_widget_resize_height"

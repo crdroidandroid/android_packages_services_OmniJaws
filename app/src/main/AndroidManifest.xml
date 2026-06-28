@@ -22,7 +22,7 @@
         android:name=".App"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
+        android:label="@string/omnijaws_app_name"
         android:usesCleartextTraffic="true">
 
         <uses-library
@@ -32,7 +32,7 @@
         <activity
             android:name=".ui.WeatherDashboardActivity"
             android:exported="true"
-            android:label="@string/activity_title"
+            android:label="@string/omnijaws_activity_title"
             android:launchMode="singleInstance"
             android:theme="@style/Theme.OmniJaws.Compose">
             <intent-filter>
@@ -55,7 +55,7 @@
         <activity
             android:name=".ui.WeatherSettingsActivity"
             android:exported="true"
-            android:label="@string/weather_config_title"
+            android:label="@string/omnijaws_weather_config_title"
             android:theme="@style/Theme.OmniJaws.Compose">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -77,7 +77,7 @@
             android:name=".ui.LocationPickerActivity"
             android:excludeFromRecents="true"
             android:exported="false"
-            android:label="@string/location_browse_activity_title"
+            android:label="@string/omnijaws_location_browse_activity_title"
             android:theme="@style/Theme.OmniJaws.Compose" />
 
         <service
@@ -276,7 +276,7 @@
         <receiver
             android:name=".widget.WeatherAppWidgetProvider"
             android:exported="true"
-            android:label="@string/weather_widget">
+            android:label="@string/omnijaws_weather_widget">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="android.intent.action.CONFIGURATION_CHANGED" />

@@ -73,7 +73,7 @@ fun HourlyForecastCard(
     ) {
         Column(modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)) {
             Text(
-                text = stringResource(R.string.forecast_card_hourly_title),
+                text = stringResource(R.string.omnijaws_forecast_card_hourly_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(horizontal = 20.dp)

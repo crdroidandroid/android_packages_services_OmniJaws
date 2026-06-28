@@ -87,7 +87,7 @@ fun DailyForecastCard(
     ) {
         Column(modifier = Modifier.padding(vertical = 16.dp)) {
             Text(
-                text = stringResource(R.string.forecast_card_title),
+                text = stringResource(R.string.omnijaws_forecast_card_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(horizontal = 20.dp)
@@ -142,9 +142,9 @@ fun DailyForecastCard(
                 ) {
                     Text(
                         text = if (expanded) {
-                            stringResource(R.string.forecast_show_less)
+                            stringResource(R.string.omnijaws_forecast_show_less)
                         } else {
-                            stringResource(R.string.forecast_show_more)
+                            stringResource(R.string.omnijaws_forecast_show_more)
                         },
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary
@@ -173,7 +173,7 @@ private fun DailyForecastRow(
     getConditionIcon: (Int) -> Drawable?
 ) {
     val icon = remember(forecast.conditionCode, iconPack, iconTheme) { getConditionIcon(forecast.conditionCode) }
-    val todayLabel = stringResource(R.string.forecast_today)
+    val todayLabel = stringResource(R.string.omnijaws_forecast_today)
     val dayName = remember(forecast.date, isToday, todayLabel) {
         formatDayName(forecast.date, isToday, todayLabel)
     }

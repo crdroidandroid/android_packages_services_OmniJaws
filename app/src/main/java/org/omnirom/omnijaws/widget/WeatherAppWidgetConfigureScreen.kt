@@ -42,7 +42,7 @@ fun WeatherAppWidgetConfigureScreen(
     onCancel: () -> Unit
 ) {
     AxionScaffold(
-        title = stringResource(R.string.weather_widget),
+        title = stringResource(R.string.omnijaws_weather_widget),
         onBackClick = onCancel
     ) { padding ->
         val colorValues = stringArrayResource(R.array.color_theme_values)
@@ -64,10 +64,10 @@ fun WeatherAppWidgetConfigureScreen(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            PreferenceGroup(title = stringResource(R.string.category_appearance)) {
+            PreferenceGroup(title = stringResource(R.string.omnijaws_category_appearance)) {
                 item {
                     ListPreference(
-                        title = stringResource(R.string.color_theme_title),
+                        title = stringResource(R.string.omnijaws_color_theme_title),
                         summary = labelFor(colorOptions, state.colorTheme),
                         options = colorOptions,
                         value = state.colorTheme,
@@ -76,7 +76,7 @@ fun WeatherAppWidgetConfigureScreen(
                 }
                 item {
                     ListPreference(
-                        title = stringResource(R.string.bg_transparency_title),
+                        title = stringResource(R.string.omnijaws_bg_transparency_title),
                         summary = labelFor(bgOptions, state.bgTransparency),
                         options = bgOptions,
                         value = state.bgTransparency,
@@ -86,7 +86,7 @@ fun WeatherAppWidgetConfigureScreen(
                 if (state.showIconTheme) {
                     item {
                         ListPreference(
-                            title = stringResource(R.string.icon_theme_title),
+                            title = stringResource(R.string.omnijaws_icon_theme_title),
                             summary = labelFor(iconOptions, state.iconTheme),
                             options = iconOptions,
                             value = state.iconTheme,
@@ -99,7 +99,7 @@ fun WeatherAppWidgetConfigureScreen(
             PreferenceGroup {
                 item {
                     ClickablePreference(
-                        title = stringResource(R.string.weather_config_title),
+                        title = stringResource(R.string.omnijaws_weather_config_title),
                         icon = Icons.Outlined.Tune,
                         onClick = onOpenWeatherSettings
                     )
