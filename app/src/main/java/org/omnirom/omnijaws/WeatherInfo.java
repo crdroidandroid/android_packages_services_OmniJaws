@@ -141,6 +141,10 @@ public class WeatherInfo {
             this.windSpeed = windSpeed;
             this.metric = metric;
         }
+
+        public String getCondition(Context context) {
+            return WeatherInfo.getCondition(context, conditionCode, condition);
+        }
     }
 
     public static final String[] WIND_DIRECTION = new String[]{
@@ -180,7 +184,7 @@ public class WeatherInfo {
 
     private static String getCondition(Context context, int conditionCode, String condition) {
         final Resources res = context.getResources();
-        final int resId = res.getIdentifier("weather_" + conditionCode, "string", context.getPackageName());
+        final int resId = res.getIdentifier("omnijaws_weather_" + conditionCode, "string", context.getPackageName());
         if (resId != 0) {
             return res.getString(resId);
         }

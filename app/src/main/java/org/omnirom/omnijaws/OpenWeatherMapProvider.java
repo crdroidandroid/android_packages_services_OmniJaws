@@ -89,7 +89,7 @@ public class OpenWeatherMapProvider extends AbstractWeatherProvider {
             String city = getWeatherDataLocality(selection);
 
             WeatherInfo w = new WeatherInfo(mContext, selection, city,
-                    /* condition */ weather.getString("main"),
+                    /* condition */ "",
                     /* conditionCode */ mapConditionIconToCode(
                     weather.getString("icon"), weather.getInt("id")),
                     /* temperature */ sanitizeTemperature(conditionData.getDouble("temp"), metric),
@@ -159,7 +159,7 @@ public class OpenWeatherMapProvider extends AbstractWeatherProvider {
                 item = new DayForecast(
                         /* low */ sanitizeTemperature(conditionData.getDouble("min"), metric),
                         /* high */ sanitizeTemperature(conditionData.getDouble("max"), metric),
-                        /* condition */ data.getString("main"),
+                        /* condition */ "",
                         /* conditionCode */ mapConditionIconToCode(
                         data.getString("icon"), data.getInt("id")),
                         day,
@@ -201,7 +201,7 @@ public class OpenWeatherMapProvider extends AbstractWeatherProvider {
                 result.add(new WeatherInfo.HourlyForecast(
                         sanitizeTemperature(hour.getDouble("temp"), metric),
                         mapConditionIconToCode(hourWeather.getString("icon"), hourWeather.getInt("id")),
-                        hourWeather.getString("main"),
+                        "",
                         hour.getLong("dt") * 1000L,
                         (float) hour.getDouble("humidity"),
                         hWindSpeed,

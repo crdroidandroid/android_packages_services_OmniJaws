@@ -212,7 +212,7 @@ public class WeatherContentProvider extends ContentProvider {
                     result.newRow()
                             .add(COLUMN_HOURLY_TEMPERATURE, h.temperature)
                             .add(COLUMN_HOURLY_CONDITION_CODE, h.conditionCode)
-                            .add(COLUMN_HOURLY_CONDITION, h.condition)
+                            .add(COLUMN_HOURLY_CONDITION, h.getCondition(mContext))
                             .add(COLUMN_HOURLY_TIMESTAMP, h.timestamp)
                             .add(COLUMN_HOURLY_HUMIDITY, h.humidity)
                             .add(COLUMN_HOURLY_WIND_SPEED, h.windSpeed);

@@ -85,7 +85,7 @@ public class PirateWeatherProvider extends AbstractWeatherProvider {
             String city = getWeatherDataLocality(selection);
 
             WeatherInfo w = new WeatherInfo(mContext, selection, city,
-                    /* condition */ conditionData.getString("summary"),
+                    /* condition */ "",
                     /* conditionCode */ mapConditionIconToCode(conditionData.getString("icon")),
                     /* temperature */ (float) conditionData.getDouble("temperature"),
                     /* humidity */ (float) (conditionData.getDouble("humidity") * 100),
@@ -134,7 +134,7 @@ public class PirateWeatherProvider extends AbstractWeatherProvider {
                 item = new DayForecast(
                         /* low */ (float) forecast.getDouble("temperatureLow"),
                         /* high */ (float) forecast.getDouble("temperatureHigh"),
-                        /* condition */ forecast.getString("summary"),
+                        /* condition */ "",
                         /* conditionCode */ mapConditionIconToCode(forecast.getString("icon")),
                         day,
                         metric);

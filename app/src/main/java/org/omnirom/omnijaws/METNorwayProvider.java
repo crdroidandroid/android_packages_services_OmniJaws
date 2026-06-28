@@ -57,8 +57,6 @@ public class METNorwayProvider extends AbstractWeatherProvider {
 
 			String symbolCode = timeseries.getJSONObject(0).getJSONObject("data").getJSONObject("next_1_hours").getJSONObject("summary").getString("symbol_code");
 			//Log.d("getAllWeather: symbolCode:", symbolCode);
-			String conditionDescription = getWeatherCondition(symbolCode);
-			//Log.d("getAllWeather: conditionDescription:", conditionDescription);
             int weatherCode = arrayWeatherIconToCode[getPriorityCondition(symbolCode)];
 
             // Check Available Night Icon
@@ -71,7 +69,7 @@ public class METNorwayProvider extends AbstractWeatherProvider {
             WeatherInfo w = new WeatherInfo(mContext,
                     /* id */ coordinates,
                     /* cityId */ city,
-                    /* condition */ conditionDescription,
+                    /* condition */ "",
                     /* conditionCode */ weatherCode,
                     /* temperature */ convertTemperature(weather.getDouble("air_temperature"), metric),
                     /* humidity */ (float) weather.getDouble("relative_humidity"),
@@ -133,9 +131,7 @@ public class METNorwayProvider extends AbstractWeatherProvider {
                 int scSixToTwelve = 0; // symbolCode next_6_hours at 06:00
                 int scTwelveToEighteen = 0; // symbolCode next_6_hours at 12:00
                 int scSixToEighteen = 0; // symbolCode next_12_hours at 06:00
-                boolean hasFastCondition = false; // If true, there is no need to calculate "symbolCode" and "conditionDescription".
-                String conditionDescription = "";
-                String cdSixToEighteen = ""; // conditionDescription at 06:00 or 12:00
+                boolean hasFastCondition = false; // If true, there is no need to recalculate "symbolCode".
 
                 while (convertTimeZone(timeseries.getJSONObject(whileIndex).getString("time")).contains(day)) {
                     double tempI = timeseries.getJSONObject(whileIndex).getJSONObject("data").getJSONObject("instant").getJSONObject("details").getDouble("air_temperature");
@@ -161,7 +157,6 @@ public class METNorwayProvider extends AbstractWeatherProvider {
 
                         if (stepSymbolCode > symbolCode) {
                             symbolCode = stepSymbolCode;
-                            conditionDescription = stepTextSymbolCode;
                         }
 
                         if(hasSixHours || hasTwelveHours) {
@@ -169,18 +164,12 @@ public class METNorwayProvider extends AbstractWeatherProvider {
                                 String textSymbolCode = timeseries.getJSONObject(whileIndex).getJSONObject("data").getJSONObject(hasTwelveHours ? "next_12_hours" : "next_6_hours").getJSONObject("summary").getString("symbol_code");
                                 if (hasTwelveHours) {
                                     scSixToEighteen = getPriorityCondition(textSymbolCode);
-                                    cdSixToEighteen = timeseries.getJSONObject(whileIndex).getJSONObject("data").getJSONObject("next_12_hours").getJSONObject("summary").getString("symbol_code");
                                 } else {
                                     scSixToTwelve = getPriorityCondition(textSymbolCode);
-                                    cdSixToEighteen = textSymbolCode;
                                 }
                             } else if (scSixToTwelve != 0 && convertTimeZone(timeseries.getJSONObject(whileIndex).getString("time")).contains("T12")) {
                                 String textSymbolCode = timeseries.getJSONObject(whileIndex).getJSONObject("data").getJSONObject("next_6_hours").getJSONObject("summary").getString("symbol_code");
                                 scTwelveToEighteen = getPriorityCondition(textSymbolCode);
-
-                                if (scSixToTwelve < scTwelveToEighteen) {
-                                    cdSixToEighteen = textSymbolCode;
-                                }
                             }
                         }
                     }
@@ -189,16 +178,12 @@ public class METNorwayProvider extends AbstractWeatherProvider {
 
                 if(hasFastCondition) {
                     symbolCode = (scSixToEighteen != 0) ? scSixToEighteen : Math.max(scSixToTwelve, scTwelveToEighteen);
-                    conditionDescription = cdSixToEighteen;
                 }
-                
-                String formattedConditionDescription = getWeatherCondition(conditionDescription);
-                //Log.d("DayForecast: formattedConditionDescription:", formattedConditionDescription);
 
                 item = new DayForecast(
                         /* low */ convertTemperature(temp_min, metric),
                         /* high */ convertTemperature(temp_max, metric),
-                        /* condition */ formattedConditionDescription,
+                        /* condition */ "",
                         /* conditionCode */ arrayWeatherIconToCode[symbolCode],
                         day,
                         metric);
@@ -244,7 +229,6 @@ public class METNorwayProvider extends AbstractWeatherProvider {
 
                 String sc = "";
                 int condCode = -1;
-                String condDesc = "";
                 JSONObject data = entry.getJSONObject("data");
                 if (data.has("next_1_hours")) {
                     sc = data.getJSONObject("next_1_hours").getJSONObject("summary").getString("symbol_code");
@@ -253,7 +237,6 @@ public class METNorwayProvider extends AbstractWeatherProvider {
                 }
                 if (!sc.isEmpty()) {
                     condCode = arrayWeatherIconToCode[getPriorityCondition(sc)];
-                    condDesc = getWeatherCondition(sc);
                     if (sc.contains("_night") && (condCode == 30 || condCode == 32 || condCode == 34)) {
                         condCode -= 1;
                     }
@@ -262,7 +245,7 @@ public class METNorwayProvider extends AbstractWeatherProvider {
                 result.add(new WeatherInfo.HourlyForecast(
                         convertTemperature(details.getDouble("air_temperature"), metric),
                         condCode,
-                        condDesc,
+                        "",
                         ts,
                         (float) details.getDouble("relative_humidity"),
                         convertWindSpeed(details.getDouble("wind_speed"), metric),
@@ -273,51 +256,6 @@ public class METNorwayProvider extends AbstractWeatherProvider {
         }
         return result;
     }
-
-	private static final HashMap<String, String> WEATHER_CONDITION_MAPPING = new HashMap<>();
-	static {
-		WEATHER_CONDITION_MAPPING.put("clearsky", "Clear Sky");
-		WEATHER_CONDITION_MAPPING.put("fair", "Mostly Clear");
-		WEATHER_CONDITION_MAPPING.put("partlycloudy", "Mostly Cloudy");
-		WEATHER_CONDITION_MAPPING.put("cloudy", "Cloudy");
-		WEATHER_CONDITION_MAPPING.put("rainshowers", "Showers");
-		WEATHER_CONDITION_MAPPING.put("rainshowersandthunder", "Showers and Thunderstorms");
-		WEATHER_CONDITION_MAPPING.put("sleetshowers", "Sleet Showers");
-		WEATHER_CONDITION_MAPPING.put("snowshowers", "Snow Showers");
-		WEATHER_CONDITION_MAPPING.put("rain", "Rainfall");
-		WEATHER_CONDITION_MAPPING.put("heavyrain", "Heavy Rainfall");
-		WEATHER_CONDITION_MAPPING.put("heavyrainandthunder", "Heavy Rainfall and Thunderstorms");
-		WEATHER_CONDITION_MAPPING.put("sleet", "Sleet");
-		WEATHER_CONDITION_MAPPING.put("snow", "Snowfall");
-		WEATHER_CONDITION_MAPPING.put("snowandthunder", "Snowfall and Thunderstorms");
-		WEATHER_CONDITION_MAPPING.put("fog", "Foggy");
-		WEATHER_CONDITION_MAPPING.put("sleetshowersandthunder", "Sleet Showers and Thunderstorms");
-		WEATHER_CONDITION_MAPPING.put("snowshowersandthunder", "Snow Showers and Thunderstorms");
-		WEATHER_CONDITION_MAPPING.put("rainandthunder", "Rainfall and Thunderstorms");
-		WEATHER_CONDITION_MAPPING.put("sleetandthunder", "Sleet and Thunderstorms");
-		WEATHER_CONDITION_MAPPING.put("lightrainshowersandthunder", "Light Rain Showers and Thunderstorms");
-		WEATHER_CONDITION_MAPPING.put("heavyrainshowersandthunder", "Heavy Rain Showers and Thunderstorms");
-		WEATHER_CONDITION_MAPPING.put("lightssleetshowersandthunder", "Light Sleet Showers and Thunderstorms");
-		WEATHER_CONDITION_MAPPING.put("heavysleetshowersandthunder", "Heavy Sleet Showers and Thunderstorms");
-		WEATHER_CONDITION_MAPPING.put("lightssnowshowersandthunder", "Light Snow Showers and Thunderstorms");
-		WEATHER_CONDITION_MAPPING.put("heavysnowshowersandthunder", "Heavy Snow Showers and Thunderstorms");
-		WEATHER_CONDITION_MAPPING.put("lightrainandthunder", "Light Rain and Thunderstorms");
-		WEATHER_CONDITION_MAPPING.put("lightsleetandthunder", "Light Sleet and Thunderstorms");
-		WEATHER_CONDITION_MAPPING.put("heavysleetandthunder", "Heavy Sleet and Thunderstorms");
-		WEATHER_CONDITION_MAPPING.put("lightsnowandthunder", "Light Snow and Thunderstorms");
-		WEATHER_CONDITION_MAPPING.put("heavysnowandthunder", "Heavy Snow and Thunderstorms");
-		WEATHER_CONDITION_MAPPING.put("lightrainshowers", "Light Rain Showers");
-		WEATHER_CONDITION_MAPPING.put("heavyrainshowers", "Heavy Rain Showers");
-		WEATHER_CONDITION_MAPPING.put("lightsleetshowers", "Light Sleet Showers");
-		WEATHER_CONDITION_MAPPING.put("heavysleetshowers", "Heavy Sleet Showers");
-		WEATHER_CONDITION_MAPPING.put("lightsnowshowers", "Light Snow Showers");
-		WEATHER_CONDITION_MAPPING.put("heavysnowshowers", "Heavy Snow Showers");
-		WEATHER_CONDITION_MAPPING.put("lightrain", "Light Rain");
-		WEATHER_CONDITION_MAPPING.put("lightsleet", "Light Sleet");
-		WEATHER_CONDITION_MAPPING.put("heavysleet", "Heavy Sleet");
-		WEATHER_CONDITION_MAPPING.put("lightsnow", "Light Snow");
-		WEATHER_CONDITION_MAPPING.put("heavysnow", "Heavy Snow");
-	}
 
     private static final HashMap<String, Integer> SYMBOL_CODE_MAPPING = new HashMap<>();
     static {
@@ -375,14 +313,6 @@ public class METNorwayProvider extends AbstractWeatherProvider {
         return SYMBOL_CODE_MAPPING.getOrDefault(condition, 0);
     }
     
-	private String getWeatherCondition(String condition) {
-		int endIndex = condition.indexOf("_");
-		if (endIndex != -1) {
-		    condition = condition.substring(0, endIndex);
-		}
-		return WEATHER_CONDITION_MAPPING.getOrDefault(condition, condition);
-	}
-
     private void initTimeZoneFormat() {
         gmt0Format.setTimeZone(TimeZone.getTimeZone("GMT"));
         userTimeZoneFormat.setTimeZone(TimeZone.getDefault());

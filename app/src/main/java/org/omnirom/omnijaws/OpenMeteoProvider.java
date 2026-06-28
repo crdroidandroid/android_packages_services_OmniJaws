@@ -87,7 +87,7 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
             WeatherInfo w = new WeatherInfo(mContext,
                     /* id */ selection,
                     /* cityId */ city,
-                    /* condition */ wmoDescription(weatherCode),
+                    /* condition */ "",
                     /* conditionCode */ mapWmoToCode(weatherCode, isDay),
                     /* temperature */ (float) current.getDouble("temperature_2m"),
                     /* humidity */ (float) current.getDouble("relative_humidity_2m"),
@@ -146,7 +146,7 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
                 result.add(new DayForecast(
                         /* low */ (float) lows.getDouble(i),
                         /* high */ (float) highs.getDouble(i),
-                        /* condition */ wmoDescription(code),
+                        /* condition */ "",
                         /* conditionCode */ mapWmoToCode(code, true),
                         getDay(i),
                         metric));
@@ -183,7 +183,7 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
                 result.add(new WeatherInfo.HourlyForecast(
                         (float) temps.getDouble(i),
                         mapWmoToCode(code, isDay),
-                        wmoDescription(code),
+                        "",
                         times.getLong(i) * 1000L,
                         hums != null ? (float) hums.optDouble(i, Double.NaN) : Float.NaN,
                         winds != null ? (float) winds.optDouble(i, Double.NaN) : Float.NaN,
@@ -260,40 +260,6 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
             case 96:
             case 99: return 4;               // thunderstorm
             default: return -1;
-        }
-    }
-
-    private static String wmoDescription(int wmo) {
-        switch (wmo) {
-            case 0:  return "Clear";
-            case 1:  return "Mainly clear";
-            case 2:  return "Partly cloudy";
-            case 3:  return "Overcast";
-            case 45: return "Fog";
-            case 48: return "Depositing rime fog";
-            case 51: return "Light drizzle";
-            case 53: return "Drizzle";
-            case 55: return "Dense drizzle";
-            case 56:
-            case 57: return "Freezing drizzle";
-            case 61: return "Light rain";
-            case 63: return "Rain";
-            case 65: return "Heavy rain";
-            case 66:
-            case 67: return "Freezing rain";
-            case 71: return "Light snow";
-            case 73: return "Snow";
-            case 75: return "Heavy snow";
-            case 77: return "Snow grains";
-            case 80: return "Light showers";
-            case 81: return "Showers";
-            case 82: return "Violent showers";
-            case 85: return "Light snow showers";
-            case 86: return "Snow showers";
-            case 95: return "Thunderstorm";
-            case 96:
-            case 99: return "Thunderstorm with hail";
-            default: return "";
         }
     }
 
