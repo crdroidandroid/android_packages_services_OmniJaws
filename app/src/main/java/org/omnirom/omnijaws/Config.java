@@ -41,6 +41,7 @@ public class Config {
     public static final String PREF_KEY_UPDATE_ERROR = "update_error";
     public static final String PREF_KEY_OWM_KEY = "owm_key";
     public static final String PREF_KEY_PIRATE_WEATHER_KEY = "pirate_weather_key";
+    public static final String PREF_KEY_VISUAL_CROSSING_KEY = "visual_crossing_key";
     public static final String PREF_KEY_HISTORY = "history";
     public static final String PREF_KEY_HISTORY_SIZE = "history_size";
 
@@ -61,6 +62,8 @@ public class Config {
                 return new PirateWeatherProvider(context);
             case "3":
                 return new OpenMeteoProvider(context);
+            case "4":
+                return new VisualCrossingProvider(context);
             default:
                 return new OpenWeatherMapProvider(context);
         }
@@ -80,6 +83,8 @@ public class Config {
                 return "Pirate Weather";
             case "3":
                 return "Open-Meteo";
+            case "4":
+                return "Visual Crossing";
             default:
                 return "OpenWeatherMap";
         }
@@ -262,6 +267,13 @@ public class Config {
                 .getDefaultSharedPreferences(context);
 
         return prefs.getString(PREF_KEY_PIRATE_WEATHER_KEY, null);
+    }
+
+    public static String getVisualCrossingKey(Context context) {
+        SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(context);
+
+        return prefs.getString(PREF_KEY_VISUAL_CROSSING_KEY, null);
     }
 
     public static boolean isHistoryOn(Context context) {

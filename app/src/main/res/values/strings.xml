@@ -14,4 +14,8 @@
     <string name="omnijaws_provider_metnorway" translatable="false">MET Norway</string>
     <string name="omnijaws_provider_pirate_weather" translatable="false">Pirate Weather</string>
     <string name="omnijaws_provider_openmeteo" translatable="false">Open-Meteo</string>
+    <string name="omnijaws_provider_visualcrossing" translatable="false">Visual Crossing</string>
+
+    <!-- Visual Crossing API key preference title -->
+    <string name="omnijaws_visual_crossing_key" translatable="false">Visual Crossing API key</string>
 </resources>

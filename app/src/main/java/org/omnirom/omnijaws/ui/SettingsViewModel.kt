@@ -48,6 +48,7 @@ data class SettingsUiState(
     val iconPackSupportsTheming: Boolean = false,
     val owmKey: String = "",
     val pirateWeatherKey: String = "",
+    val visualCrossingKey: String = "",
     val lastUpdateTime: String = "",
     val iconPacks: List<IconPackItem> = emptyList(),
     val hasLocationPermission: Boolean = false
@@ -57,6 +58,7 @@ data class SettingsUiState(
         "1" -> "MET Norway"
         "2" -> "Pirate Weather"
         "3" -> "Open-Meteo"
+        "4" -> "Visual Crossing"
         else -> provider
     }
     val unitsLabel: String get() = when (units) {
@@ -104,6 +106,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                     iconPackSupportsTheming = IconPack.supportsThemes(ctx),
                     owmKey = Config.getOwmKey(ctx) ?: "",
                     pirateWeatherKey = Config.getPirateWeatherKey(ctx) ?: "",
+                    visualCrossingKey = Config.getVisualCrossingKey(ctx) ?: "",
                     lastUpdateTime = queryLastUpdate(),
                     iconPacks = loadIconPacks(),
                     hasLocationPermission = hasLocationPermission()
@@ -191,6 +194,13 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx)
         prefs.edit().putString(Config.PREF_KEY_PIRATE_WEATHER_KEY, value).apply()
         _uiState.value = _uiState.value.copy(pirateWeatherKey = value)
+        scheduleUpdate()
+    }
+
+    fun setVisualCrossingKey(value: String) {
+        val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx)
+        prefs.edit().putString(Config.PREF_KEY_VISUAL_CROSSING_KEY, value).apply()
+        _uiState.value = _uiState.value.copy(visualCrossingKey = value)
         scheduleUpdate()
     }
 
