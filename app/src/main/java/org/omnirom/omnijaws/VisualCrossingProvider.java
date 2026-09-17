@@ -33,14 +33,21 @@ public class VisualCrossingProvider extends AbstractWeatherProvider {
     private static final String TAG = "VisualCrossingProvider";
 
     private static final int MAX_FORECAST_DAYS = 7;
+    private static final int MIN_FORECAST_DAYS = 5;
     private static final int MAX_HOURLY_ENTRIES = 24;
+
+    private static final String ELEMENTS =
+            "datetime,datetimeEpoch,temp,tempmax,tempmin,feelslike,humidity,dew,"
+            + "pressure,windspeed,winddir,uvindex,visibility,icon,sunriseEpoch,sunsetEpoch";
 
     // Timeline API: one call returns current conditions, daily forecast,
     // hourly forecast and astro data. unitGroup=metric -> degC / km/h / km,
     // unitGroup=us -> degF / mph / miles, so no unit conversion is needed.
     private static final String URL_WEATHER =
             "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/"
-            + "%s?unitGroup=%s&include=current,days,hours&iconSet=icons2&contentType=json&key=%s";
+            + "%s/next" + MAX_FORECAST_DAYS + "days?unitGroup=%s"
+            + "&include=current,days,hours&iconSet=icons2&contentType=json"
+            + "&elements=" + ELEMENTS + "&key=%s";
 
     public VisualCrossingProvider(Context context) {
         super(context);
@@ -77,10 +84,26 @@ public class VisualCrossingProvider extends AbstractWeatherProvider {
         }
         log(TAG, "URL = " + url + " returning a response of " + response);
 
+        String trimmed = response.trim();
+        if (!trimmed.startsWith("{")) {
+            Log.w(TAG, "API returned a non JSON response: "
+                    + trimmed.substring(0, Math.min(trimmed.length(), 200)));
+            return null;
+        }
+
         try {
-            JSONObject root = new JSONObject(response);
+            JSONObject root = new JSONObject(trimmed);
             JSONObject current = root.getJSONObject("currentConditions");
-            JSONArray days = root.getJSONArray("days");
+            JSONArray days = root.optJSONArray("days");
+            if (days == null || days.length() == 0) {
+                Log.w(TAG, "no daily data in response");
+                return null;
+            }
+            JSONObject today = days.getJSONObject(0);
+
+            if (root.has("queryCost")) {
+                log(TAG, "queryCost = " + root.optInt("queryCost", -1));
+            }
 
             String city = getWeatherDataLocality(selection);
 
@@ -90,34 +113,48 @@ public class VisualCrossingProvider extends AbstractWeatherProvider {
                     /* condition */ "",
                     /* conditionCode */ mapIconToCode(current.optString("icon", "")),
                     /* temperature */ (float) current.getDouble("temp"),
-                    /* humidity */ (float) current.getDouble("humidity"),
-                    /* wind */ (float) current.optDouble("windspeed", 0),
+                    /* humidity */ (float) current.optDouble("humidity", Double.NaN),
+                    /* wind */ (float) current.optDouble("windspeed", Double.NaN),
                     /* windDir */ (int) current.optDouble("winddir", 0),
                     metric,
                     parseForecasts(days, metric),
                     System.currentTimeMillis());
 
-            if (current.has("feelslike")) {
-                w.setFeelsLike((float) current.getDouble("feelslike"));
+            Float feelsLike = optFloat(current, "feelslike");
+            if (feelsLike != null) {
+                w.setFeelsLike(feelsLike);
             }
-            if (current.has("pressure") && !current.isNull("pressure")) {
-                w.setPressure((float) current.getDouble("pressure"));
+            Float pressure = optFloat(current, "pressure");
+            if (pressure != null) {
+                w.setPressure(pressure);
             }
-            if (current.has("uvindex") && !current.isNull("uvindex")) {
-                w.setUvi((float) current.getDouble("uvindex"));
+            Float uvi = optFloat(current, "uvindex");
+            if (uvi != null) {
+                w.setUvi(uvi);
             }
-            if (current.has("visibility") && !current.isNull("visibility")) {
+            Float visibility = optFloat(current, "visibility");
+            if (visibility != null) {
                 // already km (metric) or miles (us)
-                w.setVisibility((float) current.getDouble("visibility"));
+                w.setVisibility(visibility);
             }
-            if (current.has("dew") && !current.isNull("dew")) {
-                w.setDewPoint((float) current.getDouble("dew"));
+            Float dew = optFloat(current, "dew");
+            if (dew != null) {
+                w.setDewPoint(dew);
             }
-            if (current.has("sunriseEpoch")) {
-                w.setSunrise(current.getLong("sunriseEpoch") * 1000L);
+
+            long sunrise = optEpochMillis(current, "sunriseEpoch");
+            if (sunrise == 0L) {
+                sunrise = optEpochMillis(today, "sunriseEpoch");
             }
-            if (current.has("sunsetEpoch")) {
-                w.setSunset(current.getLong("sunsetEpoch") * 1000L);
+            long sunset = optEpochMillis(current, "sunsetEpoch");
+            if (sunset == 0L) {
+                sunset = optEpochMillis(today, "sunsetEpoch");
+            }
+            if (sunrise > 0L) {
+                w.setSunrise(sunrise);
+            }
+            if (sunset > 0L) {
+                w.setSunset(sunset);
             }
 
             w.setHourlyForecasts(parseHourlyForecasts(days, metric));
@@ -140,6 +177,10 @@ public class VisualCrossingProvider extends AbstractWeatherProvider {
         for (int i = 0; i < count; i++) {
             try {
                 JSONObject forecast = days.getJSONObject(i);
+                if (forecast.isNull("tempmin") || forecast.isNull("tempmax")) {
+                    Log.w(TAG, "Incomplete forecast for day " + i);
+                    continue;
+                }
                 result.add(new DayForecast(
                         /* low */ (float) forecast.getDouble("tempmin"),
                         /* high */ (float) forecast.getDouble("tempmax"),
@@ -152,8 +193,8 @@ public class VisualCrossingProvider extends AbstractWeatherProvider {
             }
         }
         // clients assume there are at least 5 entries - pad with dummies if needed
-        if (result.size() < 5) {
-            for (int i = result.size(); i < 5; i++) {
+        if (result.size() < MIN_FORECAST_DAYS) {
+            for (int i = result.size(); i < MIN_FORECAST_DAYS; i++) {
                 Log.w(TAG, "Missing forecast for day " + i + " creating dummy");
                 result.add(new DayForecast(0, 0, "", -1, "NaN", metric));
             }
@@ -166,16 +207,23 @@ public class VisualCrossingProvider extends AbstractWeatherProvider {
         // accept entries starting from the current (partially elapsed) hour
         long cutoffSec = (System.currentTimeMillis() / 1000L) - 3600L;
 
-        try {
-            for (int d = 0; d < days.length() && result.size() < MAX_HOURLY_ENTRIES; d++) {
-                JSONArray hours = days.getJSONObject(d).optJSONArray("hours");
-                if (hours == null) {
-                    continue;
-                }
-                for (int i = 0; i < hours.length() && result.size() < MAX_HOURLY_ENTRIES; i++) {
+        for (int d = 0; d < days.length() && result.size() < MAX_HOURLY_ENTRIES; d++) {
+            JSONArray hours;
+            try {
+                hours = days.getJSONObject(d).optJSONArray("hours");
+            } catch (JSONException e) {
+                Log.w(TAG, "Invalid day entry at index " + d, e);
+                continue;
+            }
+            if (hours == null) {
+                continue;
+            }
+            for (int i = 0; i < hours.length() && result.size() < MAX_HOURLY_ENTRIES; i++) {
+                // one bad hour must not discard the remaining ones
+                try {
                     JSONObject hour = hours.getJSONObject(i);
                     long ts = hour.optLong("datetimeEpoch", 0);
-                    if (ts < cutoffSec) {
+                    if (ts < cutoffSec || hour.isNull("temp")) {
                         continue;
                     }
                     result.add(new WeatherInfo.HourlyForecast(
@@ -186,19 +234,44 @@ public class VisualCrossingProvider extends AbstractWeatherProvider {
                             (float) hour.optDouble("humidity", Double.NaN),
                             (float) hour.optDouble("windspeed", Double.NaN),
                             metric));
+                } catch (JSONException e) {
+                    Log.w(TAG, "Invalid hourly forecast at day " + d + " index " + i, e);
                 }
             }
-        } catch (JSONException e) {
-            Log.w(TAG, "Invalid hourly forecast data", e);
         }
         return result;
     }
 
+    private static Float optFloat(JSONObject obj, String key) {
+        if (!obj.has(key) || obj.isNull(key)) {
+            return null;
+        }
+        double value = obj.optDouble(key, Double.NaN);
+        return Double.isNaN(value) ? null : (float) value;
+    }
+
+    private static long optEpochMillis(JSONObject obj, String key) {
+        if (obj == null || !obj.has(key) || obj.isNull(key)) {
+            return 0L;
+        }
+        return obj.optLong(key, 0L) * 1000L;
+    }
+
     private String getCoords(String coordinate) {
         try {
-            double latitude = Double.valueOf(coordinate.substring(4, coordinate.indexOf("&")));
-            double longitude = Double.valueOf(coordinate.substring(coordinate.indexOf("lon=") + 4));
-            return latitude + "," + longitude;
+            int latStart = coordinate.indexOf("lat=");
+            int lonStart = coordinate.indexOf("lon=");
+            if (latStart == -1 || lonStart == -1) {
+                return null;
+            }
+            latStart += 4;
+            int latEnd = coordinate.indexOf("&", latStart);
+            if (latEnd == -1) {
+                latEnd = coordinate.length();
+            }
+            double latitude = Double.parseDouble(coordinate.substring(latStart, latEnd));
+            double longitude = Double.parseDouble(coordinate.substring(lonStart + 4));
+            return String.format(Locale.US, "%f,%f", latitude, longitude);
         } catch (Exception e) {
             return null;
         }
@@ -207,6 +280,9 @@ public class VisualCrossingProvider extends AbstractWeatherProvider {
     // Visual Crossing "icons2" set uses Dark Sky style icon names,
     // mapped the same way as PirateWeatherProvider
     private int mapIconToCode(String icon) {
+        if (TextUtils.isEmpty(icon)) {
+            return -1;
+        }
         switch (icon) {
             case "clear-day":                return 32;
             case "clear-night":              return 31;
@@ -230,7 +306,9 @@ public class VisualCrossingProvider extends AbstractWeatherProvider {
             case "rain-snow-showers-night":  return 5;
             case "sleet":                    return 18;
             case "hail":                     return 17;
-            default:                         return -1;
+            default:
+                Log.w(TAG, "unknown icon '" + icon + "'");
+                return -1;
         }
     }
 
