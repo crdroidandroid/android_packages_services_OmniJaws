@@ -15,7 +15,6 @@
  */
 package org.omnirom.omnijaws.ui.components
 
-import android.graphics.drawable.Drawable
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.horizontalScroll
@@ -41,18 +40,26 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import android.graphics.drawable.Drawable
+import android.text.format.DateFormat
 import com.android.internal.util.crdroid.OmniJawsClient
 import org.omnirom.omnijaws.R
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.roundToInt
 
 private val ITEM_WIDTH = 64.dp
 private val ITEM_SPACING = 4.dp
 private val ROW_HORIZONTAL_PADDING = 12.dp
+private val GRAPH_VERTICAL_PADDING = 6.dp
+private const val MAX_HOURS = 24
+private const val ONE_HOUR_MS = 60L * 60L * 1000L
 
 @Composable
 fun HourlyForecastCard(
@@ -62,7 +69,20 @@ fun HourlyForecastCard(
     iconTheme: Int,
     getConditionIcon: (Int) -> Drawable?
 ) {
-    val items = hourlyForecasts.take(24)
+    val items = remember(hourlyForecasts) { hourlyForecasts.take(MAX_HOURS) }
+    if (items.isEmpty()) return
+
+    val context = LocalContext.current
+    val configuration = LocalConfiguration.current
+    val hourFormat = remember(configuration, DateFormat.is24HourFormat(context)) {
+        val locale = Locale.getDefault()
+        val pattern = DateFormat.getBestDateTimePattern(locale, "j")
+        SimpleDateFormat(pattern, locale)
+    }
+    val nowLabel = stringResource(R.string.omnijaws_hourly_now)
+    val currentHourStart = remember(items) {
+        System.currentTimeMillis() / ONE_HOUR_MS * ONE_HOUR_MS
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -96,12 +116,15 @@ fun HourlyForecastCard(
                             tempUnits = tempUnits,
                             iconPack = iconPack,
                             iconTheme = iconTheme,
-                            getConditionIcon = getConditionIcon
+                            getConditionIcon = getConditionIcon,
+                            hourFormat = hourFormat,
+                            nowLabel = nowLabel,
+                            currentHourStart = currentHourStart
                         )
                     }
                 }
 
-                if (items.size > 1) {
+                if (items.count { it.temperature.isFinite() } > 1) {
                     Spacer(modifier = Modifier.height(8.dp))
                     TemperatureGraph(
                         temps = items.map { it.temperature },
@@ -121,20 +144,29 @@ private fun HourlyItem(
     tempUnits: String,
     iconPack: String,
     iconTheme: Int,
-    getConditionIcon: (Int) -> Drawable?
+    getConditionIcon: (Int) -> Drawable?,
+    hourFormat: SimpleDateFormat,
+    nowLabel: String,
+    currentHourStart: Long
 ) {
-    val timeFormat = remember { SimpleDateFormat("HH", Locale.getDefault()) }
-    val timeText = remember(hourly.timestamp) {
-        if (hourly.timestamp <= 0) "Now" else timeFormat.format(Date(hourly.timestamp))
+    val timeText = remember(hourly.timestamp, hourFormat, currentHourStart) {
+        when {
+            hourly.timestamp <= 0L -> nowLabel
+            hourly.timestamp < currentHourStart + ONE_HOUR_MS &&
+                    hourly.timestamp >= currentHourStart -> nowLabel
+            else -> hourFormat.format(Date(hourly.timestamp))
+        }
     }
-    val icon = remember(hourly.conditionCode, iconPack, iconTheme) { getConditionIcon(hourly.conditionCode) }
+    val icon = remember(hourly.conditionCode, iconPack, iconTheme) {
+        if (hourly.conditionCode < 0) null else getConditionIcon(hourly.conditionCode)
+    }
     val tempText = remember(hourly.temperature) {
-        "${hourly.temperature.toInt()}°"
+        if (hourly.temperature.isFinite()) "${hourly.temperature.roundToInt()}\u00b0" else "\u2013"
     }
 
     Column(
         modifier = Modifier
-            .width(64.dp)
+            .width(ITEM_WIDTH)
             .padding(vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -146,16 +178,24 @@ private fun HourlyItem(
         Spacer(modifier = Modifier.height(4.dp))
         if (icon != null) {
             Image(
-                painter = DrawablePainter(icon),
-                contentDescription = hourly.condition,
+                painter = rememberDrawablePainter(icon),
+                contentDescription = listOfNotNull(
+                    hourly.condition?.takeIf { it.isNotBlank() },
+                    if (hourly.temperature.isFinite()) {
+                        "${hourly.temperature.roundToInt()}$tempUnits"
+                    } else null
+                ).joinToString(", ").ifEmpty { null },
                 modifier = Modifier.size(28.dp)
             )
+        } else {
+            Spacer(modifier = Modifier.size(28.dp))
         }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = timeText,
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1
         )
     }
 }
@@ -171,15 +211,13 @@ private fun TemperatureGraph(
     val cellStepPx = with(density) { (ITEM_WIDTH + ITEM_SPACING).toPx() }
 
     Canvas(modifier = modifier) {
-        if (temps.size < 2) return@Canvas
-
         val finite = temps.filter { it.isFinite() }
         if (finite.size < 2) return@Canvas
 
         val minTemp = finite.min()
         val maxTemp = finite.max()
         val range = (maxTemp - minTemp).coerceAtLeast(1f)
-        val paddingY = 8f
+        val paddingY = GRAPH_VERTICAL_PADDING.toPx()
 
         val path = Path()
         temps.forEachIndexed { index, temp ->

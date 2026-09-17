@@ -22,8 +22,11 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.preference.PreferenceManager
 import com.android.internal.util.crdroid.OmniJawsClient
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,6 +34,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 import org.omnirom.omnijaws.Config
+import org.omnirom.omnijaws.WeatherUpdateService
 import org.omnirom.omnijaws.icon.IconProvider
 
 data class WeatherUiState(
@@ -44,12 +48,18 @@ data class WeatherUiState(
 class WeatherViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(WeatherUiState())
+
     private companion object {
         const val TAG = "WeatherDashboard"
+        const val DEBUG = false
+        const val REFRESH_TIMEOUT_MS = 20_000L
+        const val CONTROL_URI = "content://org.omnirom.omnijaws.provider/control"
     }
+
     val uiState: StateFlow<WeatherUiState> = _uiState.asStateFlow()
 
     private val client = OmniJawsClient.get()
+    private var refreshTimeoutJob: Job? = null
 
     fun queryWeather() {
         val context = getApplication<Application>()
@@ -58,27 +68,25 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
                 client.queryWeather(context)
                 client.getWeatherInfo()
             }
-            if (info != null) {
-                Log.d(TAG, "Weather data: city=${info.city} temp=${info.temp} condition=${info.condition}")
-                Log.d(TAG, "  humidity=${info.humidity} windSpeed=${info.windSpeed} pinWheel=${info.pinWheel}")
-                Log.d(TAG, "  feelsLike=${info.feelsLike} isNaN=${info.feelsLike.isNaN()}")
-                Log.d(TAG, "  pressure=${info.pressure} isNaN=${info.pressure.isNaN()}")
-                Log.d(TAG, "  uvi=${info.uvi} isNaN=${info.uvi.isNaN()}")
-                Log.d(TAG, "  visibility=${info.visibility} isNaN=${info.visibility.isNaN()}")
-                Log.d(TAG, "  dewPoint=${info.dewPoint} isNaN=${info.dewPoint.isNaN()}")
-                Log.d(TAG, "  sunrise=${info.sunrise} sunset=${info.sunset}")
-                Log.d(TAG, "  forecasts=${info.forecasts?.size} hourly=${info.hourlyForecasts?.size}")
-            } else {
-                Log.d(TAG, "Weather data: null")
+
+            if (DEBUG) {
+                if (info != null) {
+                    Log.d(TAG, "city=${info.city} temp=${info.temp} condition=${info.condition}" +
+                            " forecasts=${info.forecasts?.size} hourly=${info.hourlyForecasts?.size}")
+                } else {
+                    Log.d(TAG, "Weather data: null")
+                }
             }
 
-            val previousError = _uiState.value.error
+            val enabled = withContext(Dispatchers.IO) { Config.isEnabled(context) }
             val resolvedError = when {
                 info != null -> null
-                !Config.isEnabled(context) -> OmniJawsClient.EXTRA_ERROR_DISABLED
-                previousError != null -> previousError
-                else -> OmniJawsClient.EXTRA_ERROR_DISABLED
+                !enabled -> OmniJawsClient.EXTRA_ERROR_DISABLED
+                _uiState.value.error != null -> _uiState.value.error
+                else -> OmniJawsClient.EXTRA_ERROR_NETWORK
             }
+
+            refreshTimeoutJob?.cancel()
 
             _uiState.value = WeatherUiState(
                 weatherInfo = info,
@@ -91,23 +99,54 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun onWeatherError(errorReason: Int) {
+        refreshTimeoutJob?.cancel()
         _uiState.value = _uiState.value.copy(error = errorReason, isLoading = false)
     }
 
     fun forceRefresh() {
         _uiState.value = _uiState.value.copy(isLoading = true)
         val context = getApplication<Application>()
+
         viewModelScope.launch(Dispatchers.IO) {
             val values = ContentValues()
             values.put("update", true)
-            context.contentResolver.update(
-                Uri.parse("content://org.omnirom.omnijaws.provider/control"),
-                values, null, null
-            )
+            runCatching {
+                context.contentResolver.update(Uri.parse(CONTROL_URI), values, null, null)
+            }.onFailure { Log.e(TAG, "forceRefresh failed", it) }
+        }
+
+        refreshTimeoutJob?.cancel()
+        refreshTimeoutJob = viewModelScope.launch {
+            delay(REFRESH_TIMEOUT_MS)
+            if (_uiState.value.isLoading) {
+                queryWeather()
+            }
+        }
+    }
+
+    fun setLocationResult(name: String, lat: Double, lon: Double) {
+        val context = getApplication<Application>()
+        val locationId = String.format(java.util.Locale.US, "lat=%f&lon=%f", lat, lon)
+        PreferenceManager.getDefaultSharedPreferences(context).edit()
+            .putBoolean(Config.PREF_KEY_CUSTOM_LOCATION, true)
+            .apply()
+        Config.setLocationId(context, locationId)
+        Config.setLocationName(context, name)
+
+        _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+        WeatherUpdateService.scheduleUpdateNow(context)
+
+        refreshTimeoutJob?.cancel()
+        refreshTimeoutJob = viewModelScope.launch {
+            delay(REFRESH_TIMEOUT_MS)
+            if (_uiState.value.isLoading) {
+                queryWeather()
+            }
         }
     }
 
     fun getConditionIcon(conditionCode: Int): Drawable? {
+        if (conditionCode < 0) return null
         return IconProvider.getConditionDrawable(getApplication(), conditionCode)
     }
 }

@@ -53,21 +53,27 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import android.text.format.DateFormat
 import com.android.internal.util.crdroid.OmniJawsClient
 import org.omnirom.omnijaws.R
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import kotlin.math.PI
+import kotlin.math.abs
 import kotlin.math.cos
+import kotlin.math.roundToInt
 import kotlin.math.sin
 
 @Composable
 fun DetailCardsGrid(weather: OmniJawsClient.WeatherInfo) {
+    val isMetric = (weather.tempUnits ?: "").contains("C", ignoreCase = true)
+
     val cards = buildList<@Composable (Modifier) -> Unit> {
         if (!weather.feelsLike.isNaN()) {
             add { m ->
@@ -77,23 +83,27 @@ fun DetailCardsGrid(weather: OmniJawsClient.WeatherInfo) {
         if (!weather.uvi.isNaN()) {
             add { m -> UvIndexCard(weather.uvi, m) }
         }
-        add { m -> HumidityCard(weather.humidity ?: "", m) }
-        add { m ->
-            WindCard(
-                speed = weather.windSpeed ?: "",
-                direction = weather.pinWheel ?: "",
-                windUnits = weather.windUnits ?: "",
-                windDeg = weather.windDirection?.replace("°", "")?.toIntOrNull() ?: 0,
-                modifier = m
-            )
+        if (weather.humidity.hasReading()) {
+            add { m -> HumidityCard(weather.humidity, m) }
+        }
+        if (weather.windSpeed.hasReading()) {
+            add { m ->
+                WindCard(
+                    speed = weather.windSpeed,
+                    direction = weather.pinWheel ?: "",
+                    windUnits = weather.windUnits ?: "",
+                    windDeg = weather.windDirection?.replace("\u00b0", "")?.trim()?.toIntOrNull() ?: 0,
+                    modifier = m
+                )
+            }
         }
         if (!weather.pressure.isNaN()) {
             add { m -> PressureCard(weather.pressure, m) }
         }
         if (!weather.visibility.isNaN()) {
-            add { m -> VisibilityCard(weather.visibility, m) }
+            add { m -> VisibilityCard(weather.visibility, isMetric, m) }
         }
-        if (weather.sunrise > 0 && weather.sunset > 0) {
+        if (weather.sunrise > 0 && weather.sunset > weather.sunrise) {
             add { m -> SunriseSunsetCard(weather.sunrise, weather.sunset, m) }
         }
         if (!weather.dewPoint.isNaN()) {
@@ -102,6 +112,8 @@ fun DetailCardsGrid(weather: OmniJawsClient.WeatherInfo) {
             }
         }
     }
+
+    if (cards.isEmpty()) return
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -124,6 +136,9 @@ fun DetailCardsGrid(weather: OmniJawsClient.WeatherInfo) {
         }
     }
 }
+
+private fun String?.hasReading(): Boolean =
+    !this.isNullOrBlank() && this.any { it.isDigit() }
 
 @Composable
 private fun DetailCard(
@@ -156,7 +171,8 @@ private fun DetailCard(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
@@ -184,17 +200,18 @@ private fun FeelsLikeCard(
         modifier = modifier
     ) {
         Text(
-            text = "${feelsLike.toInt()}${tempUnits}",
+            text = "${feelsLike.roundToInt()}$tempUnits",
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1
         )
         if (actual != null) {
-            val delta = (feelsLike - actual).toInt()
+            val delta = (feelsLike - actual).roundToInt()
             val deltaText = when {
-                delta > 0 -> "Δ +$delta°"
-                delta < 0 -> "Δ $delta°"
-                else -> "Δ 0°"
+                delta > 0 -> "\u0394 +$delta\u00b0"
+                delta < 0 -> "\u0394 -${abs(delta)}\u00b0"
+                else -> "\u0394 0\u00b0"
             }
             Text(
                 text = deltaText,
@@ -224,6 +241,7 @@ private fun FeelsLikeBar(
         Color(0xFFEF5350)  // hot
     )
     val markerColor = MaterialTheme.colorScheme.onSurface
+    val markerCore = MaterialTheme.colorScheme.surfaceBright
     val f = feelsFraction.coerceIn(0f, 1f)
 
     Canvas(modifier = modifier) {
@@ -241,7 +259,7 @@ private fun FeelsLikeBar(
         }
         val fx = (size.width * f).coerceIn(0f, size.width)
         drawCircle(markerColor, 5.dp.toPx(), Offset(fx, y))
-        drawCircle(Color.White, 3.dp.toPx(), Offset(fx, y))
+        drawCircle(markerCore, 3.dp.toPx(), Offset(fx, y))
     }
 }
 
@@ -263,7 +281,7 @@ private fun UvIndexCard(uvi: Float, modifier: Modifier) {
         modifier = modifier
     ) {
         Text(
-            text = "${uvi.toInt()}",
+            text = "${uvi.roundToInt()}",
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onSurface
@@ -297,13 +315,15 @@ private fun UvBar(uvi: Float, modifier: Modifier) {
             strokeWidth = size.height,
             cap = StrokeCap.Round
         )
-        drawLine(
-            color = activeColor,
-            start = Offset(0f, size.height / 2),
-            end = Offset(size.width * fraction, size.height / 2),
-            strokeWidth = size.height,
-            cap = StrokeCap.Round
-        )
+        if (fraction > 0f) {
+            drawLine(
+                color = activeColor,
+                start = Offset(0f, size.height / 2),
+                end = Offset(size.width * fraction, size.height / 2),
+                strokeWidth = size.height,
+                cap = StrokeCap.Round
+            )
+        }
     }
 }
 
@@ -343,6 +363,7 @@ private fun ScaleBar(
     modifier: Modifier
 ) {
     val markerColor = MaterialTheme.colorScheme.onSurface
+    val markerCore = MaterialTheme.colorScheme.surfaceBright
     val f = fraction.coerceIn(0f, 1f)
     Canvas(modifier = modifier) {
         val y = size.height / 2
@@ -356,14 +377,15 @@ private fun ScaleBar(
         )
         val markerX = (size.width * f).coerceIn(0f, size.width)
         drawCircle(markerColor, 5.dp.toPx(), Offset(markerX, y))
-        drawCircle(Color.White, 3.dp.toPx(), Offset(markerX, y))
+        drawCircle(markerCore, 3.dp.toPx(), Offset(markerX, y))
     }
 }
 
 @Composable
-private fun HumidityCard(humidity: String, modifier: Modifier) {
-    val percent = remember(humidity) {
-        humidity.filter { it.isDigit() }.toIntOrNull()
+private fun HumidityCard(humidity: String?, modifier: Modifier) {
+    val text = humidity ?: ""
+    val percent = remember(text) {
+        text.filter { it.isDigit() }.toIntOrNull()
     }
     val humidityBrush = Brush.horizontalGradient(
         listOf(Color(0xFF81D4FA), Color(0xFF0288D1))
@@ -375,10 +397,11 @@ private fun HumidityCard(humidity: String, modifier: Modifier) {
         modifier = modifier
     ) {
         Text(
-            text = humidity,
+            text = text,
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1
         )
         if (percent != null) {
             Spacer(modifier = Modifier.weight(1f))
@@ -393,7 +416,7 @@ private fun HumidityCard(humidity: String, modifier: Modifier) {
 
 @Composable
 private fun WindCard(
-    speed: String,
+    speed: String?,
     direction: String,
     windUnits: String,
     windDeg: Int,
@@ -405,10 +428,11 @@ private fun WindCard(
         modifier = modifier
     ) {
         Text(
-            text = "$speed $windUnits",
+            text = "${speed ?: ""} $windUnits".trim(),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1
         )
         Text(
             text = direction,
@@ -501,13 +525,13 @@ private fun PressureCard(pressure: Float, modifier: Modifier) {
         modifier = modifier
     ) {
         Text(
-            text = "${pressure.toInt()}",
+            text = "${pressure.roundToInt()}",
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onSurface
         )
         Text(
-            text = "${stringResource(R.string.omnijaws_unit_hpa)} · ${stringResource(levelRes)}",
+            text = "${stringResource(R.string.omnijaws_unit_hpa)} \u00b7 ${stringResource(levelRes)}",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -521,16 +545,23 @@ private fun PressureCard(pressure: Float, modifier: Modifier) {
 }
 
 @Composable
-private fun VisibilityCard(visibility: Float, modifier: Modifier) {
-    val levelRes = remember(visibility) {
+private fun VisibilityCard(visibility: Float, isMetric: Boolean, modifier: Modifier) {
+    val clearAt = if (isMetric) 10f else 6f
+    val goodAt = if (isMetric) 4f else 2.5f
+    val moderateAt = if (isMetric) 1f else 0.6f
+
+    val levelRes = remember(visibility, isMetric) {
         when {
-            visibility >= 10 -> R.string.omnijaws_visibility_level_clear
-            visibility >= 4 -> R.string.omnijaws_visibility_level_good
-            visibility >= 1 -> R.string.omnijaws_visibility_level_moderate
+            visibility >= clearAt -> R.string.omnijaws_visibility_level_clear
+            visibility >= goodAt -> R.string.omnijaws_visibility_level_good
+            visibility >= moderateAt -> R.string.omnijaws_visibility_level_moderate
             else -> R.string.omnijaws_visibility_level_poor
         }
     }
-    val fraction = remember(visibility) { (visibility / 10f).coerceIn(0f, 1f) }
+    val fraction = remember(visibility, isMetric) { (visibility / clearAt).coerceIn(0f, 1f) }
+    val unit = stringResource(
+        if (isMetric) R.string.omnijaws_unit_km else R.string.omnijaws_unit_mi
+    )
     val gradient = listOf(
         Color(0xFF607D8B),
         Color(0xFF90A4AE),
@@ -546,10 +577,11 @@ private fun VisibilityCard(visibility: Float, modifier: Modifier) {
             text = String.format(Locale.getDefault(), "%.1f", visibility),
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1
         )
         Text(
-            text = stringResource(R.string.omnijaws_visibility_subtitle, stringResource(levelRes)),
+            text = "$unit \u00b7 ${stringResource(levelRes)}",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -565,9 +597,13 @@ private fun VisibilityCard(visibility: Float, modifier: Modifier) {
 @Composable
 private fun SunriseSunsetCard(sunrise: Long, sunset: Long, modifier: Modifier) {
     val context = LocalContext.current
-    val timeFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
-    val sunriseTime = remember(sunrise) { timeFormat.format(Date(sunrise)) }
-    val sunsetTime = remember(sunset) { timeFormat.format(Date(sunset)) }
+    val configuration = LocalConfiguration.current
+    val timeFormat = remember(configuration, DateFormat.is24HourFormat(context)) {
+        val locale = Locale.getDefault()
+        SimpleDateFormat(DateFormat.getBestDateTimePattern(locale, "jm"), locale)
+    }
+    val sunriseTime = remember(sunrise, timeFormat) { timeFormat.format(Date(sunrise)) }
+    val sunsetTime = remember(sunset, timeFormat) { timeFormat.format(Date(sunset)) }
     val daylightHours = remember(sunrise, sunset, context) {
         val diff = (sunset - sunrise).coerceAtLeast(0L)
         val hours = diff / 3600000
@@ -619,7 +655,7 @@ private fun SunArc(sunrise: Long, sunset: Long, modifier: Modifier) {
     val sunColor = MaterialTheme.colorScheme.primary
     val nightSunColor = MaterialTheme.colorScheme.onSurfaceVariant
 
-    val now = remember { System.currentTimeMillis() }
+    val now = remember(sunrise, sunset) { System.currentTimeMillis() }
     val dayLength = (sunset - sunrise).coerceAtLeast(1L)
     val isDay = now in sunrise..sunset
     val progress = ((now - sunrise).toFloat() / dayLength).coerceIn(0f, 1f)
@@ -723,10 +759,11 @@ private fun DewPointCard(dewPoint: Float, tempUnits: String, modifier: Modifier)
         modifier = modifier
     ) {
         Text(
-            text = "${dewPoint.toInt()}${tempUnits}",
+            text = "${dewPoint.roundToInt()}$tempUnits",
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1
         )
         Text(
             text = stringResource(levelRes),

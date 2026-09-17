@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
@@ -49,12 +50,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.android.internal.util.crdroid.OmniJawsClient
 import org.omnirom.omnijaws.R
 import java.text.SimpleDateFormat
-import java.util.Calendar
+import java.util.Date
 import java.util.Locale
+
+private const val DATE_PATTERN = "yyyy-MM-dd"
 
 @Composable
 fun DailyForecastCard(
@@ -69,6 +74,10 @@ fun DailyForecastCard(
     val validForecasts = remember(forecasts) { forecasts.filter { it.isValid() } }
     if (validForecasts.isEmpty()) return
 
+    val todayKey = remember(forecasts) {
+        SimpleDateFormat(DATE_PATTERN, Locale.US).format(Date())
+    }
+
     // Rows that are always visible (first 3, or fewer if there isn't enough data)
     val collapsedCount = 3.coerceAtMost(validForecasts.size)
 
@@ -76,7 +85,7 @@ fun DailyForecastCard(
     val allHighs = validForecasts.mapNotNull { it.high?.toFloatOrNull() }
     val globalMin = allLows.minOrNull() ?: 0f
     val globalMax = allHighs.maxOrNull() ?: 100f
-    val currentTempFloat = currentTemp?.toFloatOrNull()
+    val currentTempFloat = currentTemp?.trim()?.toFloatOrNull()
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -96,13 +105,14 @@ fun DailyForecastCard(
             Spacer(modifier = Modifier.height(12.dp))
 
             // Always-visible rows
-            validForecasts.take(collapsedCount).forEachIndexed { index, forecast ->
+            validForecasts.take(collapsedCount).forEach { forecast ->
+                val isToday = forecast.date == todayKey
                 DailyForecastRow(
                     forecast = forecast,
-                    isToday = index == 0,
+                    isToday = isToday,
                     globalMin = globalMin,
                     globalMax = globalMax,
-                    currentTemp = if (index == 0) currentTempFloat else null,
+                    currentTemp = if (isToday) currentTempFloat else null,
                     iconPack = iconPack,
                     iconTheme = iconTheme,
                     getConditionIcon = getConditionIcon
@@ -172,7 +182,9 @@ private fun DailyForecastRow(
     iconTheme: Int,
     getConditionIcon: (Int) -> Drawable?
 ) {
-    val icon = remember(forecast.conditionCode, iconPack, iconTheme) { getConditionIcon(forecast.conditionCode) }
+    val icon = remember(forecast.conditionCode, iconPack, iconTheme) {
+        if (forecast.conditionCode < 0) null else getConditionIcon(forecast.conditionCode)
+    }
     val todayLabel = stringResource(R.string.omnijaws_forecast_today)
     val dayName = remember(forecast.date, isToday, todayLabel) {
         formatDayName(forecast.date, isToday, todayLabel)
@@ -188,12 +200,17 @@ private fun DailyForecastRow(
             text = dayName,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.width(56.dp)
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            // "Today" is wider than "Mon" - reserve room instead of clipping
+            modifier = Modifier.widthIn(min = 56.dp)
         )
+
+        Spacer(modifier = Modifier.width(8.dp))
 
         if (icon != null) {
             Image(
-                painter = DrawablePainter(icon),
+                painter = rememberDrawablePainter(icon),
                 contentDescription = forecast.condition,
                 modifier = Modifier.size(24.dp)
             )
@@ -204,10 +221,12 @@ private fun DailyForecastRow(
         Spacer(modifier = Modifier.width(12.dp))
 
         Text(
-            text = "${forecast.low}°",
+            text = "${forecast.low}\u00b0",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.width(36.dp)
+            maxLines = 1,
+            textAlign = TextAlign.End,
+            modifier = Modifier.width(44.dp)
         )
 
         TemperatureBar(
@@ -223,10 +242,12 @@ private fun DailyForecastRow(
         )
 
         Text(
-            text = "${forecast.high}°",
+            text = "${forecast.high}\u00b0",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.width(36.dp)
+            maxLines = 1,
+            textAlign = TextAlign.End,
+            modifier = Modifier.width(44.dp)
         )
     }
 }
@@ -245,10 +266,12 @@ private fun TemperatureBar(
     val endFraction = ((high - globalMin) / range).coerceIn(0f, 1f)
     val primaryColor = MaterialTheme.colorScheme.primary
     val trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
-    val markerColor = MaterialTheme.colorScheme.onPrimary
+    val markerRing = MaterialTheme.colorScheme.surfaceBright
+    val markerColor = MaterialTheme.colorScheme.onSurface
 
     Canvas(modifier = modifier) {
         val radius = size.height / 2
+        val usable = size.width - 2 * radius
 
         drawLine(
             color = trackColor,
@@ -258,24 +281,27 @@ private fun TemperatureBar(
             cap = StrokeCap.Round
         )
 
-        val barStart = radius + (size.width - 2 * radius) * startFraction
-        val barEnd = radius + (size.width - 2 * radius) * endFraction
-        if (barEnd > barStart) {
-            drawLine(
-                color = primaryColor,
-                start = Offset(barStart, size.height / 2),
-                end = Offset(barEnd, size.height / 2),
-                strokeWidth = size.height,
-                cap = StrokeCap.Round
-            )
-        }
+        val barStart = radius + usable * startFraction
+        val barEnd = (radius + usable * endFraction).coerceAtLeast(barStart)
+        drawLine(
+            color = primaryColor,
+            start = Offset(barStart, size.height / 2),
+            end = Offset(barEnd, size.height / 2),
+            strokeWidth = size.height,
+            cap = StrokeCap.Round
+        )
 
-        if (currentTemp != null) {
+        if (currentTemp != null && currentTemp.isFinite()) {
             val currentFraction = ((currentTemp - globalMin) / range).coerceIn(0f, 1f)
-            val cx = radius + (size.width - 2 * radius) * currentFraction
+            val cx = radius + usable * currentFraction
+            drawCircle(
+                color = markerRing,
+                radius = radius,
+                center = Offset(cx, size.height / 2)
+            )
             drawCircle(
                 color = markerColor,
-                radius = radius * 0.8f,
+                radius = radius * 0.6f,
                 center = Offset(cx, size.height / 2)
             )
         }
@@ -286,7 +312,7 @@ private fun formatDayName(dateStr: String?, isToday: Boolean, todayLabel: String
     if (isToday) return todayLabel
     if (dateStr == null) return ""
     return try {
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        val sdf = SimpleDateFormat(DATE_PATTERN, Locale.US)
         val date = sdf.parse(dateStr) ?: return dateStr
         SimpleDateFormat("EEE", Locale.getDefault()).format(date)
     } catch (e: Exception) {

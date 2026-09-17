@@ -16,15 +16,28 @@
 package org.omnirom.omnijaws.ui.components
 
 import android.graphics.drawable.Drawable
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.asAndroidColorFilter
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.unit.IntSize
 import kotlin.math.roundToInt
 
-class DrawablePainter(private val drawable: Drawable) : Painter() {
+@Composable
+fun rememberDrawablePainter(drawable: Drawable): Painter =
+    remember(drawable) { DrawablePainter(drawable) }
+
+class DrawablePainter(drawable: Drawable) : Painter() {
+
+    private val drawable: Drawable =
+        drawable.constantState?.newDrawable()?.mutate() ?: drawable
+
+    private var alpha: Float = 1f
+    private var colorFilter: ColorFilter? = null
 
     override val intrinsicSize: Size
         get() {
@@ -37,9 +50,25 @@ class DrawablePainter(private val drawable: Drawable) : Painter() {
             }
         }
 
+    override fun applyAlpha(alpha: Float): Boolean {
+        this.alpha = alpha
+        return true
+    }
+
+    override fun applyColorFilter(colorFilter: ColorFilter?): Boolean {
+        this.colorFilter = colorFilter
+        return true
+    }
+
     override fun DrawScope.onDraw() {
+        val width = size.width.roundToInt()
+        val height = size.height.roundToInt()
+        if (width <= 0 || height <= 0) return
+
         drawIntoCanvas { canvas ->
-            drawable.setBounds(0, 0, size.width.roundToInt(), size.height.roundToInt())
+            drawable.alpha = (alpha.coerceIn(0f, 1f) * 255).roundToInt()
+            drawable.colorFilter = colorFilter?.asAndroidColorFilter()
+            drawable.setBounds(0, 0, width, height)
             drawable.draw(canvas.nativeCanvas)
         }
     }

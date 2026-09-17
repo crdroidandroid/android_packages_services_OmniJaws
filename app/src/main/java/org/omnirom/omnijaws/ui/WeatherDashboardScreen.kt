@@ -68,14 +68,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.android.internal.util.crdroid.OmniJawsClient
 import kotlinx.coroutines.launch
 import org.omnirom.omnijaws.R
 import org.omnirom.omnijaws.ui.components.DailyForecastCard
 import org.omnirom.omnijaws.ui.components.DetailCardsGrid
-import org.omnirom.omnijaws.ui.components.DrawablePainter
 import org.omnirom.omnijaws.ui.components.HourlyForecastCard
+import org.omnirom.omnijaws.ui.components.rememberDrawablePainter
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun WeatherDashboardScreen(
@@ -134,58 +139,81 @@ fun WeatherDashboardScreen(
                         }
                     }
                     uiState.weatherInfo == null -> {
-                        Box(
+                        ErrorState(
+                            error = uiState.error,
+                            onRefresh = onRefresh,
+                            onSettingsClick = onSettingsClick,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .weight(1f),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = stringResource(R.string.omnijaws_service_unkown),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = stringResource(R.string.omnijaws_dashboard_error_subtitle),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.outline
-                                )
-                                Spacer(modifier = Modifier.height(24.dp))
-                                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                    FilledTonalButton(onClick = onRefresh) {
-                                        Icon(
-                                            Icons.Outlined.Refresh,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(stringResource(R.string.omnijaws_update_title))
-                                    }
-                                    FilledTonalButton(onClick = onSettingsClick) {
-                                        Icon(
-                                            Icons.Outlined.Settings,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(stringResource(R.string.omnijaws_settings_title))
-                                    }
-                                }
-                            }
-                        }
+                                .weight(1f)
+                        )
                     }
                     else -> {
                         WeatherContent(
                             weather = uiState.weatherInfo,
-                            onRefresh = onRefresh,
                             iconPack = iconPack,
                             iconTheme = iconTheme,
                             getConditionIcon = getConditionIcon,
                             modifier = Modifier.weight(1f)
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ErrorState(
+    error: Int?,
+    onRefresh: () -> Unit,
+    onSettingsClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val titleRes = when (error) {
+        OmniJawsClient.EXTRA_ERROR_NETWORK -> R.string.omnijaws_error_network
+        OmniJawsClient.EXTRA_ERROR_LOCATION -> R.string.omnijaws_error_location
+        OmniJawsClient.EXTRA_ERROR_DISABLED -> R.string.omnijaws_error_disabled
+        else -> R.string.omnijaws_service_unkown
+    }
+
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(horizontal = 32.dp)
+        ) {
+            Text(
+                text = stringResource(titleRes),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.omnijaws_dashboard_error_subtitle),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.outline,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                FilledTonalButton(onClick = onRefresh) {
+                    Icon(
+                        Icons.Outlined.Refresh,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.omnijaws_update_title))
+                }
+                FilledTonalButton(onClick = onSettingsClick) {
+                    Icon(
+                        Icons.Outlined.Settings,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.omnijaws_settings_title))
                 }
             }
         }
@@ -239,12 +267,13 @@ private fun DrawerContent(
 @Composable
 private fun WeatherContent(
     weather: OmniJawsClient.WeatherInfo,
-    onRefresh: () -> Unit,
     iconPack: String,
     iconTheme: Int,
     getConditionIcon: (Int) -> Drawable?,
     modifier: Modifier = Modifier
 ) {
+    val providerName = providerDisplayName(weather.provider)
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -252,6 +281,7 @@ private fun WeatherContent(
         contentPadding = PaddingValues(
             start = 16.dp,
             end = 16.dp,
+            top = 8.dp,
             bottom = 24.dp
         ),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -293,21 +323,33 @@ private fun WeatherContent(
             DetailCardsGrid(weather = weather)
         }
 
-        item {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = stringResource(
-                    R.string.omnijaws_dashboard_provider_attribution,
-                    weather.provider ?: ""
-                ),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp)
-            )
+        if (providerName.isNotBlank()) {
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(
+                        R.string.omnijaws_dashboard_provider_attribution,
+                        providerName
+                    ),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
+                )
+            }
         }
     }
+}
+
+@Composable
+private fun providerDisplayName(providerId: String?): String = when (providerId) {
+    "0" -> stringResource(R.string.omnijaws_provider_openweathermap)
+    "1" -> stringResource(R.string.omnijaws_provider_metnorway)
+    "2" -> stringResource(R.string.omnijaws_provider_pirate_weather)
+    "3" -> stringResource(R.string.omnijaws_provider_openmeteo)
+    "4" -> stringResource(R.string.omnijaws_provider_visualcrossing)
+    else -> providerId ?: ""
 }
 
 @Composable
@@ -329,22 +371,28 @@ private fun TopBar(
                 contentDescription = stringResource(R.string.omnijaws_menu_title)
             )
         }
-        Spacer(modifier = Modifier.weight(1f))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Icons.Outlined.LocationOn,
-                contentDescription = null,
-                modifier = Modifier.size(16.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = city,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+        Row(
+            modifier = Modifier.weight(1f),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (city.isNotEmpty()) {
+                Icon(
+                    imageVector = Icons.Outlined.LocationOn,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = city,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
-        Spacer(modifier = Modifier.weight(1f))
         IconButton(onClick = onRefreshClick) {
             Icon(
                 imageVector = Icons.Outlined.Refresh,
@@ -369,8 +417,10 @@ private fun WeatherSummaryRow(
     getConditionIcon: (Int) -> Drawable?
 ) {
     val icon = remember(weather.conditionCode, iconPack, iconTheme) {
-        getConditionIcon(weather.conditionCode)
+        if (weather.conditionCode < 0) null else getConditionIcon(weather.conditionCode)
     }
+
+    val today = remember(weather.forecasts) { weather.forecasts?.firstValidToday() }
 
     val enterScale = remember { Animatable(0.5f) }
     val enterAlpha = remember { Animatable(0f) }
@@ -397,7 +447,8 @@ private fun WeatherSummaryRow(
                     style = MaterialTheme.typography.displayLarge.copy(
                         fontWeight = FontWeight.Light
                     ),
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1
                 )
             }
 
@@ -405,11 +456,12 @@ private fun WeatherSummaryRow(
                 Text(
                     text = weather.condition ?: "",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    textAlign = TextAlign.End
                 )
                 Spacer(modifier = Modifier.height(2.dp))
-                if (!weather.forecasts.isNullOrEmpty()) {
-                    val today = weather.forecasts[0]
+                if (today != null) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Outlined.ArrowDownward,
@@ -441,7 +493,7 @@ private fun WeatherSummaryRow(
 
         if (icon != null) {
             Image(
-                painter = DrawablePainter(icon),
+                painter = rememberDrawablePainter(icon),
                 contentDescription = weather.condition,
                 modifier = Modifier
                     .size(160.dp)
@@ -453,4 +505,15 @@ private fun WeatherSummaryRow(
             )
         }
     }
+}
+
+private fun List<OmniJawsClient.DayForecast>.firstValidToday(): OmniJawsClient.DayForecast? {
+    val todayKey = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+    val candidate = firstOrNull { it.date == todayKey } ?: firstOrNull()
+    if (candidate == null) return null
+    if (candidate.date.isNullOrBlank() || candidate.date.equals("NaN", ignoreCase = true)) return null
+    val low = candidate.low?.toFloatOrNull()
+    val high = candidate.high?.toFloatOrNull()
+    if (low == null || high == null || !low.isFinite() || !high.isFinite()) return null
+    return candidate
 }
