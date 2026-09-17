@@ -33,7 +33,10 @@ public class PirateWeatherProvider extends AbstractWeatherProvider {
     private static final String TAG = "PirateWeatherProvider";
 
     private static final String URL_WEATHER =
-            "https://api.pirateweather.net/forecast/%s/%s?units=%s&exclude=minutely,hourly,alerts,flags";
+            "https://api.pirateweather.net/forecast/%s/%s?units=%s&exclude=minutely,alerts,flags";
+
+    private static final int MIN_FORECAST_DAYS = 5;
+    private static final int HOURLY_FORECAST_COUNT = 24;
 
     public PirateWeatherProvider(Context context) {
         super(context);
@@ -58,6 +61,7 @@ public class PirateWeatherProvider extends AbstractWeatherProvider {
         String units = metric ? "si" : "us";
         String coordsForUrl = getCoords(selection);
         if (coordsForUrl == null) {
+            Log.w(TAG, "could not parse coordinates from '" + selection + "'");
             return null;
         }
 
@@ -71,32 +75,55 @@ public class PirateWeatherProvider extends AbstractWeatherProvider {
         try {
             JSONObject conditions = new JSONObject(conditionResponse);
             JSONObject conditionData = conditions.getJSONObject("currently");
-            ArrayList<DayForecast> forecasts =
-                    parseForecasts(conditions.getJSONObject("daily").getJSONArray("data"), metric);
-            
-            float windSpeed = (float) conditionData.getDouble("windSpeed");
-            if (metric) {
-                // speeds are in m/s so convert to our common metric unit km/h
-                windSpeed *= 3.6f;
-            } else {
-                // Dark Sky US units gives mph
-            }
+            JSONArray dailyData = conditions.getJSONObject("daily").getJSONArray("data");
+            ArrayList<DayForecast> forecasts = parseForecasts(dailyData, metric);
 
             String city = getWeatherDataLocality(selection);
 
             WeatherInfo w = new WeatherInfo(mContext, selection, city,
                     /* condition */ "",
-                    /* conditionCode */ mapConditionIconToCode(conditionData.getString("icon")),
+                    /* conditionCode */ mapConditionIconToCode(conditionData.optString("icon", "")),
                     /* temperature */ (float) conditionData.getDouble("temperature"),
-                    /* humidity */ (float) (conditionData.getDouble("humidity") * 100),
-                    /* wind */ windSpeed,
-                    /* windDir */ conditionData.has("windBearing") ? conditionData.getInt("windBearing") : 0,
+                    /* humidity */ (float) (conditionData.optDouble("humidity", Double.NaN) * 100),
+                    /* wind */ convertWindSpeed(conditionData.optDouble("windSpeed", Double.NaN), metric),
+                    /* windDir */ (int) conditionData.optDouble("windBearing", 0),
                     metric,
                     forecasts,
                     System.currentTimeMillis());
 
+            if (conditionData.has("apparentTemperature")) {
+                w.setFeelsLike((float) conditionData.getDouble("apparentTemperature"));
+            }
+            if (conditionData.has("pressure")) {
+                // si and us both report hPa / mb
+                w.setPressure((float) conditionData.getDouble("pressure"));
+            }
+            if (conditionData.has("uvIndex")) {
+                w.setUvi((float) conditionData.getDouble("uvIndex"));
+            }
+            if (conditionData.has("dewPoint")) {
+                w.setDewPoint((float) conditionData.getDouble("dewPoint"));
+            }
             if (conditionData.has("visibility")) {
+                // already km (si) or miles (us) - no conversion needed
                 w.setVisibility((float) conditionData.getDouble("visibility"));
+            }
+
+            if (dailyData.length() > 0) {
+                JSONObject today = dailyData.getJSONObject(0);
+                if (today.has("sunriseTime")) {
+                    w.setSunrise(today.getLong("sunriseTime") * 1000L);
+                }
+                if (today.has("sunsetTime")) {
+                    w.setSunset(today.getLong("sunsetTime") * 1000L);
+                }
+            }
+
+            if (conditions.has("hourly")) {
+                JSONObject hourly = conditions.getJSONObject("hourly");
+                if (hourly.has("data")) {
+                    w.setHourlyForecasts(parseHourlyForecasts(hourly.getJSONArray("data"), metric));
+                }
             }
 
             log(TAG, "Weather updated: " + w);
@@ -111,9 +138,19 @@ public class PirateWeatherProvider extends AbstractWeatherProvider {
 
     private String getCoords(String coordinate) {
         try {
-            double latitude = Double.valueOf(coordinate.substring(4, coordinate.indexOf("&")));
-            double longitude = Double.valueOf(coordinate.substring(coordinate.indexOf("lon=") + 4));
-            return latitude + "," + longitude;
+            int latStart = coordinate.indexOf("lat=");
+            int lonStart = coordinate.indexOf("lon=");
+            if (latStart == -1 || lonStart == -1) {
+                return null;
+            }
+            latStart += 4;
+            int latEnd = coordinate.indexOf("&", latStart);
+            if (latEnd == -1) {
+                latEnd = coordinate.length();
+            }
+            double latitude = Double.parseDouble(coordinate.substring(latStart, latEnd));
+            double longitude = Double.parseDouble(coordinate.substring(lonStart + 4));
+            return String.format(Locale.US, "%f,%f", latitude, longitude);
         } catch (Exception e) {
             return null;
         }
@@ -131,11 +168,17 @@ public class PirateWeatherProvider extends AbstractWeatherProvider {
             DayForecast item = null;
             try {
                 JSONObject forecast = forecasts.getJSONObject(i);
+                double low = forecast.has("temperatureLow")
+                        ? forecast.getDouble("temperatureLow")
+                        : forecast.getDouble("temperatureMin");
+                double high = forecast.has("temperatureHigh")
+                        ? forecast.getDouble("temperatureHigh")
+                        : forecast.getDouble("temperatureMax");
                 item = new DayForecast(
-                        /* low */ (float) forecast.getDouble("temperatureLow"),
-                        /* high */ (float) forecast.getDouble("temperatureHigh"),
+                        /* low */ (float) low,
+                        /* high */ (float) high,
                         /* condition */ "",
-                        /* conditionCode */ mapConditionIconToCode(forecast.getString("icon")),
+                        /* conditionCode */ mapConditionIconToCode(forecast.optString("icon", "")),
                         day,
                         metric);
             } catch (JSONException e) {
@@ -145,8 +188,8 @@ public class PirateWeatherProvider extends AbstractWeatherProvider {
             result.add(item);
         }
         // clients assume there are 5 entries
-        if (result.size() < 5) {
-            for (int i = result.size(); i < 5; i++) {
+        if (result.size() < MIN_FORECAST_DAYS) {
+            for (int i = result.size(); i < MIN_FORECAST_DAYS; i++) {
                 Log.w(TAG, "Missing forecast for day " + i + " creating dummy");
                 DayForecast item = new DayForecast(
                         /* low */ 0,
@@ -161,36 +204,70 @@ public class PirateWeatherProvider extends AbstractWeatherProvider {
         return result;
     }
 
-    private int mapConditionIconToCode(String icon) {
-        if (icon.equals("clear-day")) {
-            return 32;
-        } else if (icon.equals("clear-night")) {
-            return 31;
-        } else if (icon.equals("rain")) {
-            return 11;
-        } else if (icon.equals("snow")) {
-            return 16;
-        } else if (icon.equals("sleet")) {
-            return 18;
-        } else if (icon.equals("wind")) {
-            return 24;
-        } else if (icon.equals("fog")) {
-            return 20;
-        } else if (icon.equals("cloudy")) {
-            return 26;
-        } else if (icon.equals("partly-cloudy-day")) {
-            return 30;
-        } else if (icon.equals("partly-cloudy-night")) {
-            return 29;
-        } else if (icon.equals("hail")) {
-            return 17;
-        } else if (icon.equals("thunderstorm")) {
-            return 4;
-        } else if (icon.equals("tornado")) {
-            return 0;
-        }
+    private ArrayList<WeatherInfo.HourlyForecast> parseHourlyForecasts(JSONArray hourly, boolean metric) {
+        ArrayList<WeatherInfo.HourlyForecast> result = new ArrayList<>();
+        final long startSec = (System.currentTimeMillis() / 1000L) - 3600L;
 
-        return -1;
+        for (int i = 0; i < hourly.length() && result.size() < HOURLY_FORECAST_COUNT; i++) {
+            try {
+                JSONObject hour = hourly.getJSONObject(i);
+                long time = hour.getLong("time");
+                if (time < startSec) {
+                    continue;
+                }
+                result.add(new WeatherInfo.HourlyForecast(
+                        (float) hour.getDouble("temperature"),
+                        mapConditionIconToCode(hour.optString("icon", "")),
+                        "",
+                        time * 1000L,
+                        (float) (hour.optDouble("humidity", Double.NaN) * 100),
+                        convertWindSpeed(hour.optDouble("windSpeed", Double.NaN), metric),
+                        metric));
+            } catch (JSONException e) {
+                Log.w(TAG, "Invalid hourly forecast for index " + i, e);
+            }
+        }
+        return result;
+    }
+
+    private static float convertWindSpeed(double value, boolean metric) {
+        return (float) (metric ? value * 3.6 : value);
+    }
+
+    private int mapConditionIconToCode(String icon) {
+        if (TextUtils.isEmpty(icon)) {
+            return -1;
+        }
+        switch (icon) {
+            case "clear-day":
+                return 32;
+            case "clear-night":
+                return 31;
+            case "rain":
+                return 11;
+            case "snow":
+                return 16;
+            case "sleet":
+                return 18;
+            case "wind":
+                return 24;
+            case "fog":
+                return 20;
+            case "cloudy":
+                return 26;
+            case "partly-cloudy-day":
+                return 30;
+            case "partly-cloudy-night":
+                return 29;
+            case "hail":
+                return 17;
+            case "thunderstorm":
+                return 4;
+            case "tornado":
+                return 0;
+            default:
+                return -1;
+        }
     }
 
     public boolean shouldRetry() {
