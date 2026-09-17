@@ -31,6 +31,10 @@ import android.util.Log;
 public class OpenMeteoProvider extends AbstractWeatherProvider {
     private static final String TAG = "OpenMeteoProvider";
 
+    private static final int MIN_FORECAST_DAYS = 5;
+    private static final int HOURLY_FORECAST_COUNT = 24;
+    private static final long ONE_HOUR_SEC = 3600L;
+
     private static final String URL_WEATHER =
             "https://api.open-meteo.com/v1/forecast?latitude=%f&longitude=%f"
             + "&current=temperature_2m,relative_humidity_2m,apparent_temperature,"
@@ -75,12 +79,18 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
 
         try {
             JSONObject root = new JSONObject(response);
+
+            if (root.optBoolean("error", false)) {
+                Log.w(TAG, "API error: " + root.optString("reason", "unknown"));
+                return null;
+            }
+
             JSONObject current = root.getJSONObject("current");
-            JSONObject hourly = root.getJSONObject("hourly");
+            JSONObject hourly = root.optJSONObject("hourly");
             JSONObject daily = root.getJSONObject("daily");
 
             boolean isDay = current.optInt("is_day", 1) == 1;
-            int weatherCode = current.getInt("weather_code");
+            int weatherCode = current.optInt("weather_code", -1);
 
             String city = getWeatherDataLocality(selection);
 
@@ -90,9 +100,9 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
                     /* condition */ "",
                     /* conditionCode */ mapWmoToCode(weatherCode, isDay),
                     /* temperature */ (float) current.getDouble("temperature_2m"),
-                    /* humidity */ (float) current.getDouble("relative_humidity_2m"),
-                    /* wind */ (float) current.getDouble("wind_speed_10m"),
-                    /* windDir */ current.optInt("wind_direction_10m", 0),
+                    /* humidity */ (float) current.optDouble("relative_humidity_2m", Double.NaN),
+                    /* wind */ (float) current.optDouble("wind_speed_10m", Double.NaN),
+                    /* windDir */ (int) current.optDouble("wind_direction_10m", 0),
                     metric,
                     parseForecasts(daily, metric),
                     System.currentTimeMillis());
@@ -104,25 +114,27 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
                 w.setPressure((float) current.getDouble("pressure_msl"));
             }
 
-            JSONArray hTimes = hourly.optJSONArray("time");
+            JSONArray hTimes = hourly != null ? hourly.optJSONArray("time") : null;
             if (hTimes != null && hTimes.length() > 0) {
-                int idx = nearestHourIndex(hTimes, System.currentTimeMillis() / 1000L);
+                final long nowSec = System.currentTimeMillis() / 1000L;
+                int idx = nearestHourIndex(hTimes, nowSec);
                 w.setDewPoint(floatAt(hourly, "dew_point_2m", idx));
                 w.setUvi(floatAt(hourly, "uv_index", idx));
                 float visMeters = floatAt(hourly, "visibility", idx);
                 if (!Float.isNaN(visMeters)) {
                     w.setVisibility(metric ? visMeters / 1000f : visMeters / 1609.34f);
                 }
-                w.setHourlyForecasts(parseHourlyForecasts(hourly, idx, metric));
+                int startIdx = firstIndexAtOrAfter(hTimes, nowSec - ONE_HOUR_SEC);
+                w.setHourlyForecasts(parseHourlyForecasts(hourly, startIdx, metric));
             }
 
             JSONArray sunrise = daily.optJSONArray("sunrise");
             JSONArray sunset = daily.optJSONArray("sunset");
             if (sunrise != null && sunrise.length() > 0) {
-                w.setSunrise(sunrise.getLong(0) * 1000L);
+                w.setSunrise(sunrise.optLong(0) * 1000L);
             }
             if (sunset != null && sunset.length() > 0) {
-                w.setSunset(sunset.getLong(0) * 1000L);
+                w.setSunset(sunset.optLong(0) * 1000L);
             }
 
             log(TAG, "Weather updated: " + w);
@@ -138,10 +150,18 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
         JSONArray codes = daily.getJSONArray("weather_code");
         JSONArray highs = daily.getJSONArray("temperature_2m_max");
         JSONArray lows = daily.getJSONArray("temperature_2m_min");
-        int count = codes.length();
+
+        int count = Math.min(codes.length(), Math.min(highs.length(), lows.length()));
+        if (count == 0) {
+            throw new JSONException("Empty forecasts array");
+        }
 
         for (int i = 0; i < count; i++) {
             try {
+                if (codes.isNull(i) || highs.isNull(i) || lows.isNull(i)) {
+                    Log.w(TAG, "Incomplete forecast for day " + i);
+                    continue;
+                }
                 int code = codes.getInt(i);
                 result.add(new DayForecast(
                         /* low */ (float) lows.getDouble(i),
@@ -156,8 +176,8 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
         }
 
         // clients assume there are at least 5 entries - pad with dummies if needed
-        if (result.size() < 5) {
-            for (int i = result.size(); i < 5; i++) {
+        if (result.size() < MIN_FORECAST_DAYS) {
+            for (int i = result.size(); i < MIN_FORECAST_DAYS; i++) {
                 Log.w(TAG, "Missing forecast for day " + i + " creating dummy");
                 result.add(new DayForecast(0, 0, "", -1, "NaN", metric));
             }
@@ -168,17 +188,27 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
     private ArrayList<WeatherInfo.HourlyForecast> parseHourlyForecasts(
             JSONObject hourly, int startIdx, boolean metric) {
         ArrayList<WeatherInfo.HourlyForecast> result = new ArrayList<>();
-        try {
-            JSONArray times = hourly.getJSONArray("time");
-            JSONArray temps = hourly.getJSONArray("temperature_2m");
-            JSONArray codes = hourly.getJSONArray("weather_code");
-            JSONArray hums = hourly.optJSONArray("relative_humidity_2m");
-            JSONArray winds = hourly.optJSONArray("wind_speed_10m");
-            JSONArray isDays = hourly.optJSONArray("is_day");
 
-            int end = Math.min(times.length(), startIdx + 24);
-            for (int i = startIdx; i < end; i++) {
-                int code = codes.getInt(i);
+        JSONArray times = hourly.optJSONArray("time");
+        JSONArray temps = hourly.optJSONArray("temperature_2m");
+        JSONArray codes = hourly.optJSONArray("weather_code");
+        if (times == null || temps == null || codes == null) {
+            Log.w(TAG, "Missing hourly arrays");
+            return result;
+        }
+        JSONArray hums = hourly.optJSONArray("relative_humidity_2m");
+        JSONArray winds = hourly.optJSONArray("wind_speed_10m");
+        JSONArray isDays = hourly.optJSONArray("is_day");
+
+        int end = Math.min(Math.min(times.length(), Math.min(temps.length(), codes.length())),
+                startIdx + HOURLY_FORECAST_COUNT);
+
+        for (int i = Math.max(startIdx, 0); i < end; i++) {
+            try {
+                if (times.isNull(i) || temps.isNull(i)) {
+                    continue;
+                }
+                int code = codes.isNull(i) ? -1 : codes.getInt(i);
                 boolean isDay = isDays == null || isDays.optInt(i, 1) == 1;
                 result.add(new WeatherInfo.HourlyForecast(
                         (float) temps.getDouble(i),
@@ -188,20 +218,27 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
                         hums != null ? (float) hums.optDouble(i, Double.NaN) : Float.NaN,
                         winds != null ? (float) winds.optDouble(i, Double.NaN) : Float.NaN,
                         metric));
+            } catch (JSONException e) {
+                Log.w(TAG, "Invalid hourly forecast for index " + i, e);
             }
-        } catch (JSONException e) {
-            Log.w(TAG, "Invalid hourly forecast data", e);
         }
         return result;
     }
 
     private static double[] parseCoords(String selection) {
         try {
-            int latStart = selection.indexOf("lat=") + 4;
-            int amp = selection.indexOf("&", latStart);
-            int lonStart = selection.indexOf("lon=") + 4;
-            double lat = Double.parseDouble(selection.substring(latStart, amp));
-            double lon = Double.parseDouble(selection.substring(lonStart));
+            int latStart = selection.indexOf("lat=");
+            int lonStart = selection.indexOf("lon=");
+            if (latStart == -1 || lonStart == -1) {
+                return null;
+            }
+            latStart += 4;
+            int latEnd = selection.indexOf("&", latStart);
+            if (latEnd == -1) {
+                latEnd = selection.length();
+            }
+            double lat = Double.parseDouble(selection.substring(latStart, latEnd));
+            double lon = Double.parseDouble(selection.substring(lonStart + 4));
             return new double[]{lat, lon};
         } catch (Exception e) {
             return null;
@@ -216,9 +253,20 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
             if (diff < best) {
                 best = diff;
                 idx = i;
+            } else {
+                break;
             }
         }
         return idx;
+    }
+
+    private static int firstIndexAtOrAfter(JSONArray times, long fromSec) {
+        for (int i = 0; i < times.length(); i++) {
+            if (times.optLong(i, Long.MIN_VALUE) >= fromSec) {
+                return i;
+            }
+        }
+        return Math.max(times.length() - 1, 0);
     }
 
     private static float floatAt(JSONObject obj, String key, int idx) {
