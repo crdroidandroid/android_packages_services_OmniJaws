@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.omnirom.omnijaws.Config
+import org.omnirom.omnijaws.WeatherContentProvider
 import org.omnirom.omnijaws.WeatherUpdateService
 import org.omnirom.omnijaws.widget.WeatherAppWidgetProvider
 import org.omnirom.omnijaws.icon.IconProvider
@@ -139,6 +140,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx)
         prefs.edit().putString(Config.PREF_KEY_UNITS, value).apply()
         _uiState.value = _uiState.value.copy(units = value)
+        WeatherContentProvider.notifySettingsChanged(ctx)
         scheduleUpdate()
     }
 

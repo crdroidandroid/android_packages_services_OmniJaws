@@ -32,12 +32,15 @@ public class WeatherContentProvider extends ContentProvider {
     private static final String TAG = "WeatherService:WeatherContentProvider";
     private static final boolean DEBUG = false;
 
-    static WeatherInfo sCachedWeatherInfo;
+    static volatile WeatherInfo sCachedWeatherInfo;
 
     private static final int URI_TYPE_WEATHER = 1;
     private static final int URI_TYPE_SETTINGS = 2;
     private static final int URI_TYPE_CONTROL = 3;
     private static final int URI_TYPE_HOURLY = 4;
+
+    // km <-> miles, and km/h <-> mph
+    private static final float KM_PER_MILE = 1.609344f;
 
     private static final String COLUMN_CURRENT_CITY_ID = "city_id";
     private static final String COLUMN_CURRENT_CITY = "city";
@@ -174,23 +177,32 @@ public class WeatherContentProvider extends ContentProvider {
         } else if (projectionType == URI_TYPE_WEATHER) {
             WeatherInfo weather = sCachedWeatherInfo;
             if (weather != null) {
+                final boolean from = weather.isMetric();
+                final boolean to = Config.isMetric(mContext);
+
+                if (DEBUG && from != to) {
+                    Log.i(TAG, "converting cached data from "
+                            + (from ? "metric" : "imperial") + " to "
+                            + (to ? "metric" : "imperial"));
+                }
+
                 // current
                 result.newRow()
                         .add(COLUMN_CURRENT_CITY, weather.getCity())
                         .add(COLUMN_CURRENT_CITY_ID, weather.getId())
                         .add(COLUMN_CURRENT_CONDITION, weather.getCondition())
                         .add(COLUMN_CURRENT_HUMIDITY, weather.getFormattedHumidity())
-                        .add(COLUMN_CURRENT_WIND_SPEED, weather.getWindSpeed())
+                        .add(COLUMN_CURRENT_WIND_SPEED, convertSpeed(weather.getWindSpeed(), from, to))
                         .add(COLUMN_CURRENT_WIND_DIRECTION, weather.getWindDirection())
-                        .add(COLUMN_CURRENT_TEMPERATURE, weather.getTemperature())
+                        .add(COLUMN_CURRENT_TEMPERATURE, convertTemp(weather.getTemperature(), from, to))
                         .add(COLUMN_CURRENT_TIME_STAMP, weather.getTimestamp().toString())
                         .add(COLUMN_CURRENT_PIN_WHEEL, weather.getPinWheel())
                         .add(COLUMN_CURRENT_CONDITION_CODE, weather.getConditionCode())
-                        .add(COLUMN_CURRENT_FEELS_LIKE, weather.getFeelsLike())
+                        .add(COLUMN_CURRENT_FEELS_LIKE, convertTemp(weather.getFeelsLike(), from, to))
                         .add(COLUMN_CURRENT_PRESSURE, weather.getPressure())
                         .add(COLUMN_CURRENT_UVI, weather.getUvi())
-                        .add(COLUMN_CURRENT_VISIBILITY, weather.getVisibility())
-                        .add(COLUMN_CURRENT_DEW_POINT, weather.getDewPoint())
+                        .add(COLUMN_CURRENT_VISIBILITY, convertDistance(weather.getVisibility(), from, to))
+                        .add(COLUMN_CURRENT_DEW_POINT, convertTemp(weather.getDewPoint(), from, to))
                         .add(COLUMN_CURRENT_SUNRISE, weather.getSunrise())
                         .add(COLUMN_CURRENT_SUNSET, weather.getSunset());
 
@@ -198,8 +210,8 @@ public class WeatherContentProvider extends ContentProvider {
                 for (DayForecast day : weather.getForecasts()) {
                     result.newRow()
                             .add(COLUMN_FORECAST_CONDITION, day.getCondition(mContext))
-                            .add(COLUMN_FORECAST_LOW, day.getLow())
-                            .add(COLUMN_FORECAST_HIGH, day.getHigh())
+                            .add(COLUMN_FORECAST_LOW, convertTemp(day.getLow(), from, to))
+                            .add(COLUMN_FORECAST_HIGH, convertTemp(day.getHigh(), from, to))
                             .add(COLUMN_FORECAST_CONDITION_CODE, day.getConditionCode())
                             .add(COLUMN_FORECAST_DATE, day.date);
                 }
@@ -208,19 +220,46 @@ public class WeatherContentProvider extends ContentProvider {
         } else if (projectionType == URI_TYPE_HOURLY) {
             WeatherInfo weather = sCachedWeatherInfo;
             if (weather != null && weather.getHourlyForecasts() != null) {
+                final boolean from = weather.isMetric();
+                final boolean to = Config.isMetric(mContext);
+
                 for (WeatherInfo.HourlyForecast h : weather.getHourlyForecasts()) {
                     result.newRow()
-                            .add(COLUMN_HOURLY_TEMPERATURE, h.temperature)
+                            .add(COLUMN_HOURLY_TEMPERATURE, convertTemp(h.temperature, from, to))
                             .add(COLUMN_HOURLY_CONDITION_CODE, h.conditionCode)
                             .add(COLUMN_HOURLY_CONDITION, h.getCondition(mContext))
                             .add(COLUMN_HOURLY_TIMESTAMP, h.timestamp)
                             .add(COLUMN_HOURLY_HUMIDITY, h.humidity)
-                            .add(COLUMN_HOURLY_WIND_SPEED, h.windSpeed);
+                            .add(COLUMN_HOURLY_WIND_SPEED, convertSpeed(h.windSpeed, from, to));
                 }
                 return result;
             }
         }
         return null;
+    }
+
+    /** degC <-> degF. */
+    private static float convertTemp(float value, boolean fromMetric, boolean toMetric) {
+        if (fromMetric == toMetric || Float.isNaN(value)) {
+            return value;
+        }
+        return toMetric ? (value - 32f) / 1.8f : (value * 1.8f) + 32f;
+    }
+
+    /** km/h <-> mph. */
+    private static float convertSpeed(float value, boolean fromMetric, boolean toMetric) {
+        if (fromMetric == toMetric || Float.isNaN(value)) {
+            return value;
+        }
+        return toMetric ? value * KM_PER_MILE : value / KM_PER_MILE;
+    }
+
+    /** km <-> miles. */
+    private static float convertDistance(float value, boolean fromMetric, boolean toMetric) {
+        if (fromMetric == toMetric || Float.isNaN(value)) {
+            return value;
+        }
+        return toMetric ? value * KM_PER_MILE : value / KM_PER_MILE;
     }
 
     private String[] resolveProjection(String[] projection, int uriType) {
@@ -276,5 +315,9 @@ public class WeatherContentProvider extends ContentProvider {
     public static void notifySettingsChanged(Context context) {
         context.getContentResolver().notifyChange(
                 Uri.parse("content://" + WeatherContentProvider.AUTHORITY + "/settings"), null);
+        context.getContentResolver().notifyChange(
+                Uri.parse("content://" + WeatherContentProvider.AUTHORITY + "/weather"), null);
+        context.getContentResolver().notifyChange(
+                Uri.parse("content://" + WeatherContentProvider.AUTHORITY + "/hourly"), null);
     }
 }

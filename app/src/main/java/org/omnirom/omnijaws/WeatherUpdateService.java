@@ -411,7 +411,6 @@ public class WeatherUpdateService extends JobService {
                         // error
                         Log.d(TAG, "clear weather data");
                         Config.setUpdateError(WeatherUpdateService.this, true);
-                        Config.clearWeatherData(WeatherUpdateService.this);
                         WeatherContentProvider.updateCachedWeatherInfo(WeatherUpdateService.this);
                         WeatherAppWidgetProvider.updateAllWidgets(WeatherUpdateService.this);
                         if (locationError) {
