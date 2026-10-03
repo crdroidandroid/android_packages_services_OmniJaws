@@ -53,36 +53,7 @@ data class SettingsUiState(
     val lastUpdateTime: String = "",
     val iconPacks: List<IconPackItem> = emptyList(),
     val hasLocationPermission: Boolean = false
-) {
-    val providerLabel: String get() = when (provider) {
-        "0" -> "OpenWeatherMap"
-        "1" -> "MET Norway"
-        "2" -> "Pirate Weather"
-        "3" -> "Open-Meteo"
-        "4" -> "Visual Crossing"
-        else -> provider
-    }
-    val unitsLabel: String get() = when (units) {
-        "0" -> "Metric (\u00b0C)"
-        "1" -> "Imperial (\u00b0F)"
-        else -> units
-    }
-    val intervalLabel: String get() = when (updateInterval) {
-        "1" -> "1 hour"
-        "2" -> "2 hours"
-        "4" -> "4 hours"
-        "6" -> "6 hours"
-        "12" -> "12 hours"
-        else -> "$updateInterval hours"
-    }
-
-    val iconThemeLabel: String get() = when (iconTheme) {
-        IconProvider.ICON_THEME_SYSTEM.toString() -> "Follow system"
-        IconProvider.ICON_THEME_LIGHT.toString() -> "Light"
-        IconProvider.ICON_THEME_DARK.toString() -> "Dark"
-        else -> iconTheme
-    }
-}
+)
 
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -175,7 +146,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         _uiState.value = _uiState.value.copy(
             iconPack = value,
             iconPackSupportsTheming = IconPack.supportsThemes(ctx)
-            )
+        )
         scheduleUpdate()
     }
 
