@@ -28,13 +28,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.CancellationSignal;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.preference.PreferenceManager;
@@ -62,7 +60,10 @@ public class WeatherUpdateService extends JobService {
 
     private static final float LOCATION_ACCURACY_THRESHOLD_METERS = 50000;
     private static final long OUTDATED_LOCATION_THRESHOLD_MILLIS = 10L * 60L * 1000L; // 10 minutes
-    private static final long LOCATION_REQUEST_TIMEOUT_MS = 15L * 1000L; // 15 seconds
+    private static final long FUSED_TIMEOUT_MS = 10L * 1000L;
+    private static final long NETWORK_TIMEOUT_MS = 10L * 1000L;
+    private static final long GPS_TIMEOUT_MS = 30L * 1000L;
+    private static final long LOCATION_TOTAL_BUDGET_MS = 45L * 1000L;
     private static final int RETRY_DELAY_MS = 5000;
     private static final int RETRY_MAX_NUM = 5;
 
@@ -77,14 +78,6 @@ public class WeatherUpdateService extends JobService {
     private Handler mHandler;
     private volatile CancellationSignal mLocationCancellationSignal;
     private static final SimpleDateFormat dayFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US);
-
-    private static final Criteria sLocationCriteria;
-    static {
-        sLocationCriteria = new Criteria();
-        sLocationCriteria.setPowerRequirement(Criteria.POWER_LOW);
-        sLocationCriteria.setAccuracy(Criteria.ACCURACY_COARSE);
-        sLocationCriteria.setCostAllowed(false);
-    }
 
     @Override
     public boolean onStopJob(JobParameters params) {
@@ -203,7 +196,7 @@ public class WeatherUpdateService extends JobService {
         Log.d(TAG, "getCurrentLocation: needsFreshFix = " + needsUpdate);
 
         if (needsUpdate) {
-            Location fresh = requestCurrentLocationBlocking(lm);
+            Location fresh = requestFreshLocation(lm);
             if (fresh != null) {
                 location = fresh;
             } else {
@@ -247,28 +240,52 @@ public class WeatherUpdateService extends JobService {
         return best;
     }
 
-    @SuppressLint("MissingPermission")
-    private Location requestCurrentLocationBlocking(LocationManager lm) {
-        String provider = null;
-        if (lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-            provider = LocationManager.NETWORK_PROVIDER;
-        } else if (lm.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            provider = LocationManager.GPS_PROVIDER;
-        } else if (lm.isProviderEnabled(LocationManager.FUSED_PROVIDER)) {
-            provider = LocationManager.FUSED_PROVIDER;
-        } else {
-            String best = lm.getBestProvider(sLocationCriteria, true);
-            if (!TextUtils.isEmpty(best)) {
-                provider = best;
+    private Location requestFreshLocation(LocationManager lm) {
+        final long deadline = System.currentTimeMillis() + LOCATION_TOTAL_BUDGET_MS;
+        final String[] candidates = {
+                LocationManager.FUSED_PROVIDER,
+                LocationManager.NETWORK_PROVIDER,
+                LocationManager.GPS_PROVIDER
+        };
+        final long[] timeouts = { FUSED_TIMEOUT_MS, NETWORK_TIMEOUT_MS, GPS_TIMEOUT_MS };
+
+        boolean triedAny = false;
+        for (int i = 0; i < candidates.length; i++) {
+            String provider = candidates[i];
+            if (!isProviderUsable(lm, provider)) {
+                Log.d(TAG, "Provider '" + provider + "' not available or disabled, skipping");
+                continue;
+            }
+            long remaining = deadline - System.currentTimeMillis();
+            if (remaining <= 0) {
+                Log.w(TAG, "Location budget used up before trying '" + provider + "'");
+                break;
+            }
+            triedAny = true;
+            Location fix = requestCurrentLocationBlocking(lm, provider, Math.min(timeouts[i], remaining));
+            if (fix != null && fix.getAccuracy() <= LOCATION_ACCURACY_THRESHOLD_METERS) {
+                return fix;
             }
         }
 
-        if (provider == null) {
-            Log.e(TAG, "No enabled location provider (network/gps/fused all off)");
-            return null;
+        if (!triedAny) {
+            Log.e(TAG, "No usable location provider (fused/network/gps). Check that the ROM "
+                    + "binds a network location provider (config_locationProviderPackageNames).");
         }
+        return null;
+    }
 
-        Log.d(TAG, "Requesting fresh location from provider '" + provider + "'");
+    private static boolean isProviderUsable(LocationManager lm, String provider) {
+        try {
+            return lm.hasProvider(provider) && lm.isProviderEnabled(provider);
+        } catch (IllegalArgumentException | SecurityException e) {
+            return false;
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private Location requestCurrentLocationBlocking(LocationManager lm, String provider, long timeoutMs) {
+        Log.d(TAG, "Requesting fresh location from '" + provider + "' (timeout " + timeoutMs + " ms)");
 
         final CountDownLatch latch = new CountDownLatch(1);
         final Location[] result = new Location[1];
@@ -281,16 +298,16 @@ public class WeatherUpdateService extends JobService {
                 result[0] = location;
                 latch.countDown();
             });
-        } catch (SecurityException e) {
-            Log.e(TAG, "Missing runtime permission for getCurrentLocation", e);
+        } catch (SecurityException | IllegalArgumentException e) {
+            Log.e(TAG, "getCurrentLocation failed for '" + provider + "'", e);
             mLocationCancellationSignal = null;
             return null;
         }
 
         try {
-            if (!latch.await(LOCATION_REQUEST_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
-                Log.w(TAG, "Timed out after " + (LOCATION_REQUEST_TIMEOUT_MS / 1000)
-                        + "s waiting for a fix from '" + provider + "'");
+            if (!latch.await(timeoutMs, TimeUnit.MILLISECONDS)) {
+                Log.w(TAG, "Timed out after " + timeoutMs + " ms waiting for a fix from '"
+                        + provider + "'");
                 cancel.cancel();
             }
         } catch (InterruptedException e) {
@@ -298,6 +315,9 @@ public class WeatherUpdateService extends JobService {
             cancel.cancel();
         } finally {
             mLocationCancellationSignal = null;
+        }
+        if (result[0] == null) {
+            Log.w(TAG, "No fix from '" + provider + "'");
         }
         return result[0];
     }
@@ -395,7 +415,9 @@ public class WeatherUpdateService extends JobService {
                                 if (location != null) {
                                     w = provider.getLocationWeather(location, Config.isMetric(ctx));
                                 } else {
-                                    Log.w(TAG, "no location available");
+                                    Log.w(TAG, "no location available (background location granted="
+                                            + (checkSelfPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                                                    == PackageManager.PERMISSION_GRANTED) + ")");
                                     locationError = true;
                                     // we are outa here
                                     break;

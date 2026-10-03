@@ -18,7 +18,10 @@ package org.omnirom.omnijaws.ui
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -57,6 +60,17 @@ class WeatherSettingsActivity : ComponentActivity(), OmniJawsClient.OmniJawsObse
         viewModel.onPermissionResult(granted)
     }
 
+    private val backgroundPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (!granted &&
+            !shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+        ) {
+            openAppDetailsSettings()
+        }
+        viewModel.onBackgroundPermissionResult()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -89,7 +103,12 @@ class WeatherSettingsActivity : ComponentActivity(), OmniJawsClient.OmniJawsObse
                         onOwmKeyChanged = { viewModel.setOwmKey(it) },
                         onPirateWeatherKeyChanged = { viewModel.setPirateWeatherKey(it) },
                         onVisualCrossingKeyChanged = { viewModel.setVisualCrossingKey(it) },
-                        onRequestLocationPermission = { requestLocationPermissionIfNeeded() }
+                        onRequestLocationPermission = { requestLocationPermissionIfNeeded() },
+                        onRequestBackgroundLocationPermission = {
+                            backgroundPermissionLauncher.launch(
+                                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                            )
+                        }
                     )
                 }
             }
@@ -124,5 +143,16 @@ class WeatherSettingsActivity : ComponentActivity(), OmniJawsClient.OmniJawsObse
                 )
             )
         }
+    }
+
+    private fun openAppDetailsSettings() {
+        runCatching {
+            startActivity(
+                Intent(
+                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    Uri.fromParts("package", packageName, null)
+                )
+            )
+        }.onFailure { Log.w("WeatherSettings", "App details settings not available", it) }
     }
 }

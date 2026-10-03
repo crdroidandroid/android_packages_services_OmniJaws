@@ -77,7 +77,8 @@ fun WeatherSettingsScreen(
     onOwmKeyChanged: (String) -> Unit,
     onPirateWeatherKeyChanged: (String) -> Unit,
     onVisualCrossingKeyChanged: (String) -> Unit,
-    onRequestLocationPermission: () -> Unit
+    onRequestLocationPermission: () -> Unit,
+    onRequestBackgroundLocationPermission: () -> Unit
 ) {
     AxionScaffold(
         title = stringResource(R.string.omnijaws_weather_config_title),
@@ -190,6 +191,18 @@ fun WeatherSettingsScreen(
                                 summary = stringResource(R.string.omnijaws_grant_location_permission_summary),
                                 icon = Icons.Outlined.Security,
                                 onClick = onRequestLocationPermission
+                            )
+                        }
+                    }
+                    if (!state.customLocation && state.hasLocationPermission &&
+                        !state.hasBackgroundLocationPermission
+                    ) {
+                        item {
+                            ClickablePreference(
+                                title = stringResource(R.string.omnijaws_grant_background_location_title),
+                                summary = stringResource(R.string.omnijaws_grant_background_location_summary),
+                                icon = Icons.Outlined.Security,
+                                onClick = onRequestBackgroundLocationPermission
                             )
                         }
                     }

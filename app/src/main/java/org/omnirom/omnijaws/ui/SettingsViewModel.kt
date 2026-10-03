@@ -56,7 +56,8 @@ data class SettingsUiState(
     val lastUpdateTime: String = "",
     val isUpdating: Boolean = false,
     val iconPacks: List<IconPackItem> = emptyList(),
-    val hasLocationPermission: Boolean = false
+    val hasLocationPermission: Boolean = false,
+    val hasBackgroundLocationPermission: Boolean = false
 )
 
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
@@ -88,7 +89,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                     lastUpdateTime = queryLastUpdate(),
                     isUpdating = _uiState.value.isUpdating,
                     iconPacks = loadIconPacks(),
-                    hasLocationPermission = hasLocationPermission()
+                    hasLocationPermission = hasLocationPermission(),
+                    hasBackgroundLocationPermission = hasBackgroundLocationPermission()
                 )
             }
             _uiState.value = state
@@ -183,7 +185,16 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun onPermissionResult(granted: Boolean) {
-        _uiState.value = _uiState.value.copy(hasLocationPermission = granted)
+        _uiState.value = _uiState.value.copy(
+            hasLocationPermission = granted,
+            hasBackgroundLocationPermission = hasBackgroundLocationPermission()
+        )
+        if (granted && !_uiState.value.customLocation) scheduleUpdate()
+    }
+
+    fun onBackgroundPermissionResult() {
+        val granted = hasBackgroundLocationPermission()
+        _uiState.value = _uiState.value.copy(hasBackgroundLocationPermission = granted)
         if (granted && !_uiState.value.customLocation) scheduleUpdate()
     }
 
@@ -210,6 +221,10 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         return ctx.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
                 ctx.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
     }
+
+    private fun hasBackgroundLocationPermission(): Boolean =
+        ctx.checkSelfPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED
 
     private fun scheduleUpdate() {
         WeatherUpdateService.scheduleUpdateNow(ctx)
