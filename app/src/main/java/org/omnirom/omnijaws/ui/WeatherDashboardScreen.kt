@@ -207,6 +207,7 @@ private fun ErrorState(
     val titleRes = when (locationFix) {
         LocationIssue.SERVICES_DISABLED -> R.string.omnijaws_error_location_services_off
         LocationIssue.PERMISSION_MISSING -> R.string.omnijaws_error_location_permission
+        LocationIssue.CUSTOM_LOCATION_MISSING -> R.string.omnijaws_error_custom_location_missing
         LocationIssue.NONE -> when (error) {
             OmniJawsClient.EXTRA_ERROR_NETWORK -> R.string.omnijaws_error_network
             OmniJawsClient.EXTRA_ERROR_LOCATION -> R.string.omnijaws_error_location
@@ -218,6 +219,7 @@ private fun ErrorState(
     val subtitleRes = when (locationFix) {
         LocationIssue.SERVICES_DISABLED -> R.string.omnijaws_error_location_services_off_summary
         LocationIssue.PERMISSION_MISSING -> R.string.omnijaws_error_location_permission_summary
+        LocationIssue.CUSTOM_LOCATION_MISSING -> R.string.omnijaws_error_custom_location_missing_summary
         LocationIssue.NONE -> R.string.omnijaws_dashboard_error_subtitle
     }
 
@@ -258,6 +260,14 @@ private fun ErrorState(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                 }
+                LocationIssue.CUSTOM_LOCATION_MISSING -> {
+                    PrimaryActionButton(
+                        icon = Icons.Outlined.LocationOn,
+                        labelRes = R.string.omnijaws_action_choose_location,
+                        onClick = onPickLocation
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
                 LocationIssue.NONE -> Unit
             }
 
@@ -282,7 +292,7 @@ private fun ErrorState(
                 }
             }
 
-            if (isLocationError) {
+            if (isLocationError && locationFix != LocationIssue.CUSTOM_LOCATION_MISSING) {
                 Spacer(modifier = Modifier.height(8.dp))
                 TextButton(onClick = onPickLocation) {
                     Text(stringResource(R.string.omnijaws_action_pick_location))

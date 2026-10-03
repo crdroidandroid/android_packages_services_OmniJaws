@@ -26,6 +26,7 @@ import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
@@ -35,6 +36,8 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.text.TextUtils;
 import android.util.Log;
+
+import androidx.preference.PreferenceManager;
 
 import org.omnirom.omnijaws.widget.WeatherAppWidgetProvider;
 
@@ -62,6 +65,10 @@ public class WeatherUpdateService extends JobService {
     private static final long LOCATION_REQUEST_TIMEOUT_MS = 15L * 1000L; // 15 seconds
     private static final int RETRY_DELAY_MS = 5000;
     private static final int RETRY_MAX_NUM = 5;
+
+    private static final String PREF_KEY_DATA_SOURCE = "weather_data_source";
+    private static final String SOURCE_CURRENT = "current";
+    private static final String SOURCE_CUSTOM_PREFIX = "custom:";
 
     public static final int PERIODIC_UPDATE_JOB_ID = 0;
     public static final int ONCE_UPDATE_JOB_ID = 1;
@@ -133,6 +140,28 @@ public class WeatherUpdateService extends JobService {
 
         Log.d(TAG, "updateWeather");
         updateWeather(params);
+    }
+
+    private static SharedPreferences prefs(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context);
+    }
+
+    private static String currentSource(Context context) {
+        return Config.isCustomLocation(context)
+                ? SOURCE_CUSTOM_PREFIX + Config.getLocationId(context)
+                : SOURCE_CURRENT;
+    }
+
+    public static boolean isCachedDataForOtherSource(Context context) {
+        String stored = prefs(context).getString(PREF_KEY_DATA_SOURCE, null);
+        return stored != null && !stored.equals(currentSource(context));
+    }
+
+    public static void ensureDataSourceRecorded(Context context) {
+        SharedPreferences prefs = prefs(context);
+        if (!prefs.contains(PREF_KEY_DATA_SOURCE)) {
+            prefs.edit().putString(PREF_KEY_DATA_SOURCE, currentSource(context)).apply();
+        }
     }
 
     private boolean doCheckLocationEnabled() {
@@ -351,18 +380,20 @@ public class WeatherUpdateService extends JobService {
         mHandler.post(new Runnable() {
             @Override
             public void run() {
+                final Context ctx = WeatherUpdateService.this;
+                final String source = currentSource(ctx);
                 WeatherInfo w = null;
                 boolean locationError = false;
                 try {
-                    AbstractWeatherProvider provider = Config.getProvider(WeatherUpdateService.this);
+                    AbstractWeatherProvider provider = Config.getProvider(ctx);
                     int i = 0;
                     // retry max RETRY_MAX_NUM times
                     while (i < RETRY_MAX_NUM) {
-                        if (!Config.isCustomLocation(WeatherUpdateService.this)) {
+                        if (!Config.isCustomLocation(ctx)) {
                             if (checkPermissions()) {
                                 Location location = getCurrentLocation();
                                 if (location != null) {
-                                    w = provider.getLocationWeather(location, Config.isMetric(WeatherUpdateService.this));
+                                    w = provider.getLocationWeather(location, Config.isMetric(ctx));
                                 } else {
                                     Log.w(TAG, "no location available");
                                     locationError = true;
@@ -379,17 +410,19 @@ public class WeatherUpdateService extends JobService {
                                 // we are outa here
                                 break;
                             }
-                        } else if (Config.getLocationId(WeatherUpdateService.this) != null) {
-                            w = provider.getCustomWeather(Config.getLocationId(WeatherUpdateService.this), Config.isMetric(WeatherUpdateService.this));
+                        } else if (Config.getLocationId(ctx) != null) {
+                            w = provider.getCustomWeather(Config.getLocationId(ctx), Config.isMetric(ctx));
                         } else {
                             Log.w(TAG, "no valid custom location");
+                            locationError = true;
                             // we are outa here
                             break;
                         }
                         if (w != null) {
-                            Config.setWeatherData(WeatherUpdateService.this, w);
-                            WeatherContentProvider.updateCachedWeatherInfo(WeatherUpdateService.this);
-                            WeatherAppWidgetProvider.updateAllWidgets(WeatherUpdateService.this);
+                            Config.setWeatherData(ctx, w);
+                            prefs(ctx).edit().putString(PREF_KEY_DATA_SOURCE, source).apply();
+                            WeatherContentProvider.updateCachedWeatherInfo(ctx);
+                            WeatherAppWidgetProvider.updateAllWidgets(ctx);
                             // we are outa here
                             break;
                         } else {
@@ -408,11 +441,14 @@ public class WeatherUpdateService extends JobService {
                     }
                 } finally {
                     if (w == null) {
-                        // error
-                        Log.d(TAG, "clear weather data");
-                        Config.setUpdateError(WeatherUpdateService.this, true);
-                        WeatherContentProvider.updateCachedWeatherInfo(WeatherUpdateService.this);
-                        WeatherAppWidgetProvider.updateAllWidgets(WeatherUpdateService.this);
+                        Config.setUpdateError(ctx, true);
+                        if (isCachedDataForOtherSource(ctx)) {
+                            Log.d(TAG, "clearing weather data of previous location source");
+                            Config.clearWeatherData(ctx);
+                            prefs(ctx).edit().remove(PREF_KEY_DATA_SOURCE).apply();
+                        }
+                        WeatherContentProvider.updateCachedWeatherInfo(ctx);
+                        WeatherAppWidgetProvider.updateAllWidgets(ctx);
                         if (locationError) {
                             Intent errorIntent = new Intent(ACTION_ERROR);
                             errorIntent.putExtra(EXTRA_ERROR, EXTRA_ERROR_LOCATION);

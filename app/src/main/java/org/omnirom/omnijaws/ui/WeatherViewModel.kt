@@ -45,7 +45,8 @@ import org.omnirom.omnijaws.icon.IconProvider
 enum class LocationIssue {
     NONE,
     SERVICES_DISABLED,
-    PERMISSION_MISSING
+    PERMISSION_MISSING,
+    CUSTOM_LOCATION_MISSING
 }
 
 data class WeatherUiState(
@@ -72,6 +73,8 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
     private val client = OmniJawsClient.get()
     private var refreshTimeoutJob: Job? = null
 
+    private var otherSourceUpdateRequested = false
+
     private val isRefreshPending: Boolean
         get() = refreshTimeoutJob?.isActive == true
 
@@ -83,29 +86,36 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
                 client.getWeatherInfo()
             }
 
-            if (DEBUG) {
-                if (info != null) {
-                    Log.d(TAG, "city=${info.city} temp=${info.temp} condition=${info.condition}" +
-                            " forecasts=${info.forecasts?.size} hourly=${info.hourlyForecasts?.size}")
-                } else {
-                    Log.d(TAG, "Weather data: null")
-                }
-            }
-
-            val (enabled, locationIssue) = withContext(Dispatchers.IO) {
-                Config.isEnabled(context) to resolveLocationIssue()
+            val (enabled, locationIssue, otherSource) = withContext(Dispatchers.IO) {
+                Triple(
+                    Config.isEnabled(context),
+                    resolveLocationIssue(),
+                    WeatherUpdateService.isCachedDataForOtherSource(context)
+                )
             }
             val iconPack = Config.getIconPack(context) ?: ""
             val iconTheme = Config.getIconTheme(context)
 
+            val wrongSource = info != null && otherSource
+            val usableInfo = if (wrongSource) null else info
+            if (!wrongSource) otherSourceUpdateRequested = false
+
+            if (DEBUG) {
+                Log.d(TAG, "info=$info wrongSource=$wrongSource issue=$locationIssue")
+            }
+
             if (endRefresh) refreshTimeoutJob?.cancel()
+
+            val requestUpdate = wrongSource && enabled &&
+                    !otherSourceUpdateRequested && !isRefreshPending
+            val showLoading = requestUpdate && locationIssue == LocationIssue.NONE
 
             _uiState.update { current ->
                 current.copy(
-                    weatherInfo = info,
-                    isLoading = isRefreshPending,
+                    weatherInfo = usableInfo,
+                    isLoading = isRefreshPending || showLoading,
                     error = when {
-                        info != null -> null
+                        usableInfo != null -> null
                         !enabled -> OmniJawsClient.EXTRA_ERROR_DISABLED
                         locationIssue != LocationIssue.NONE -> OmniJawsClient.EXTRA_ERROR_LOCATION
                         current.error != null -> current.error
@@ -115,6 +125,11 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
                     iconTheme = iconTheme,
                     locationIssue = locationIssue
                 )
+            }
+
+            if (requestUpdate) {
+                otherSourceUpdateRequested = true
+                if (showLoading) forceRefresh() else requestServiceUpdate()
             }
         }
     }
@@ -140,7 +155,7 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
                 !isRefreshPending
 
         if (recovered) {
-            _uiState.update { it.copy(error = null, locationIssue = issue) }
+            _uiState.update { it.copy(locationIssue = issue) }
             forceRefresh()
         } else {
             queryWeather(endRefresh = false)
@@ -148,22 +163,15 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun forceRefresh() {
-        _uiState.update { it.copy(isLoading = true) }
-        val context = getApplication<Application>()
-
-        viewModelScope.launch(Dispatchers.IO) {
-            val values = ContentValues()
-            values.put("update", true)
-            runCatching {
-                context.contentResolver.update(Uri.parse(CONTROL_URI), values, null, null)
-            }.onFailure { Log.e(TAG, "forceRefresh failed", it) }
-        }
-
+        _uiState.update { it.copy(isLoading = true, error = null) }
+        requestServiceUpdate()
         startRefreshTimeout()
     }
 
     fun setLocationResult(name: String, lat: Double, lon: Double) {
         val context = getApplication<Application>()
+        WeatherUpdateService.ensureDataSourceRecorded(context)
+
         val locationId = String.format(Locale.US, "lat=%f&lon=%f", lat, lon)
         PreferenceManager.getDefaultSharedPreferences(context).edit()
             .putBoolean(Config.PREF_KEY_CUSTOM_LOCATION, true)
@@ -171,8 +179,14 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
         Config.setLocationId(context, locationId)
         Config.setLocationName(context, name)
 
+        otherSourceUpdateRequested = true
         _uiState.update {
-            it.copy(isLoading = true, error = null, locationIssue = LocationIssue.NONE)
+            it.copy(
+                weatherInfo = null,
+                isLoading = true,
+                error = null,
+                locationIssue = LocationIssue.NONE
+            )
         }
         WeatherUpdateService.scheduleUpdateNow(context)
 
@@ -182,6 +196,17 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
     fun getConditionIcon(conditionCode: Int): Drawable? {
         if (conditionCode < 0) return null
         return IconProvider.getConditionDrawable(getApplication(), conditionCode)
+    }
+
+    private fun requestServiceUpdate() {
+        val context = getApplication<Application>()
+        viewModelScope.launch(Dispatchers.IO) {
+            val values = ContentValues()
+            values.put("update", true)
+            runCatching {
+                context.contentResolver.update(Uri.parse(CONTROL_URI), values, null, null)
+            }.onFailure { Log.e(TAG, "update request failed", it) }
+        }
     }
 
     private fun startRefreshTimeout() {
@@ -198,7 +223,13 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
         val context = getApplication<Application>()
         val customLocation = PreferenceManager.getDefaultSharedPreferences(context)
             .getBoolean(Config.PREF_KEY_CUSTOM_LOCATION, false)
-        if (customLocation) return LocationIssue.NONE
+        if (customLocation) {
+            return if (Config.getLocationId(context).isNullOrEmpty()) {
+                LocationIssue.CUSTOM_LOCATION_MISSING
+            } else {
+                LocationIssue.NONE
+            }
+        }
 
         val locationManager = context.getSystemService(LocationManager::class.java)
         if (locationManager != null && !locationManager.isLocationEnabled) {

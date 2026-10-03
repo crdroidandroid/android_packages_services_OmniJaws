@@ -130,17 +130,15 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun setCustomLocation(enabled: Boolean) {
+        WeatherUpdateService.ensureDataSourceRecorded(ctx)
         val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx)
         prefs.edit().putBoolean(Config.PREF_KEY_CUSTOM_LOCATION, enabled).apply()
         _uiState.value = _uiState.value.copy(customLocation = enabled)
-        if (enabled) {
-            if (Config.getLocationId(ctx) != null) scheduleUpdate()
-        } else {
-            if (hasLocationPermission()) scheduleUpdate()
-        }
+        scheduleUpdate()
     }
 
     fun setLocationResult(name: String, lat: Double, lon: Double) {
+        WeatherUpdateService.ensureDataSourceRecorded(ctx)
         val locationId = String.format(java.util.Locale.US, "lat=%f&lon=%f", lat, lon)
         Config.setLocationId(ctx, locationId)
         Config.setLocationName(ctx, name)
