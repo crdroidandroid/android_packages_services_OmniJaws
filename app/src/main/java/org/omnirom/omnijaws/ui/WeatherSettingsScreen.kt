@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Cloud
@@ -45,9 +44,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -61,8 +61,6 @@ import com.android.axion.compose.scaffold.AxionScaffold
 import org.omnirom.omnijaws.R
 import org.omnirom.omnijaws.icon.IconProvider
 
-private const val URL_TAG = "URL"
-
 @Composable
 fun WeatherSettingsScreen(
     state: SettingsUiState,
@@ -71,6 +69,7 @@ fun WeatherSettingsScreen(
     onProviderChanged: (String) -> Unit,
     onUnitsChanged: (String) -> Unit,
     onIntervalChanged: (String) -> Unit,
+    onForceUpdate: () -> Unit,
     onCustomLocationChanged: (Boolean) -> Unit,
     onLocationPickerClick: () -> Unit,
     onIconPackChanged: (String) -> Unit,
@@ -150,11 +149,14 @@ fun WeatherSettingsScreen(
                     item {
                         ClickablePreference(
                             title = stringResource(R.string.omnijaws_last_update_time),
-                            summary = state.lastUpdateTime.ifEmpty {
-                                stringResource(R.string.omnijaws_weather_last_update_never)
+                            summary = when {
+                                state.isUpdating -> stringResource(R.string.omnijaws_service_progress)
+                                state.lastUpdateTime.isEmpty() ->
+                                    stringResource(R.string.omnijaws_weather_last_update_never)
+                                else -> state.lastUpdateTime
                             },
                             icon = Icons.Outlined.Update,
-                            onClick = {}
+                            onClick = onForceUpdate
                         )
                     }
                 }
@@ -338,14 +340,17 @@ private fun EditTextPreference(
             },
             confirmButton = {
                 TextButton(onClick = {
-                    onValueChange(textValue)
+                    onValueChange(textValue.trim())
                     showDialog = false
                 }) {
                     Text(stringResource(android.R.string.ok))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDialog = false }) {
+                TextButton(onClick = {
+                    textValue = value
+                    showDialog = false
+                }) {
                     Text(stringResource(android.R.string.cancel))
                 }
             }
@@ -378,26 +383,19 @@ private fun PlainNotePreference(text: String) {
 @Composable
 private fun HtmlNotePreference(html: String) {
     val linkColor = MaterialTheme.colorScheme.primary
-    val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
-    val uriHandler = LocalUriHandler.current
 
     val annotated = remember(html, linkColor) {
         val spanned = HtmlCompat.fromHtml(html, HtmlCompat.FROM_HTML_MODE_LEGACY)
+        val linkStyles = TextLinkStyles(
+            style = SpanStyle(color = linkColor, textDecoration = TextDecoration.Underline)
+        )
         buildAnnotatedString {
             append(spanned.toString())
-            val urlSpans = spanned.getSpans(0, spanned.length, URLSpan::class.java)
-            for (span in urlSpans) {
+            for (span in spanned.getSpans(0, spanned.length, URLSpan::class.java)) {
                 val start = spanned.getSpanStart(span)
                 val end = spanned.getSpanEnd(span)
-                if (start in 0..end && end <= length) {
-                    addStyle(
-                        SpanStyle(
-                            color = linkColor,
-                            textDecoration = TextDecoration.Underline
-                        ),
-                        start, end
-                    )
-                    addStringAnnotation(URL_TAG, span.url, start, end)
+                if (start in 0 until end && end <= length) {
+                    addLink(LinkAnnotation.Url(span.url, linkStyles), start, end)
                 }
             }
         }
@@ -408,13 +406,10 @@ private fun HtmlNotePreference(html: String) {
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        ClickableText(
+        Text(
             text = annotated,
-            style = MaterialTheme.typography.bodyMedium.copy(color = onSurfaceVariant),
-            onClick = { offset ->
-                annotated.getStringAnnotations(URL_TAG, offset, offset)
-                    .firstOrNull()?.let { runCatching { uriHandler.openUri(it.item) } }
-            }
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

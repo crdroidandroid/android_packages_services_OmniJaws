@@ -16,6 +16,7 @@
 package org.omnirom.omnijaws.ui
 
 import android.graphics.drawable.Drawable
+import androidx.annotation.StringRes
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -44,6 +45,7 @@ import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.MyLocation
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -51,6 +53,7 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
@@ -58,6 +61,7 @@ import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -66,6 +70,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -88,6 +93,8 @@ fun WeatherDashboardScreen(
     onRefresh: () -> Unit,
     onSettingsClick: () -> Unit,
     onLocationClick: () -> Unit,
+    onOpenLocationSettings: () -> Unit,
+    onRequestLocationPermission: () -> Unit,
     iconPack: String,
     iconTheme: Int,
     getConditionIcon: (Int) -> Drawable?
@@ -127,7 +134,18 @@ fun WeatherDashboardScreen(
                     onSettingsClick = onSettingsClick
                 )
 
+                val weatherInfo = uiState.weatherInfo
                 when {
+                    weatherInfo != null -> {
+                        RefreshIndicator(visible = uiState.isLoading)
+                        WeatherContent(
+                            weather = weatherInfo,
+                            iconPack = iconPack,
+                            iconTheme = iconTheme,
+                            getConditionIcon = getConditionIcon,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                     uiState.isLoading -> {
                         Box(
                             modifier = Modifier
@@ -138,23 +156,18 @@ fun WeatherDashboardScreen(
                             CircularProgressIndicator()
                         }
                     }
-                    uiState.weatherInfo == null -> {
+                    else -> {
                         ErrorState(
                             error = uiState.error,
+                            locationIssue = uiState.locationIssue,
                             onRefresh = onRefresh,
                             onSettingsClick = onSettingsClick,
+                            onOpenLocationSettings = onOpenLocationSettings,
+                            onRequestLocationPermission = onRequestLocationPermission,
+                            onPickLocation = onLocationClick,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .weight(1f)
-                        )
-                    }
-                    else -> {
-                        WeatherContent(
-                            weather = uiState.weatherInfo,
-                            iconPack = iconPack,
-                            iconTheme = iconTheme,
-                            getConditionIcon = getConditionIcon,
-                            modifier = Modifier.weight(1f)
                         )
                     }
                 }
@@ -164,17 +177,48 @@ fun WeatherDashboardScreen(
 }
 
 @Composable
+private fun RefreshIndicator(visible: Boolean) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .height(4.dp)
+    ) {
+        if (visible) {
+            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+        }
+    }
+}
+
+@Composable
 private fun ErrorState(
     error: Int?,
+    locationIssue: LocationIssue,
     onRefresh: () -> Unit,
     onSettingsClick: () -> Unit,
+    onOpenLocationSettings: () -> Unit,
+    onRequestLocationPermission: () -> Unit,
+    onPickLocation: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val titleRes = when (error) {
-        OmniJawsClient.EXTRA_ERROR_NETWORK -> R.string.omnijaws_error_network
-        OmniJawsClient.EXTRA_ERROR_LOCATION -> R.string.omnijaws_error_location
-        OmniJawsClient.EXTRA_ERROR_DISABLED -> R.string.omnijaws_error_disabled
-        else -> R.string.omnijaws_service_unkown
+    val isLocationError = error == OmniJawsClient.EXTRA_ERROR_LOCATION
+    val locationFix = if (isLocationError) locationIssue else LocationIssue.NONE
+
+    val titleRes = when (locationFix) {
+        LocationIssue.SERVICES_DISABLED -> R.string.omnijaws_error_location_services_off
+        LocationIssue.PERMISSION_MISSING -> R.string.omnijaws_error_location_permission
+        LocationIssue.NONE -> when (error) {
+            OmniJawsClient.EXTRA_ERROR_NETWORK -> R.string.omnijaws_error_network
+            OmniJawsClient.EXTRA_ERROR_LOCATION -> R.string.omnijaws_error_location
+            OmniJawsClient.EXTRA_ERROR_DISABLED -> R.string.omnijaws_error_disabled
+            else -> R.string.omnijaws_service_unkown
+        }
+    }
+
+    val subtitleRes = when (locationFix) {
+        LocationIssue.SERVICES_DISABLED -> R.string.omnijaws_error_location_services_off_summary
+        LocationIssue.PERMISSION_MISSING -> R.string.omnijaws_error_location_permission_summary
+        LocationIssue.NONE -> R.string.omnijaws_dashboard_error_subtitle
     }
 
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
@@ -190,12 +234,33 @@ private fun ErrorState(
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = stringResource(R.string.omnijaws_dashboard_error_subtitle),
+                text = stringResource(subtitleRes),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.outline,
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(24.dp))
+
+            when (locationFix) {
+                LocationIssue.SERVICES_DISABLED -> {
+                    PrimaryActionButton(
+                        icon = Icons.Outlined.LocationOn,
+                        labelRes = R.string.omnijaws_action_open_location_settings,
+                        onClick = onOpenLocationSettings
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+                LocationIssue.PERMISSION_MISSING -> {
+                    PrimaryActionButton(
+                        icon = Icons.Outlined.MyLocation,
+                        labelRes = R.string.omnijaws_action_grant_location_permission,
+                        onClick = onRequestLocationPermission
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+                LocationIssue.NONE -> Unit
+            }
+
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 FilledTonalButton(onClick = onRefresh) {
                     Icon(
@@ -216,7 +281,27 @@ private fun ErrorState(
                     Text(stringResource(R.string.omnijaws_settings_title))
                 }
             }
+
+            if (isLocationError) {
+                Spacer(modifier = Modifier.height(8.dp))
+                TextButton(onClick = onPickLocation) {
+                    Text(stringResource(R.string.omnijaws_action_pick_location))
+                }
+            }
         }
+    }
+}
+
+@Composable
+private fun PrimaryActionButton(
+    icon: ImageVector,
+    @StringRes labelRes: Int,
+    onClick: () -> Unit
+) {
+    Button(onClick = onClick) {
+        Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(stringResource(labelRes))
     }
 }
 
@@ -427,6 +512,8 @@ private fun WeatherSummaryRow(
     val spatialSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
 
     LaunchedEffect(weather.conditionCode) {
+        enterScale.snapTo(0.5f)
+        enterAlpha.snapTo(0f)
         launch { enterScale.animateTo(1f, spatialSpec) }
         launch { enterAlpha.animateTo(1f, tween(400)) }
     }

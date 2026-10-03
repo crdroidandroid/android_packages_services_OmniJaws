@@ -17,8 +17,8 @@ package org.omnirom.omnijaws.ui
 
 import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
-import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -66,30 +66,31 @@ class WeatherSettingsActivity : ComponentActivity(), OmniJawsClient.OmniJawsObse
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.surfaceContainer
                 ) {
-                val state by viewModel.uiState.collectAsState()
-                WeatherSettingsScreen(
-                    state = state,
-                    onBack = { finish() },
-                    onEnableChanged = { viewModel.setEnabled(it) },
-                    onProviderChanged = { viewModel.setProvider(it) },
-                    onUnitsChanged = { viewModel.setUnits(it) },
-                    onIntervalChanged = { viewModel.setUpdateInterval(it) },
-                    onCustomLocationChanged = {
-                        viewModel.setCustomLocation(it)
-                        if (!it) requestLocationPermissionIfNeeded()
-                    },
-                    onLocationPickerClick = {
-                        locationPickerLauncher.launch(
-                            Intent(this, LocationPickerActivity::class.java)
-                        )
-                    },
-                    onIconPackChanged = { viewModel.setIconPack(it) },
-                    onIconThemeChanged = { viewModel.setIconTheme(it) },
-                    onOwmKeyChanged = { viewModel.setOwmKey(it) },
-                    onPirateWeatherKeyChanged = { viewModel.setPirateWeatherKey(it) },
-                    onVisualCrossingKeyChanged = { viewModel.setVisualCrossingKey(it) },
-                    onRequestLocationPermission = { requestLocationPermissionIfNeeded() }
-                )
+                    val state by viewModel.uiState.collectAsState()
+                    WeatherSettingsScreen(
+                        state = state,
+                        onBack = { finish() },
+                        onEnableChanged = { viewModel.setEnabled(it) },
+                        onProviderChanged = { viewModel.setProvider(it) },
+                        onUnitsChanged = { viewModel.setUnits(it) },
+                        onIntervalChanged = { viewModel.setUpdateInterval(it) },
+                        onForceUpdate = { viewModel.forceUpdate() },
+                        onCustomLocationChanged = {
+                            viewModel.setCustomLocation(it)
+                            if (!it) requestLocationPermissionIfNeeded()
+                        },
+                        onLocationPickerClick = {
+                            locationPickerLauncher.launch(
+                                Intent(this, LocationPickerActivity::class.java)
+                            )
+                        },
+                        onIconPackChanged = { viewModel.setIconPack(it) },
+                        onIconThemeChanged = { viewModel.setIconTheme(it) },
+                        onOwmKeyChanged = { viewModel.setOwmKey(it) },
+                        onPirateWeatherKeyChanged = { viewModel.setPirateWeatherKey(it) },
+                        onVisualCrossingKeyChanged = { viewModel.setVisualCrossingKey(it) },
+                        onRequestLocationPermission = { requestLocationPermissionIfNeeded() }
+                    )
                 }
             }
         }
@@ -110,10 +111,12 @@ class WeatherSettingsActivity : ComponentActivity(), OmniJawsClient.OmniJawsObse
         viewModel.refreshUpdateStatus()
     }
 
-    override fun weatherError(errorReason: Int) {}
+    override fun weatherError(errorReason: Int) {
+        viewModel.refreshUpdateStatus()
+    }
 
     private fun requestLocationPermissionIfNeeded() {
-        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             permissionLauncher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION,

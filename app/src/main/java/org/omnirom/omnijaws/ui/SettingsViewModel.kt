@@ -23,9 +23,12 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.internal.util.crdroid.OmniJawsClient
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.omnirom.omnijaws.Config
@@ -51,6 +54,7 @@ data class SettingsUiState(
     val pirateWeatherKey: String = "",
     val visualCrossingKey: String = "",
     val lastUpdateTime: String = "",
+    val isUpdating: Boolean = false,
     val iconPacks: List<IconPackItem> = emptyList(),
     val hasLocationPermission: Boolean = false
 )
@@ -61,6 +65,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
     private val ctx get() = getApplication<Application>()
+
+    private var updateTimeoutJob: Job? = null
 
     fun loadSettings() {
         viewModelScope.launch {
@@ -80,6 +86,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                     pirateWeatherKey = Config.getPirateWeatherKey(ctx) ?: "",
                     visualCrossingKey = Config.getVisualCrossingKey(ctx) ?: "",
                     lastUpdateTime = queryLastUpdate(),
+                    isUpdating = _uiState.value.isUpdating,
                     iconPacks = loadIconPacks(),
                     hasLocationPermission = hasLocationPermission()
                 )
@@ -182,16 +189,28 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         if (granted && !_uiState.value.customLocation) scheduleUpdate()
     }
 
-    private fun hasLocationPermission(): Boolean {
-        return ctx.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-                ctx.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+    fun forceUpdate() {
+        if (_uiState.value.isUpdating) return
+        _uiState.update { it.copy(isUpdating = true) }
+        scheduleUpdate()
+        updateTimeoutJob?.cancel()
+        updateTimeoutJob = viewModelScope.launch {
+            delay(UPDATE_TIMEOUT_MS)
+            refreshUpdateStatus()
+        }
     }
 
     fun refreshUpdateStatus() {
+        updateTimeoutJob?.cancel()
         viewModelScope.launch {
             val last = withContext(Dispatchers.IO) { queryLastUpdate() }
-            _uiState.value = _uiState.value.copy(lastUpdateTime = last)
+            _uiState.update { it.copy(lastUpdateTime = last, isUpdating = false) }
         }
+    }
+
+    private fun hasLocationPermission(): Boolean {
+        return ctx.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                ctx.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
     }
 
     private fun scheduleUpdate() {
@@ -230,5 +249,6 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     companion object {
         val DEFAULT_ICON_PACK = Config.DEFAULT_ICON_PACK
+        private const val UPDATE_TIMEOUT_MS = 20_000L
     }
 }
