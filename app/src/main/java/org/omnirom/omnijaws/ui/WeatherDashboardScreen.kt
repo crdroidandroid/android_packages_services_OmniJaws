@@ -160,6 +160,7 @@ fun WeatherDashboardScreen(
                         ErrorState(
                             error = uiState.error,
                             locationIssue = uiState.locationIssue,
+                            apiKeyMissing = uiState.apiKeyMissing,
                             onRefresh = onRefresh,
                             onSettingsClick = onSettingsClick,
                             onOpenLocationSettings = onOpenLocationSettings,
@@ -194,6 +195,7 @@ private fun RefreshIndicator(visible: Boolean) {
 private fun ErrorState(
     error: Int?,
     locationIssue: LocationIssue,
+    apiKeyMissing: Boolean,
     onRefresh: () -> Unit,
     onSettingsClick: () -> Unit,
     onOpenLocationSettings: () -> Unit,
@@ -203,8 +205,10 @@ private fun ErrorState(
 ) {
     val isLocationError = error == OmniJawsClient.EXTRA_ERROR_LOCATION
     val locationFix = if (isLocationError) locationIssue else LocationIssue.NONE
+    val showApiKeyError = apiKeyMissing && !isLocationError &&
+            error != OmniJawsClient.EXTRA_ERROR_DISABLED
 
-    val titleRes = when (locationFix) {
+    val titleRes = if (showApiKeyError) R.string.omnijaws_error_api_key_missing else when (locationFix) {
         LocationIssue.SERVICES_DISABLED -> R.string.omnijaws_error_location_services_off
         LocationIssue.PERMISSION_MISSING -> R.string.omnijaws_error_location_permission
         LocationIssue.CUSTOM_LOCATION_MISSING -> R.string.omnijaws_error_custom_location_missing
@@ -216,7 +220,7 @@ private fun ErrorState(
         }
     }
 
-    val subtitleRes = when (locationFix) {
+    val subtitleRes = if (showApiKeyError) R.string.omnijaws_error_api_key_missing_summary else when (locationFix) {
         LocationIssue.SERVICES_DISABLED -> R.string.omnijaws_error_location_services_off_summary
         LocationIssue.PERMISSION_MISSING -> R.string.omnijaws_error_location_permission_summary
         LocationIssue.CUSTOM_LOCATION_MISSING -> R.string.omnijaws_error_custom_location_missing_summary

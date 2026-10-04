@@ -139,21 +139,35 @@ public class WeatherUpdateService extends JobService {
         return PreferenceManager.getDefaultSharedPreferences(context);
     }
 
-    private static String currentSource(Context context) {
+    private static String currentLocationSource(Context context) {
         return Config.isCustomLocation(context)
                 ? SOURCE_CUSTOM_PREFIX + Config.getLocationId(context)
                 : SOURCE_CURRENT;
     }
 
+    private static String currentSource(Context context) {
+        String provider = prefs(context).getString(Config.PREF_KEY_PROVIDER, "1");
+        return "provider=" + provider + ";" + currentLocationSource(context);
+    }
+
     public static boolean isCachedDataForOtherSource(Context context) {
         String stored = prefs(context).getString(PREF_KEY_DATA_SOURCE, null);
-        return stored != null && !stored.equals(currentSource(context));
+        if (stored == null) return false;
+        if (!stored.startsWith("provider=")) {
+            return !stored.equals(currentLocationSource(context));
+        }
+        return !stored.equals(currentSource(context));
     }
 
     public static void ensureDataSourceRecorded(Context context) {
         SharedPreferences prefs = prefs(context);
-        if (!prefs.contains(PREF_KEY_DATA_SOURCE)) {
-            prefs.edit().putString(PREF_KEY_DATA_SOURCE, currentSource(context)).apply();
+        String stored = prefs.getString(PREF_KEY_DATA_SOURCE, null);
+        if (stored == null) {
+            prefs.edit().putString(PREF_KEY_DATA_SOURCE, currentSource(context)).commit();
+        } else if (!stored.startsWith("provider=")) {
+            String provider = prefs.getString(Config.PREF_KEY_PROVIDER, "1");
+            prefs.edit().putString(PREF_KEY_DATA_SOURCE,
+                    "provider=" + provider + ";" + stored).commit();
         }
     }
 
@@ -442,7 +456,7 @@ public class WeatherUpdateService extends JobService {
                         }
                         if (w != null) {
                             Config.setWeatherData(ctx, w);
-                            prefs(ctx).edit().putString(PREF_KEY_DATA_SOURCE, source).apply();
+                            prefs(ctx).edit().putString(PREF_KEY_DATA_SOURCE, source).commit();
                             WeatherContentProvider.updateCachedWeatherInfo(ctx);
                             WeatherAppWidgetProvider.updateAllWidgets(ctx);
                             // we are outa here
@@ -465,9 +479,9 @@ public class WeatherUpdateService extends JobService {
                     if (w == null) {
                         Config.setUpdateError(ctx, true);
                         if (isCachedDataForOtherSource(ctx)) {
-                            Log.d(TAG, "clearing weather data of previous location source");
+                            Log.d(TAG, "clearing weather data of previous provider/location");
                             Config.clearWeatherData(ctx);
-                            prefs(ctx).edit().remove(PREF_KEY_DATA_SOURCE).apply();
+                            prefs(ctx).edit().remove(PREF_KEY_DATA_SOURCE).commit();
                         }
                         WeatherContentProvider.updateCachedWeatherInfo(ctx);
                         WeatherAppWidgetProvider.updateAllWidgets(ctx);

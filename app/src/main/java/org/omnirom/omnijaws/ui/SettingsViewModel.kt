@@ -111,7 +111,9 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     fun setProvider(value: String) {
         val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx)
-        prefs.edit().putString(Config.PREF_KEY_PROVIDER, value).apply()
+        if (value == prefs.getString(Config.PREF_KEY_PROVIDER, "1")) return
+        WeatherUpdateService.ensureDataSourceRecorded(ctx)
+        prefs.edit().putString(Config.PREF_KEY_PROVIDER, value).commit()
         _uiState.value = _uiState.value.copy(provider = value)
         scheduleUpdate()
     }

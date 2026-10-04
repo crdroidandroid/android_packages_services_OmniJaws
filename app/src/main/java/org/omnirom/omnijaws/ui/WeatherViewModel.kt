@@ -55,7 +55,8 @@ data class WeatherUiState(
     val error: Int? = null,
     val iconPack: String = "",
     val iconTheme: Int = IconProvider.ICON_THEME_DEFAULT,
-    val locationIssue: LocationIssue = LocationIssue.NONE
+    val locationIssue: LocationIssue = LocationIssue.NONE,
+    val apiKeyMissing: Boolean = false
 )
 
 class WeatherViewModel(application: Application) : AndroidViewModel(application) {
@@ -93,6 +94,7 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
                     WeatherUpdateService.isCachedDataForOtherSource(context)
                 )
             }
+            val apiKeyMissing = withContext(Dispatchers.IO) { isApiKeyMissing() }
             val iconPack = Config.getIconPack(context) ?: ""
             val iconTheme = Config.getIconTheme(context)
 
@@ -123,7 +125,8 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
                     },
                     iconPack = iconPack,
                     iconTheme = iconTheme,
-                    locationIssue = locationIssue
+                    locationIssue = locationIssue,
+                    apiKeyMissing = apiKeyMissing
                 )
             }
 
@@ -216,6 +219,18 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
             if (_uiState.value.isLoading) {
                 queryWeather()
             }
+        }
+    }
+
+    private fun isApiKeyMissing(): Boolean {
+        val context = getApplication<Application>()
+        val provider = PreferenceManager.getDefaultSharedPreferences(context)
+            .getString(Config.PREF_KEY_PROVIDER, "1")
+        return when (provider) {
+            "0" -> Config.getOwmKey(context).isNullOrBlank()
+            "2" -> Config.getPirateWeatherKey(context).isNullOrBlank()
+            "4" -> Config.getVisualCrossingKey(context).isNullOrBlank()
+            else -> false
         }
     }
 
