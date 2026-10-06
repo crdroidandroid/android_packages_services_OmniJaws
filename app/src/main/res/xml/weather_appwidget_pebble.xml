@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: crDroid Android Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:configure="org.omnirom.omnijaws.widget.WeatherAppWidgetConfigureActivity"
+    android:description="@string/omnijaws_weather_pebble_widget_desc"
+    android:initialLayout="@layout/weather_appwidget_pebble"
+    android:minWidth="@dimen/weather_pebble_min_size"
+    android:minHeight="@dimen/weather_pebble_min_size"
+    android:minResizeWidth="@dimen/weather_pebble_min_resize_size"
+    android:minResizeHeight="@dimen/weather_pebble_min_resize_size"
+    android:previewLayout="@layout/weather_appwidget_pebble_preview"
+    android:resizeMode="vertical|horizontal"
+    android:targetCellWidth="2"
+    android:targetCellHeight="2"
+    android:updatePeriodMillis="0"
+    android:widgetCategory="home_screen"
+    android:widgetFeatures="reconfigurable" />

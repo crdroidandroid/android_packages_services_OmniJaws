@@ -141,6 +141,12 @@ class WeatherAppWidgetProvider : AppWidgetProvider() {
                 Log.i(TAG, "updateAfterConfigure")
             }
             val appWidgetManager = AppWidgetManager.getInstance(context)
+            // The configure activity is shared with the pebble widget.
+            val provider = appWidgetManager.getAppWidgetInfo(appWidgetId)?.provider
+            if (provider?.className == WeatherPebbleAppWidgetProvider::class.java.name) {
+                WeatherPebbleAppWidgetProvider.updateAfterConfigure(context, appWidgetId)
+                return
+            }
             updateWeather(context, appWidgetManager, appWidgetId)
         }
 
@@ -468,6 +474,7 @@ class WeatherAppWidgetProvider : AppWidgetProvider() {
             for (appWidgetId in appWidgetIds) {
                 updateWeather(context, appWidgetManager, appWidgetId)
             }
+            WeatherPebbleAppWidgetProvider.updateAllWidgets(context)
         }
 
         @JvmStatic
@@ -479,6 +486,7 @@ class WeatherAppWidgetProvider : AppWidgetProvider() {
             for (appWidgetId in appWidgetIds) {
                 updateWeather(context, appWidgetManager, appWidgetId)
             }
+            WeatherPebbleAppWidgetProvider.updateAllWidgets(context)
         }
     }
 }
