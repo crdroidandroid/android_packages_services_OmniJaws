@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: crDroid Android Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:id="@+id/pebble_root"
+        android:layout_width="@dimen/weather_pebble_size"
+        android:layout_height="@dimen/weather_pebble_size"
+        android:layout_gravity="center">
+
+        <ImageView
+            android:id="@+id/pebble_background"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"
+            android:src="@drawable/weather_appwidget_pebble"
+            android:tint="@color/weather_pebble_bg_light" />
+
+        <TextView
+            android:id="@+id/pebble_temp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignStart="@+id/pebble_icon"
+            android:layout_marginTop="@dimen/weather_pebble_temp_margin_top"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:singleLine="true"
+            android:textColor="@color/weather_pebble_text"
+            android:textSize="@dimen/weather_pebble_temp_size"
+            android:text="21°" />
+
+        <ImageView
+            android:id="@+id/pebble_icon"
+            android:layout_width="@dimen/weather_pebble_icon_size"
+            android:layout_height="@dimen/weather_pebble_icon_size"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginStart="@dimen/weather_pebble_icon_margin"
+            android:layout_marginBottom="@dimen/weather_pebble_icon_margin"
+            android:scaleType="fitCenter"
+            android:src="@drawable/google_new_30" />
+
+    </RelativeLayout>
+
+</FrameLayout>

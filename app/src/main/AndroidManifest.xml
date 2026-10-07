@@ -287,6 +287,20 @@
                 android:resource="@xml/weather_appwidget" />
         </receiver>
 
+        <receiver
+            android:name=".widget.WeatherPebbleAppWidgetProvider"
+            android:exported="true"
+            android:label="@string/omnijaws_weather_pebble_widget">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="android.intent.action.CONFIGURATION_CHANGED" />
+                <action android:name="android.intent.action.LOCALE_CHANGED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/weather_appwidget_pebble" />
+        </receiver>
+
         <activity
             android:name=".widget.WeatherAppWidgetConfigureActivity"
             android:exported="true"

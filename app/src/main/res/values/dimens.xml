@@ -27,5 +27,13 @@
     <dimen name="activity_forecast_image_size">50dp</dimen>
     <dimen name="activity_actions_image_size">36dp</dimen>
     <dimen name="activity_city_side_margin">64dp</dimen>
+    <!-- Pebble widget preview; the live widget rescales these per cell size. -->
+    <dimen name="weather_pebble_size">110dp</dimen>
+    <dimen name="weather_pebble_min_size">110dp</dimen>
+    <dimen name="weather_pebble_min_resize_size">80dp</dimen>
+    <dimen name="weather_pebble_temp_size">42dp</dimen>
+    <dimen name="weather_pebble_temp_margin_top">11dp</dimen>
+    <dimen name="weather_pebble_icon_size">36dp</dimen>
+    <dimen name="weather_pebble_icon_margin">22dp</dimen>
 
 </resources>
