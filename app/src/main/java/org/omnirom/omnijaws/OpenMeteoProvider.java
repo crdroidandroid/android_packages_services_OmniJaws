@@ -16,8 +16,11 @@
 
 package org.omnirom.omnijaws;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -34,6 +37,8 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
     private static final int MIN_FORECAST_DAYS = 5;
     private static final int HOURLY_FORECAST_COUNT = 24;
     private static final long ONE_HOUR_SEC = 3600L;
+
+    private static final double SNOW_WET_BULB_MAX_C = 1.0;
 
     private static final String URL_WEATHER =
             "https://api.open-meteo.com/v1/forecast?latitude=%f&longitude=%f"
@@ -90,7 +95,11 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
             JSONObject daily = root.getJSONObject("daily");
 
             boolean isDay = current.optInt("is_day", 1) == 1;
-            int weatherCode = current.optInt("weather_code", -1);
+            float currentTemp = (float) current.getDouble("temperature_2m");
+            float currentHumidity = (float) current.optDouble("relative_humidity_2m", Double.NaN);
+            int weatherCode = snowIfCold(current.optInt("weather_code", -1),
+                    toCelsius(currentTemp, metric), currentHumidity);
+            int utcOffsetSec = root.optInt("utc_offset_seconds", 0);
 
             String city = getWeatherDataLocality(selection);
 
@@ -99,12 +108,12 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
                     /* cityId */ city,
                     /* condition */ "",
                     /* conditionCode */ mapWmoToCode(weatherCode, isDay),
-                    /* temperature */ (float) current.getDouble("temperature_2m"),
-                    /* humidity */ (float) current.optDouble("relative_humidity_2m", Double.NaN),
+                    /* temperature */ currentTemp,
+                    /* humidity */ currentHumidity,
                     /* wind */ (float) current.optDouble("wind_speed_10m", Double.NaN),
                     /* windDir */ (int) current.optDouble("wind_direction_10m", 0),
                     metric,
-                    parseForecasts(daily, metric),
+                    parseForecasts(daily, utcOffsetSec, metric),
                     System.currentTimeMillis());
 
             if (current.has("apparent_temperature")) {
@@ -145,8 +154,10 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
         return null;
     }
 
-    private ArrayList<DayForecast> parseForecasts(JSONObject daily, boolean metric) throws JSONException {
+    private ArrayList<DayForecast> parseForecasts(JSONObject daily, int utcOffsetSec, boolean metric)
+            throws JSONException {
         ArrayList<DayForecast> result = new ArrayList<>();
+        JSONArray times = daily.optJSONArray("time");
         JSONArray codes = daily.getJSONArray("weather_code");
         JSONArray highs = daily.getJSONArray("temperature_2m_max");
         JSONArray lows = daily.getJSONArray("temperature_2m_min");
@@ -162,13 +173,14 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
                     Log.w(TAG, "Incomplete forecast for day " + i);
                     continue;
                 }
-                int code = codes.getInt(i);
+                float high = (float) highs.getDouble(i);
+                int code = snowIfCold(codes.getInt(i), toCelsius(high, metric), 100f);
                 result.add(new DayForecast(
                         /* low */ (float) lows.getDouble(i),
-                        /* high */ (float) highs.getDouble(i),
+                        /* high */ high,
                         /* condition */ "",
                         /* conditionCode */ mapWmoToCode(code, true),
-                        getDay(i),
+                        dayAt(times, i, utcOffsetSec),
                         metric));
             } catch (JSONException e) {
                 Log.w(TAG, "Invalid forecast for day " + i, e);
@@ -208,14 +220,17 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
                 if (times.isNull(i) || temps.isNull(i)) {
                     continue;
                 }
-                int code = codes.isNull(i) ? -1 : codes.getInt(i);
+                float temp = (float) temps.getDouble(i);
+                float humidity = hums != null ? (float) hums.optDouble(i, Double.NaN) : Float.NaN;
+                int code = codes.isNull(i) ? -1
+                        : snowIfCold(codes.getInt(i), toCelsius(temp, metric), humidity);
                 boolean isDay = isDays == null || isDays.optInt(i, 1) == 1;
                 result.add(new WeatherInfo.HourlyForecast(
-                        (float) temps.getDouble(i),
+                        temp,
                         mapWmoToCode(code, isDay),
                         "",
                         times.getLong(i) * 1000L,
-                        hums != null ? (float) hums.optDouble(i, Double.NaN) : Float.NaN,
+                        humidity,
                         winds != null ? (float) winds.optDouble(i, Double.NaN) : Float.NaN,
                         metric));
             } catch (JSONException e) {
@@ -275,6 +290,50 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
             return Float.NaN;
         }
         return (float) arr.optDouble(idx, Double.NaN);
+    }
+
+    private String dayAt(JSONArray times, int i, int utcOffsetSec) {
+        if (times != null && i < times.length() && !times.isNull(i)) {
+            long localMidnightMs = (times.optLong(i) + utcOffsetSec) * 1000L;
+            SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+            fmt.setTimeZone(TimeZone.getTimeZone("UTC"));
+            return fmt.format(new Date(localMidnightMs));
+        }
+        return getDay(i);
+    }
+
+    private static double toCelsius(float value, boolean metric) {
+        return metric ? value : (value - 32.0) / 1.8;
+    }
+
+    static double wetBulb(double t, double rh) {
+        rh = Math.max(5.0, Math.min(99.0, rh));
+        return t * Math.atan(0.151977 * Math.sqrt(rh + 8.313659))
+                + Math.atan(t + rh) - Math.atan(rh - 1.676331)
+                + 0.00391838 * Math.pow(rh, 1.5) * Math.atan(0.023101 * rh)
+                - 4.686035;
+    }
+
+    static int snowIfCold(int wmo, double tempC, float humidity) {
+        if (Double.isNaN(tempC)) {
+            return wmo;
+        }
+        double tw = Float.isNaN(humidity) || humidity >= 100f ? tempC : wetBulb(tempC, humidity);
+        if (tw > SNOW_WET_BULB_MAX_C) {
+            return wmo;
+        }
+        switch (wmo) {
+            case 51:
+            case 53:
+            case 61: return 71; // light drizzle / rain -> slight snow
+            case 55:
+            case 63: return 73; // dense drizzle / moderate rain -> moderate snow
+            case 65: return 75; // heavy rain -> heavy snow
+            case 80: return 85; // slight showers -> slight snow showers
+            case 81:
+            case 82: return 86; // moderate / violent showers -> heavy snow showers
+            default: return wmo;
+        }
     }
 
     private static int mapWmoToCode(int wmo, boolean isDay) {
