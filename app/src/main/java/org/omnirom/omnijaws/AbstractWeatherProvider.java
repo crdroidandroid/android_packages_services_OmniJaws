@@ -18,6 +18,7 @@
 package org.omnirom.omnijaws;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -25,6 +26,8 @@ import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.Xml;
+
+import androidx.preference.PreferenceManager;
 
 import org.xmlpull.v1.XmlPullParser;
 
@@ -51,6 +54,11 @@ public abstract class AbstractWeatherProvider {
     protected static final String PART_COORDINATES =
             "lat=%f&lon=%f";
 
+    // Last resolved locality, keyed by coordinates rounded to ~1 km and the language, so
+    // regular updates at the same place don't query the geocoder or geonames again (the
+    // shared geonames account is rate limited) and a failed lookup doesn't show Unknown.
+    private static final String PREF_KEY_LOCALITY_CACHE = "locality_cache";
+
     public AbstractWeatherProvider(Context context) {
         mContext = context;
     }
@@ -69,9 +77,10 @@ public abstract class AbstractWeatherProvider {
         if (DEBUG) Log.d("WeatherService:" + tag, msg);
     }
 
-    private String getCoordinatesLocalityWithGoogle(String coordinate) {
-        double latitude = Double.valueOf(coordinate.substring(4, coordinate.indexOf("&")));
-        double longitude = Double.valueOf(coordinate.substring(coordinate.indexOf("lon=") + 4));
+    private String getCoordinatesLocalityWithGoogle(double latitude, double longitude) {
+        if (!Geocoder.isPresent()) {
+            return null;
+        }
         Geocoder geocoder = new Geocoder(mContext.getApplicationContext(), Locale.getDefault());
         try {
             List<Address> listAddresses = geocoder.getFromLocation(latitude, longitude, 1);
@@ -79,22 +88,41 @@ public abstract class AbstractWeatherProvider {
                 Address a = listAddresses.get(0);
                 return TextUtils.isEmpty(a.getLocality()) ? a.getAdminArea() : a.getLocality();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException | IllegalArgumentException e) {
+            Log.w(TAG, "Geocoder lookup failed", e);
         }
         return null;
     }
 
     protected String getCoordinatesLocality(String coordinate) {
-        String cityGoogle = getCoordinatesLocalityWithGoogle(coordinate);
-        if (!TextUtils.isEmpty(cityGoogle)) {
-            return cityGoogle;
+        double latitude, longitude;
+        try {
+            latitude = Double.parseDouble(coordinate.substring(4, coordinate.indexOf("&")));
+            longitude = Double.parseDouble(coordinate.substring(coordinate.indexOf("lon=") + 4));
+        } catch (RuntimeException e) {
+            Log.w(TAG, "Could not parse coordinates '" + coordinate + "'", e);
+            return null;
         }
-        double latitude = Double.valueOf(coordinate.substring(4, coordinate.indexOf("&")));
-        double longitude = Double.valueOf(coordinate.substring(coordinate.indexOf("lon=") + 4));
-        Log.d(TAG, "getCoordinatesLocality " + latitude + " " + longitude);
+        String lang = Locale.getDefault().getLanguage();
+        String cacheKey = String.format(Locale.US, "%.2f,%.2f,%s|", latitude, longitude, lang);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+        String cached = prefs.getString(PREF_KEY_LOCALITY_CACHE, null);
+        if (cached != null && cached.startsWith(cacheKey)) {
+            return cached.substring(cacheKey.length());
+        }
 
-        String lang = Locale.getDefault().getLanguage().replaceFirst("_", "-");
+        String city = getCoordinatesLocalityWithGoogle(latitude, longitude);
+        if (TextUtils.isEmpty(city)) {
+            city = getCoordinatesLocalityWithGeonames(latitude, longitude, lang);
+        }
+        if (!TextUtils.isEmpty(city)) {
+            prefs.edit().putString(PREF_KEY_LOCALITY_CACHE, cacheKey + city).apply();
+        }
+        return city;
+    }
+
+    private String getCoordinatesLocalityWithGeonames(double latitude, double longitude, String lang) {
+        log(TAG, "getCoordinatesLocalityWithGeonames " + latitude + " " + longitude);
         String url = String.format(Locale.US, URL_LOCALITY, latitude, longitude, lang);
         String response = retrieve(url);
         if (response == null) {
@@ -105,25 +133,34 @@ public abstract class AbstractWeatherProvider {
         try {
             return parseLocality(response);
         } catch (Exception e) {
-            Log.w(TAG, "Received malformed location data (coordinate=" + coordinate + ")", e);
+            Log.w(TAG, "Received malformed location data (" + latitude + "," + longitude + ")", e);
         }
         return null;
     }
 
     // US coordinates yield an <address> block, elsewhere a <geoname> hierarchy
-    // ordered from Earth down to the nearest place.
+    // ordered from Earth down to the nearest place, or an <ocean> at sea.
+    // Errors (e.g. the hourly limit of the shared account) come back as <status>.
     private static String parseLocality(String xml) throws Exception {
         XmlPullParser parser = Xml.newPullParser();
         parser.setInput(new StringReader(xml));
-        String placename = null, adminName2 = null;
+        String placename = null, adminName2 = null, ocean = null;
         String name = null, fcode = null;
         List<String[]> geonames = new ArrayList<>();
-        boolean inAddress = false, inGeoname = false;
+        boolean inAddress = false, inGeoname = false, inOcean = false;
         for (int ev = parser.getEventType(); ev != XmlPullParser.END_DOCUMENT; ev = parser.next()) {
             if (ev == XmlPullParser.START_TAG) {
                 String tag = parser.getName();
-                if ("address".equals(tag)) {
+                if ("status".equals(tag)) {
+                    Log.w(TAG, "geonames error " + parser.getAttributeValue(null, "value")
+                            + ": " + parser.getAttributeValue(null, "message"));
+                    return null;
+                } else if ("address".equals(tag)) {
                     inAddress = true;
+                } else if ("ocean".equals(tag)) {
+                    inOcean = true;
+                } else if (inOcean && "name".equals(tag)) {
+                    ocean = parser.nextText();
                 } else if ("geoname".equals(tag)) {
                     inGeoname = true;
                     name = fcode = null;
@@ -139,6 +176,8 @@ public abstract class AbstractWeatherProvider {
             } else if (ev == XmlPullParser.END_TAG) {
                 if ("address".equals(parser.getName())) {
                     inAddress = false;
+                } else if ("ocean".equals(parser.getName())) {
+                    inOcean = false;
                 } else if ("geoname".equals(parser.getName())) {
                     inGeoname = false;
                     geonames.add(new String[] { name, fcode });
@@ -151,17 +190,27 @@ public abstract class AbstractWeatherProvider {
         if (!TextUtils.isEmpty(adminName2)) {
             return adminName2;
         }
+        // Deepest first: the nearest town when the hierarchy ends in one, else the
+        // smallest of the usual administrative levels.
         for (int i = geonames.size() - 1; i >= 0; i--) {
             String n = geonames.get(i)[0];
             String f = geonames.get(i)[1];
             if (TextUtils.isEmpty(n)) {
                 continue;
             }
-            if ("ADM3".equals(f) || "ADM2".equals(f) || "ADM1".equals(f)) {
+            if (isPopulatedPlace(f) || "ADM3".equals(f) || "ADM2".equals(f) || "ADM1".equals(f)) {
                 return n;
             }
         }
-        return null;
+        return ocean;
+    }
+
+    // PPL, PPLA..PPLA4, PPLC, PPLL, PPLS, ...; not historical, abandoned, destroyed or a
+    // section of a place (PPLH gives names like "Paris 09 Ancien - Quartier Hotel-de-Ville").
+    private static boolean isPopulatedPlace(String fcode) {
+        return fcode != null && fcode.startsWith("PPL")
+                && !"PPLH".equals(fcode) && !"PPLQ".equals(fcode)
+                && !"PPLW".equals(fcode) && !"PPLX".equals(fcode);
     }
 
     protected String getWeatherDataLocality(String coordinates) {
