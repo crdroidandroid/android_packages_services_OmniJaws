@@ -24,11 +24,12 @@ import android.location.Location;
 import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.Xml;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import org.xmlpull.v1.XmlPullParser;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -46,7 +47,7 @@ public abstract class AbstractWeatherProvider {
     private static final String URL_PLACES =
             "https://secure.geonames.org/searchJSON?name_startsWith=%s&lang=%s&username=omnijaws&maxRows=20";
     private static final String URL_LOCALITY =
-            "https://secure.geonames.org/extendedFindNearbyJSON?lat=%f&lng=%f&lang=%s&username=omnijaws";
+            "https://secure.geonames.org/extendedFindNearby?lat=%f&lng=%f&lang=%s&username=omnijaws";
     protected static final String PART_COORDINATES =
             "lat=%f&lon=%f";
 
@@ -94,7 +95,7 @@ public abstract class AbstractWeatherProvider {
         Log.d(TAG, "getCoordinatesLocality " + latitude + " " + longitude);
 
         String lang = Locale.getDefault().getLanguage().replaceFirst("_", "-");
-        String url = String.format(URL_LOCALITY, latitude, longitude, lang);
+        String url = String.format(Locale.US, URL_LOCALITY, latitude, longitude, lang);
         String response = retrieve(url);
         if (response == null) {
             return null;
@@ -102,41 +103,63 @@ public abstract class AbstractWeatherProvider {
         log(TAG, "URL = " + url + " returning a response of " + response);
 
         try {
-            JSONObject jsonResults = new JSONObject(response);
-            if (jsonResults.has("address")) {
-                JSONObject address = jsonResults.getJSONObject("address");
-                String city = address.getString("placename");
-                String area = address.getString("adminName2");
-                if (!TextUtils.isEmpty(city)) {
-                    return city;
-                }
-                if (!TextUtils.isEmpty(area)) {
-                    return area;
-                }
-            } else if (jsonResults.has("geonames")) {
-                JSONArray jsonResultsArray = jsonResults.getJSONArray("geonames");
-                int count = jsonResultsArray.length();
-
-                for (int i = count - 1; i >= 0; i--) {
-                    JSONObject geoname = jsonResultsArray.getJSONObject(i);
-                    String fcode = geoname.getString("fcode");
-                    String name = geoname.getString("name");
-                    if (TextUtils.isEmpty(name)) {
-                        continue;
-                    }
-                    if (fcode.equals("ADM3")) {
-                        return name;
-                    }
-                    if (fcode.equals("ADM2")) {
-                        return name;
-                    }
-                    if (fcode.equals("ADM1")) {
-                        return name;
-                    }
-                }
-            }
+            return parseLocality(response);
         } catch (Exception e) {
             Log.w(TAG, "Received malformed location data (coordinate=" + coordinate + ")", e);
+        }
+        return null;
+    }
+
+    // US coordinates yield an <address> block, elsewhere a <geoname> hierarchy
+    // ordered from Earth down to the nearest place.
+    private static String parseLocality(String xml) throws Exception {
+        XmlPullParser parser = Xml.newPullParser();
+        parser.setInput(new StringReader(xml));
+        String placename = null, adminName2 = null;
+        String name = null, fcode = null;
+        List<String[]> geonames = new ArrayList<>();
+        boolean inAddress = false, inGeoname = false;
+        for (int ev = parser.getEventType(); ev != XmlPullParser.END_DOCUMENT; ev = parser.next()) {
+            if (ev == XmlPullParser.START_TAG) {
+                String tag = parser.getName();
+                if ("address".equals(tag)) {
+                    inAddress = true;
+                } else if ("geoname".equals(tag)) {
+                    inGeoname = true;
+                    name = fcode = null;
+                } else if (inAddress && "placename".equals(tag)) {
+                    placename = parser.nextText();
+                } else if (inAddress && "adminName2".equals(tag)) {
+                    adminName2 = parser.nextText();
+                } else if (inGeoname && "name".equals(tag)) {
+                    name = parser.nextText();
+                } else if (inGeoname && "fcode".equals(tag)) {
+                    fcode = parser.nextText();
+                }
+            } else if (ev == XmlPullParser.END_TAG) {
+                if ("address".equals(parser.getName())) {
+                    inAddress = false;
+                } else if ("geoname".equals(parser.getName())) {
+                    inGeoname = false;
+                    geonames.add(new String[] { name, fcode });
+                }
+            }
+        }
+        if (!TextUtils.isEmpty(placename)) {
+            return placename;
+        }
+        if (!TextUtils.isEmpty(adminName2)) {
+            return adminName2;
+        }
+        for (int i = geonames.size() - 1; i >= 0; i--) {
+            String n = geonames.get(i)[0];
+            String f = geonames.get(i)[1];
+            if (TextUtils.isEmpty(n)) {
+                continue;
+            }
+            if ("ADM3".equals(f) || "ADM2".equals(f) || "ADM1".equals(f)) {
+                return n;
+            }
         }
         return null;
     }
