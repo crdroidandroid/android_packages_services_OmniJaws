@@ -455,6 +455,7 @@ public class WeatherUpdateService extends JobService {
                             break;
                         }
                         if (w != null) {
+                            w.setSubLocality(provider.getSubLocality());
                             Config.setWeatherData(ctx, w);
                             prefs(ctx).edit().putString(PREF_KEY_DATA_SOURCE, source).commit();
                             WeatherContentProvider.updateCachedWeatherInfo(ctx);

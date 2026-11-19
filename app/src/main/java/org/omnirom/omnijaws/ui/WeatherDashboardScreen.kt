@@ -107,6 +107,7 @@ fun WeatherDashboardScreen(
         drawerContent = {
             DrawerContent(
                 city = uiState.weatherInfo?.city ?: "",
+                subLocality = uiState.subLocality,
                 onSettingsClick = {
                     scope.launch { drawerState.close() }
                     onSettingsClick()
@@ -129,6 +130,7 @@ fun WeatherDashboardScreen(
             ) {
                 TopBar(
                     city = uiState.weatherInfo?.city ?: "",
+                    subLocality = uiState.subLocality,
                     onMenuClick = { scope.launch { drawerState.open() } },
                     onRefreshClick = onRefresh,
                     onSettingsClick = onSettingsClick
@@ -322,6 +324,7 @@ private fun PrimaryActionButton(
 @Composable
 private fun DrawerContent(
     city: String,
+    subLocality: String,
     onSettingsClick: () -> Unit,
     onLocationClick: () -> Unit
 ) {
@@ -341,6 +344,14 @@ private fun DrawerContent(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 28.dp, vertical = 4.dp)
             )
+            if (subLocality.isNotEmpty()) {
+                Text(
+                    text = subLocality,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 28.dp)
+                )
+            }
         }
         Spacer(modifier = Modifier.height(8.dp))
         HorizontalDivider(modifier = Modifier.padding(horizontal = 28.dp))
@@ -454,6 +465,7 @@ private fun providerDisplayName(providerId: String?): String = when (providerId)
 @Composable
 private fun TopBar(
     city: String,
+    subLocality: String,
     onMenuClick: () -> Unit,
     onRefreshClick: () -> Unit,
     onSettingsClick: () -> Unit
@@ -483,13 +495,24 @@ private fun TopBar(
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = city,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = city,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (subLocality.isNotEmpty()) {
+                        Text(
+                            text = subLocality,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
             }
         }
         IconButton(onClick = onRefreshClick) {

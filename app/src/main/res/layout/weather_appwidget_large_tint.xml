@@ -102,6 +102,16 @@
                         android:maxLines="2"
                         android:textAppearance="@style/WeatherMedium" />
 
+                    <TextView
+                        android:id="@+id/current_weather_sub_locality"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:gravity="center_horizontal"
+                        android:singleLine="true"
+                        android:textAppearance="@style/WeatherSmall"
+                        android:visibility="gone" />
+
                     <LinearLayout
                         android:id="@+id/current_condition_line"
                         android:layout_width="match_parent"

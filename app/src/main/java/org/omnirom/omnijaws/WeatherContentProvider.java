@@ -44,6 +44,7 @@ public class WeatherContentProvider extends ContentProvider {
 
     private static final String COLUMN_CURRENT_CITY_ID = "city_id";
     private static final String COLUMN_CURRENT_CITY = "city";
+    private static final String COLUMN_CURRENT_SUB_LOCALITY = "sub_locality";
     private static final String COLUMN_CURRENT_CONDITION = "condition";
     private static final String COLUMN_CURRENT_TEMPERATURE = "temperature";
     private static final String COLUMN_CURRENT_HUMIDITY = "humidity";
@@ -87,6 +88,7 @@ public class WeatherContentProvider extends ContentProvider {
     private static final String[] PROJECTION_DEFAULT_WEATHER = new String[] {
             COLUMN_CURRENT_CITY_ID,
             COLUMN_CURRENT_CITY,
+            COLUMN_CURRENT_SUB_LOCALITY,
             COLUMN_CURRENT_CONDITION,
             COLUMN_CURRENT_TEMPERATURE,
             COLUMN_CURRENT_HUMIDITY,
@@ -189,6 +191,7 @@ public class WeatherContentProvider extends ContentProvider {
                 // current
                 result.newRow()
                         .add(COLUMN_CURRENT_CITY, weather.getCity())
+                        .add(COLUMN_CURRENT_SUB_LOCALITY, weather.getSubLocality())
                         .add(COLUMN_CURRENT_CITY_ID, weather.getId())
                         .add(COLUMN_CURRENT_CONDITION, weather.getCondition())
                         .add(COLUMN_CURRENT_HUMIDITY, weather.getFormattedHumidity())

@@ -262,6 +262,12 @@ class WeatherAppWidgetProvider : AppWidgetProvider() {
             )
             widget.setTextViewText(R.id.current_data, currentData)
             widget.setTextViewText(R.id.current_weather_city, weatherData.city)
+            val subLocality = Config.getSubLocality(context, weatherData.city)
+            widget.setTextViewText(R.id.current_weather_sub_locality, subLocality ?: "")
+            widget.setViewVisibility(
+                R.id.current_weather_sub_locality,
+                if (subLocality != null) View.VISIBLE else View.GONE
+            )
             widget.setImageViewResource(
                 R.id.current_humidity_image, R.drawable.ic_humidity_symbol_small
             )

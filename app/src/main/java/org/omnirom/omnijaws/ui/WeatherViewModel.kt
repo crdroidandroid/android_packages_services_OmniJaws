@@ -51,6 +51,8 @@ enum class LocationIssue {
 
 data class WeatherUiState(
     val weatherInfo: OmniJawsClient.WeatherInfo? = null,
+    /** Neighbourhood or district shown below the city, or "" when there is none. */
+    val subLocality: String = "",
     val isLoading: Boolean = true,
     val error: Int? = null,
     val iconPack: String = "",
@@ -100,6 +102,9 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
 
             val wrongSource = info != null && otherSource
             val usableInfo = if (wrongSource) null else info
+            val subLocality = usableInfo?.let {
+                withContext(Dispatchers.IO) { Config.getSubLocality(context, it.city) }
+            } ?: ""
             if (!wrongSource) otherSourceUpdateRequested = false
 
             if (DEBUG) {
@@ -115,6 +120,7 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
             _uiState.update { current ->
                 current.copy(
                     weatherInfo = usableInfo,
+                    subLocality = subLocality,
                     isLoading = isRefreshPending || showLoading,
                     error = when {
                         usableInfo != null -> null

@@ -58,6 +58,9 @@ public abstract class AbstractWeatherProvider {
     // regular updates at the same place don't query the geocoder or geonames again (the
     // shared geonames account is rate limited) and a failed lookup doesn't show Unknown.
     private static final String PREF_KEY_LOCALITY_CACHE = "locality_cache";
+    private static final char LOCALITY_SEPARATOR = '\u001F';
+
+    private String mSubLocality;
 
     public AbstractWeatherProvider(Context context) {
         mContext = context;
@@ -77,7 +80,11 @@ public abstract class AbstractWeatherProvider {
         if (DEBUG) Log.d("WeatherService:" + tag, msg);
     }
 
-    private String getCoordinatesLocalityWithGoogle(double latitude, double longitude) {
+    public String getSubLocality() {
+        return mSubLocality;
+    }
+
+    private String[] getCoordinatesLocalityWithGoogle(double latitude, double longitude) {
         if (!Geocoder.isPresent()) {
             return null;
         }
@@ -86,7 +93,8 @@ public abstract class AbstractWeatherProvider {
             List<Address> listAddresses = geocoder.getFromLocation(latitude, longitude, 1);
             if(listAddresses != null && listAddresses.size() > 0){
                 Address a = listAddresses.get(0);
-                return TextUtils.isEmpty(a.getLocality()) ? a.getAdminArea() : a.getLocality();
+                String city = TextUtils.isEmpty(a.getLocality()) ? a.getAdminArea() : a.getLocality();
+                return new String[] { city, a.getSubLocality() };
             }
         } catch (IOException | IllegalArgumentException e) {
             Log.w(TAG, "Geocoder lookup failed", e);
@@ -95,6 +103,7 @@ public abstract class AbstractWeatherProvider {
     }
 
     protected String getCoordinatesLocality(String coordinate) {
+        mSubLocality = null;
         double latitude, longitude;
         try {
             latitude = Double.parseDouble(coordinate.substring(4, coordinate.indexOf("&")));
@@ -108,20 +117,42 @@ public abstract class AbstractWeatherProvider {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
         String cached = prefs.getString(PREF_KEY_LOCALITY_CACHE, null);
         if (cached != null && cached.startsWith(cacheKey)) {
-            return cached.substring(cacheKey.length());
+            String value = cached.substring(cacheKey.length());
+            int sep = value.indexOf(LOCALITY_SEPARATOR);
+            if (sep < 0) {
+                return value;
+            }
+            mSubLocality = cleanSubLocality(value.substring(0, sep), value.substring(sep + 1));
+            return value.substring(0, sep);
         }
 
-        String city = getCoordinatesLocalityWithGoogle(latitude, longitude);
-        if (TextUtils.isEmpty(city)) {
-            city = getCoordinatesLocalityWithGeonames(latitude, longitude, lang);
+        String[] locality = getCoordinatesLocalityWithGoogle(latitude, longitude);
+        if (locality == null || TextUtils.isEmpty(locality[0])) {
+            locality = getCoordinatesLocalityWithGeonames(latitude, longitude, lang);
         }
-        if (!TextUtils.isEmpty(city)) {
-            prefs.edit().putString(PREF_KEY_LOCALITY_CACHE, cacheKey + city).apply();
+        if (locality == null || TextUtils.isEmpty(locality[0])) {
+            return null;
         }
+        String city = locality[0];
+        mSubLocality = cleanSubLocality(city, locality[1]);
+        prefs.edit().putString(PREF_KEY_LOCALITY_CACHE, cacheKey + city
+                + (mSubLocality != null ? LOCALITY_SEPARATOR + mSubLocality : "")).apply();
         return city;
     }
 
-    private String getCoordinatesLocalityWithGeonames(double latitude, double longitude, String lang) {
+    // Null when the sub-locality is blank or just repeats the city.
+    private static String cleanSubLocality(String city, String subLocality) {
+        if (subLocality == null) {
+            return null;
+        }
+        subLocality = subLocality.trim();
+        if (subLocality.isEmpty() || subLocality.equalsIgnoreCase(city == null ? "" : city.trim())) {
+            return null;
+        }
+        return subLocality;
+    }
+
+    private String[] getCoordinatesLocalityWithGeonames(double latitude, double longitude, String lang) {
         log(TAG, "getCoordinatesLocalityWithGeonames " + latitude + " " + longitude);
         String url = String.format(Locale.US, URL_LOCALITY, latitude, longitude, lang);
         String response = retrieve(url);
@@ -141,7 +172,7 @@ public abstract class AbstractWeatherProvider {
     // US coordinates yield an <address> block, elsewhere a <geoname> hierarchy
     // ordered from Earth down to the nearest place, or an <ocean> at sea.
     // Errors (e.g. the hourly limit of the shared account) come back as <status>.
-    private static String parseLocality(String xml) throws Exception {
+    private static String[] parseLocality(String xml) throws Exception {
         XmlPullParser parser = Xml.newPullParser();
         parser.setInput(new StringReader(xml));
         String placename = null, adminName2 = null, ocean = null;
@@ -185,13 +216,14 @@ public abstract class AbstractWeatherProvider {
             }
         }
         if (!TextUtils.isEmpty(placename)) {
-            return placename;
+            return new String[] { placename, null };
         }
         if (!TextUtils.isEmpty(adminName2)) {
-            return adminName2;
+            return new String[] { adminName2, null };
         }
         // Deepest first: the nearest town when the hierarchy ends in one, else the
         // smallest of the usual administrative levels.
+        int cityIndex = -1;
         for (int i = geonames.size() - 1; i >= 0; i--) {
             String n = geonames.get(i)[0];
             String f = geonames.get(i)[1];
@@ -199,10 +231,27 @@ public abstract class AbstractWeatherProvider {
                 continue;
             }
             if (isPopulatedPlace(f) || "ADM3".equals(f) || "ADM2".equals(f) || "ADM1".equals(f)) {
-                return n;
+                cityIndex = i;
+                break;
             }
         }
-        return ocean;
+        if (cityIndex < 0) {
+            return ocean != null ? new String[] { ocean, null } : null;
+        }
+        String city = geonames.get(cityIndex)[0];
+        String subLocality = null;
+        for (int i = geonames.size() - 1; i >= 0; i--) {
+            String n = geonames.get(i)[0];
+            String f = geonames.get(i)[1];
+            if (i == cityIndex || TextUtils.isEmpty(n) || n.equalsIgnoreCase(city)) {
+                continue;
+            }
+            if ("PPLX".equals(f) || "ADM5".equals(f) || "ADM4".equals(f) || "ADM3".equals(f)) {
+                subLocality = n;
+                break;
+            }
+        }
+        return new String[] { city, subLocality };
     }
 
     // PPL, PPLA..PPLA4, PPLC, PPLL, PPLS, ...; not historical, abandoned, destroyed or a
@@ -215,16 +264,20 @@ public abstract class AbstractWeatherProvider {
 
     protected String getWeatherDataLocality(String coordinates) {
         String city;
+        mSubLocality = null;
         if (Config.isCustomLocation(mContext)) {
             city = Config.getLocationName(mContext);
             if (TextUtils.isEmpty(city)) {
                 city = getCoordinatesLocality(coordinates);
             }
+            // A custom location is the place the user picked: no sub-locality.
+            mSubLocality = null;
         } else {
             city = getCoordinatesLocality(coordinates);
         }
         if (TextUtils.isEmpty(city)) {
             city = mContext.getResources().getString(R.string.omnijaws_city_unkown);
+            mSubLocality = null;
         }
         log(TAG, "getWeatherDataLocality = " + city);
         return city;

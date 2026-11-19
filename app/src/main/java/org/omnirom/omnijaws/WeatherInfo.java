@@ -22,6 +22,7 @@ import java.util.Date;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.text.TextUtils;
 
 import androidx.annotation.Nullable;
 
@@ -32,6 +33,7 @@ public class WeatherInfo {
 
     private String id;
     private String city;
+    private String subLocality;
     private String condition;
     private String pinWheel;
     private int conditionCode;
@@ -172,6 +174,15 @@ public class WeatherInfo {
 
     public String getCity() {
         return city;
+    }
+
+    public String getSubLocality() {
+        return subLocality;
+    }
+
+    public void setSubLocality(String subLocality) {
+        // '|' separates the serialized fields
+        this.subLocality = TextUtils.isEmpty(subLocality) ? null : subLocality.replace('|', ' ');
     }
 
     public String getCondition() {
@@ -388,6 +399,8 @@ public class WeatherInfo {
         builder.append(sunrise).append('|');
         builder.append(sunset).append('|');
         serializeHourlyForecasts(builder);
+        builder.append('|');
+        builder.append(subLocality != null ? subLocality : "");
         return builder.toString();
     }
 
@@ -421,8 +434,9 @@ public class WeatherInfo {
             return null;
         }
 
-        String[] parts = input.split("\\|");
-        if (parts == null || (parts.length != 12 && parts.length != 20)) {
+        // -1 keeps a trailing empty sub-locality
+        String[] parts = input.split("\\|", -1);
+        if (parts == null || (parts.length != 12 && parts.length != 20 && parts.length != 21)) {
             return null;
         }
 
@@ -482,7 +496,11 @@ public class WeatherInfo {
                 humidity, wind, windDirection, metric,
                 /* forecasts */ forecasts, timestamp, pinWheel);
 
-        if (parts.length == 20) {
+        if (parts.length == 21) {
+            w.setSubLocality(parts[20]);
+        }
+
+        if (parts.length >= 20) {
             try {
                 w.feelsLike = Float.parseFloat(parts[12]);
                 w.pressure = Float.parseFloat(parts[13]);

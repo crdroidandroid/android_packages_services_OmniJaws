@@ -21,6 +21,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.text.TextUtils;
 
 import org.omnirom.omnijaws.icon.IconProvider;
 
@@ -142,6 +143,23 @@ public class Config {
             return data;
         }
         return null;
+    }
+
+    public static String getSubLocality(Context context, String city) {
+        if (TextUtils.isEmpty(city)
+                || city.equals(context.getString(R.string.omnijaws_city_unkown))) {
+            return null;
+        }
+        WeatherInfo data = getWeatherData(context);
+        if (data == null || !city.equals(data.getCity())) {
+            return null;
+        }
+        String sub = data.getSubLocality();
+        if (sub == null) {
+            return null;
+        }
+        sub = sub.trim();
+        return sub.isEmpty() || sub.equalsIgnoreCase(city.trim()) ? null : sub;
     }
 
     public static void setWeatherData(Context context, WeatherInfo data) {
