@@ -417,6 +417,7 @@ public class WeatherUpdateService extends JobService {
                 final Context ctx = WeatherUpdateService.this;
                 final String source = currentSource(ctx);
                 WeatherInfo w = null;
+                double[] coords = null;
                 boolean locationError = false;
                 try {
                     AbstractWeatherProvider provider = Config.getProvider(ctx);
@@ -427,6 +428,7 @@ public class WeatherUpdateService extends JobService {
                             if (checkPermissions()) {
                                 Location location = getCurrentLocation();
                                 if (location != null) {
+                                    coords = new double[]{location.getLatitude(), location.getLongitude()};
                                     w = provider.getLocationWeather(location, Config.isMetric(ctx));
                                 } else {
                                     Log.w(TAG, "no location available (background location granted="
@@ -447,6 +449,7 @@ public class WeatherUpdateService extends JobService {
                                 break;
                             }
                         } else if (Config.getLocationId(ctx) != null) {
+                            coords = AirQualityProvider.parseCoords(Config.getLocationId(ctx));
                             w = provider.getCustomWeather(Config.getLocationId(ctx), Config.isMetric(ctx));
                         } else {
                             Log.w(TAG, "no valid custom location");
@@ -456,6 +459,10 @@ public class WeatherUpdateService extends JobService {
                         }
                         if (w != null) {
                             w.setSubLocality(provider.getSubLocality());
+                            if (coords != null) {
+                                // best effort: weather is stored even without AQI
+                                AirQualityProvider.fetchInto(w, coords[0], coords[1]);
+                            }
                             Config.setWeatherData(ctx, w);
                             prefs(ctx).edit().putString(PREF_KEY_DATA_SOURCE, source).commit();
                             WeatherContentProvider.updateCachedWeatherInfo(ctx);

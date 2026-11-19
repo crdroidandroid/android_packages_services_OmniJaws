@@ -54,6 +54,11 @@ public class WeatherInfo {
     private long sunset;
     private ArrayList<HourlyForecast> hourlyForecasts;
 
+    // US AQI (0-500), -1 when unknown; particulates in ug/m3
+    private int aqi;
+    private float pm25;
+    private float pm10;
+
     private WeatherInfo(Context context, String id,
                         String city, String condition, int conditionCode, float temp,
                         float humidity, float wind, int windDir,
@@ -80,6 +85,9 @@ public class WeatherInfo {
         this.sunrise = 0;
         this.sunset = 0;
         this.hourlyForecasts = new ArrayList<>();
+        this.aqi = -1;
+        this.pm25 = Float.NaN;
+        this.pm10 = Float.NaN;
     }
 
     public WeatherInfo(Context context, String id,
@@ -329,6 +337,24 @@ public class WeatherInfo {
         this.hourlyForecasts = hourlyForecasts;
     }
 
+    public int getAqi() {
+        return aqi;
+    }
+
+    public float getPm25() {
+        return pm25;
+    }
+
+    public float getPm10() {
+        return pm10;
+    }
+
+    public void setAirQuality(int aqi, float pm25, float pm10) {
+        this.aqi = aqi < 0 ? -1 : aqi;
+        this.pm25 = pm25;
+        this.pm10 = pm10;
+    }
+
     public float getHumidity() {
         return humidity;
     }
@@ -400,7 +426,10 @@ public class WeatherInfo {
         builder.append(sunset).append('|');
         serializeHourlyForecasts(builder);
         builder.append('|');
-        builder.append(subLocality != null ? subLocality : "");
+        builder.append(subLocality != null ? subLocality : "").append('|');
+        builder.append(aqi).append('|');
+        builder.append(pm25).append('|');
+        builder.append(pm10);
         return builder.toString();
     }
 
@@ -436,7 +465,8 @@ public class WeatherInfo {
 
         // -1 keeps a trailing empty sub-locality
         String[] parts = input.split("\\|", -1);
-        if (parts == null || (parts.length != 12 && parts.length != 20 && parts.length != 21)) {
+        if (parts == null || (parts.length != 12 && parts.length != 20 && parts.length != 21
+                && parts.length != 24)) {
             return null;
         }
 
@@ -496,8 +526,16 @@ public class WeatherInfo {
                 humidity, wind, windDirection, metric,
                 /* forecasts */ forecasts, timestamp, pinWheel);
 
-        if (parts.length == 21) {
+        if (parts.length >= 21) {
             w.setSubLocality(parts[20]);
+        }
+
+        if (parts.length >= 24) {
+            try {
+                w.setAirQuality(Integer.parseInt(parts[21]),
+                        Float.parseFloat(parts[22]), Float.parseFloat(parts[23]));
+            } catch (NumberFormatException ignored) {
+            }
         }
 
         if (parts.length >= 20) {

@@ -33,6 +33,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Air
 import androidx.compose.material.icons.outlined.Compress
 import androidx.compose.material.icons.outlined.DeviceThermostat
+import androidx.compose.material.icons.outlined.Masks
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.material.icons.outlined.WbSunny
@@ -79,6 +80,9 @@ fun DetailCardsGrid(weather: OmniJawsClient.WeatherInfo) {
             add { m ->
                 FeelsLikeCard(weather.feelsLike, weather.temp, weather.tempUnits ?: "", m)
             }
+        }
+        if (weather.aqi >= 0) {
+            add { m -> AirQualityCard(weather.aqi, weather.pm25, weather.pm10, m) }
         }
         if (!weather.uvi.isNaN()) {
             add { m -> UvIndexCard(weather.uvi, m) }
@@ -293,6 +297,67 @@ private fun UvIndexCard(uvi: Float, modifier: Modifier) {
         )
         Spacer(modifier = Modifier.weight(1f))
         UvBar(uvi = uvi, modifier = Modifier.fillMaxWidth().height(6.dp))
+    }
+}
+
+@Composable
+private fun AirQualityCard(aqi: Int, pm25: Float, pm10: Float, modifier: Modifier) {
+    // US EPA categories
+    val levelRes = remember(aqi) {
+        when {
+            aqi <= 50 -> R.string.omnijaws_aqi_level_good
+            aqi <= 100 -> R.string.omnijaws_aqi_level_moderate
+            aqi <= 150 -> R.string.omnijaws_aqi_level_sensitive
+            aqi <= 200 -> R.string.omnijaws_aqi_level_unhealthy
+            aqi <= 300 -> R.string.omnijaws_aqi_level_very_unhealthy
+            else -> R.string.omnijaws_aqi_level_hazardous
+        }
+    }
+    val fraction = remember(aqi) { (aqi / 300f).coerceIn(0f, 1f) }
+    val gradient = listOf(
+        Color(0xFF66BB6A),
+        Color(0xFFFFEE58),
+        Color(0xFFFFA726),
+        Color(0xFFEF5350),
+        Color(0xFFAB47BC)
+    )
+    val particulates = buildList {
+        if (!pm25.isNaN()) add(stringResource(R.string.omnijaws_aqi_pm25_format, pm25.roundToInt()))
+        if (!pm10.isNaN()) add(stringResource(R.string.omnijaws_aqi_pm10_format, pm10.roundToInt()))
+    }.joinToString(" \u00b7 ")
+
+    DetailCard(
+        icon = Icons.Outlined.Masks,
+        title = stringResource(R.string.omnijaws_detail_air_quality),
+        modifier = modifier
+    ) {
+        Text(
+            text = "$aqi",
+            style = MaterialTheme.typography.headlineLarge,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1
+        )
+        Text(
+            text = stringResource(levelRes),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 2
+        )
+        if (particulates.isNotEmpty()) {
+            Text(
+                text = particulates,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1
+            )
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        ScaleBar(
+            fraction = fraction,
+            gradient = gradient,
+            modifier = Modifier.fillMaxWidth().height(10.dp)
+        )
     }
 }
 

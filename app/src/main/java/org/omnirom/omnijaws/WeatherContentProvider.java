@@ -61,6 +61,9 @@ public class WeatherContentProvider extends ContentProvider {
     private static final String COLUMN_CURRENT_DEW_POINT = "dew_point";
     private static final String COLUMN_CURRENT_SUNRISE = "sunrise";
     private static final String COLUMN_CURRENT_SUNSET = "sunset";
+    private static final String COLUMN_CURRENT_AQI = "aqi";
+    private static final String COLUMN_CURRENT_PM25 = "pm25";
+    private static final String COLUMN_CURRENT_PM10 = "pm10";
 
     private static final String COLUMN_FORECAST_LOW = "forecast_low";
     private static final String COLUMN_FORECAST_HIGH = "forecast_high";
@@ -104,6 +107,9 @@ public class WeatherContentProvider extends ContentProvider {
             COLUMN_CURRENT_DEW_POINT,
             COLUMN_CURRENT_SUNRISE,
             COLUMN_CURRENT_SUNSET,
+            COLUMN_CURRENT_AQI,
+            COLUMN_CURRENT_PM25,
+            COLUMN_CURRENT_PM10,
             COLUMN_FORECAST_LOW,
             COLUMN_FORECAST_HIGH,
             COLUMN_FORECAST_CONDITION,
@@ -207,7 +213,11 @@ public class WeatherContentProvider extends ContentProvider {
                         .add(COLUMN_CURRENT_VISIBILITY, convertDistance(weather.getVisibility(), from, to))
                         .add(COLUMN_CURRENT_DEW_POINT, convertTemp(weather.getDewPoint(), from, to))
                         .add(COLUMN_CURRENT_SUNRISE, weather.getSunrise())
-                        .add(COLUMN_CURRENT_SUNSET, weather.getSunset());
+                        .add(COLUMN_CURRENT_SUNSET, weather.getSunset())
+                        // null when unknown, so clients can tell it apart from 0 (good)
+                        .add(COLUMN_CURRENT_AQI, weather.getAqi() >= 0 ? weather.getAqi() : null)
+                        .add(COLUMN_CURRENT_PM25, weather.getPm25())
+                        .add(COLUMN_CURRENT_PM10, weather.getPm10());
 
                 // forecast
                 for (DayForecast day : weather.getForecasts()) {
