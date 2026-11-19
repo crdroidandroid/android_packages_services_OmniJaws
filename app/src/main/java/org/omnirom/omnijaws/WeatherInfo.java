@@ -54,8 +54,9 @@ public class WeatherInfo {
     private long sunset;
     private ArrayList<HourlyForecast> hourlyForecasts;
 
-    // US AQI (0-500), -1 when unknown; particulates in ug/m3
+    // AQI (0-500), -1 when unknown, on the scale in aqiScale; particulates in ug/m3
     private int aqi;
+    private String aqiScale;
     private float pm25;
     private float pm10;
 
@@ -86,6 +87,7 @@ public class WeatherInfo {
         this.sunset = 0;
         this.hourlyForecasts = new ArrayList<>();
         this.aqi = -1;
+        this.aqiScale = AirQualityProvider.SCALE_US;
         this.pm25 = Float.NaN;
         this.pm10 = Float.NaN;
     }
@@ -341,6 +343,10 @@ public class WeatherInfo {
         return aqi;
     }
 
+    public String getAqiScale() {
+        return aqiScale;
+    }
+
     public float getPm25() {
         return pm25;
     }
@@ -349,8 +355,10 @@ public class WeatherInfo {
         return pm10;
     }
 
-    public void setAirQuality(int aqi, float pm25, float pm10) {
+    public void setAirQuality(int aqi, String scale, float pm25, float pm10) {
         this.aqi = aqi < 0 ? -1 : aqi;
+        this.aqiScale = AirQualityProvider.SCALE_IN.equals(scale)
+                ? AirQualityProvider.SCALE_IN : AirQualityProvider.SCALE_US;
         this.pm25 = pm25;
         this.pm10 = pm10;
     }
@@ -429,7 +437,8 @@ public class WeatherInfo {
         builder.append(subLocality != null ? subLocality : "").append('|');
         builder.append(aqi).append('|');
         builder.append(pm25).append('|');
-        builder.append(pm10);
+        builder.append(pm10).append('|');
+        builder.append(aqiScale);
         return builder.toString();
     }
 
@@ -466,7 +475,7 @@ public class WeatherInfo {
         // -1 keeps a trailing empty sub-locality
         String[] parts = input.split("\\|", -1);
         if (parts == null || (parts.length != 12 && parts.length != 20 && parts.length != 21
-                && parts.length != 24)) {
+                && parts.length != 24 && parts.length != 25)) {
             return null;
         }
 
@@ -532,7 +541,9 @@ public class WeatherInfo {
 
         if (parts.length >= 24) {
             try {
+                // data stored before the scale was added is US AQI
                 w.setAirQuality(Integer.parseInt(parts[21]),
+                        parts.length >= 25 ? parts[24] : AirQualityProvider.SCALE_US,
                         Float.parseFloat(parts[22]), Float.parseFloat(parts[23]));
             } catch (NumberFormatException ignored) {
             }

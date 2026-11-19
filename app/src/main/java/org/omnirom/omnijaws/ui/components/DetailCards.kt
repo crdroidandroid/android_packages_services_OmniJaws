@@ -82,7 +82,9 @@ fun DetailCardsGrid(weather: OmniJawsClient.WeatherInfo) {
             }
         }
         if (weather.aqi >= 0) {
-            add { m -> AirQualityCard(weather.aqi, weather.pm25, weather.pm10, m) }
+            add { m ->
+                AirQualityCard(weather.aqi, weather.aqiScale, weather.pm25, weather.pm10, m)
+            }
         }
         if (!weather.uvi.isNaN()) {
             add { m -> UvIndexCard(weather.uvi, m) }
@@ -301,19 +303,41 @@ private fun UvIndexCard(uvi: Float, modifier: Modifier) {
 }
 
 @Composable
-private fun AirQualityCard(aqi: Int, pm25: Float, pm10: Float, modifier: Modifier) {
-    // US EPA categories
-    val levelRes = remember(aqi) {
-        when {
-            aqi <= 50 -> R.string.omnijaws_aqi_level_good
-            aqi <= 100 -> R.string.omnijaws_aqi_level_moderate
-            aqi <= 150 -> R.string.omnijaws_aqi_level_sensitive
-            aqi <= 200 -> R.string.omnijaws_aqi_level_unhealthy
-            aqi <= 300 -> R.string.omnijaws_aqi_level_very_unhealthy
-            else -> R.string.omnijaws_aqi_level_hazardous
+private fun AirQualityCard(
+    aqi: Int,
+    scale: String?,
+    pm25: Float,
+    pm10: Float,
+    modifier: Modifier
+) {
+    val isIndia = scale == OmniJawsClient.AQI_SCALE_IN
+    val levelRes = remember(aqi, isIndia) {
+        if (isIndia) {
+            // CPCB National AQI categories
+            when {
+                aqi <= 50 -> R.string.omnijaws_aqi_level_good
+                aqi <= 100 -> R.string.omnijaws_aqi_level_satisfactory
+                aqi <= 200 -> R.string.omnijaws_aqi_level_moderate
+                aqi <= 300 -> R.string.omnijaws_aqi_level_poor
+                aqi <= 400 -> R.string.omnijaws_aqi_level_very_poor
+                else -> R.string.omnijaws_aqi_level_severe
+            }
+        } else {
+            // US EPA categories
+            when {
+                aqi <= 50 -> R.string.omnijaws_aqi_level_good
+                aqi <= 100 -> R.string.omnijaws_aqi_level_moderate
+                aqi <= 150 -> R.string.omnijaws_aqi_level_sensitive
+                aqi <= 200 -> R.string.omnijaws_aqi_level_unhealthy
+                aqi <= 300 -> R.string.omnijaws_aqi_level_very_unhealthy
+                else -> R.string.omnijaws_aqi_level_hazardous
+            }
         }
     }
-    val fraction = remember(aqi) { (aqi / 300f).coerceIn(0f, 1f) }
+    // both scales end their worst band at 500, from 300 (US) and 400 (India)
+    val fraction = remember(aqi, isIndia) {
+        (aqi / (if (isIndia) 400f else 300f)).coerceIn(0f, 1f)
+    }
     val gradient = listOf(
         Color(0xFF66BB6A),
         Color(0xFFFFEE58),
