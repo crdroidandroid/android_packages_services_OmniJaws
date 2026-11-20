@@ -263,6 +263,32 @@ public class WeatherInfo {
         return pinWheel;
     }
 
+    private static final int MIN_FORECAST_DAYS = 5;
+
+    public void removeIncompleteForecasts() {
+        ArrayList<DayForecast> kept = new ArrayList<>();
+        for (DayForecast d : forecasts) {
+            if (isComplete(d)) {
+                kept.add(d);
+            }
+        }
+        while (kept.size() < MIN_FORECAST_DAYS) {
+            kept.add(new DayForecast(0, 0, "", -1, "NaN", metric));
+        }
+        forecasts = kept;
+    }
+
+    private static boolean isComplete(DayForecast d) {
+        if (TextUtils.isEmpty(d.date) || "NaN".equalsIgnoreCase(d.date)) {
+            return false;
+        }
+        if (Float.isNaN(d.low) || Float.isInfinite(d.low)
+                || Float.isNaN(d.high) || Float.isInfinite(d.high)) {
+            return false;
+        }
+        return d.conditionCode >= 0 || !TextUtils.isEmpty(d.condition);
+    }
+
     public ArrayList<DayForecast> getForecasts() {
         return forecasts;
     }

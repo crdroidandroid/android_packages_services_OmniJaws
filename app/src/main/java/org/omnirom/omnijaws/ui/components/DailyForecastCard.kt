@@ -454,6 +454,9 @@ private fun buildDayItems(
             ?: return@mapNotNull null
         val high = forecast.high?.toFloatOrNull()?.takeIf { it.isFinite() }
             ?: return@mapNotNull null
+        if (forecast.conditionCode < 0 && forecast.condition.isNullOrBlank()) {
+            return@mapNotNull null
+        }
         val label = when (date) {
             today -> todayLabel
             today.minusDays(1) -> yesterdayLabel

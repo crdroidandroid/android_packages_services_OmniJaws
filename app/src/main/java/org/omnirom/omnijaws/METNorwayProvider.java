@@ -28,6 +28,7 @@ public class METNorwayProvider extends AbstractWeatherProvider {
 
     private static final int MAX_FORECAST_DAYS = 10;
     private static final int MIN_FORECAST_DAYS = 5;
+    private static final int MIN_DAY_ENTRIES = 3;
     private static final int HOURLY_FORECAST_COUNT = 24;
 
     private static final String[] STEP_KEYS = {
@@ -146,6 +147,7 @@ public class METNorwayProvider extends AbstractWeatherProvider {
             double temp_max = -Double.MAX_VALUE;
             double temp_min = Double.MAX_VALUE;
             boolean hasData = false;
+            int entries = 0;
 
             int symbolCode = 0;
             int scSixToTwelve = 0; // symbolCode next_6_hours at 06:00
@@ -184,6 +186,7 @@ public class METNorwayProvider extends AbstractWeatherProvider {
                         temp_min = tempI;
                     }
                     hasData = true;
+                    entries++;
 
                     boolean hasOneHour = data.has("next_1_hours");
                     boolean hasSixHours = data.has("next_6_hours");
@@ -237,6 +240,12 @@ public class METNorwayProvider extends AbstractWeatherProvider {
             if (hasFastCondition) {
                 symbolCode = (scSixToEighteen != 0)
                         ? scSixToEighteen : Math.max(scSixToTwelve, scTwelveToEighteen);
+            }
+
+            if (i > 0 && (entries < MIN_DAY_ENTRIES || symbolCode == 0)) {
+                Log.w(TAG, "Incomplete data for day " + i + " (" + day + "), "
+                        + entries + " entries, stopping");
+                break;
             }
 
             result.add(new DayForecast(
