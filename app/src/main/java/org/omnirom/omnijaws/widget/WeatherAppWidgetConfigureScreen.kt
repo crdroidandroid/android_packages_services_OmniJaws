@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.android.axion.compose.preferences.ClickablePreference
 import com.android.axion.compose.preferences.ListPreference
 import com.android.axion.compose.preferences.PreferenceGroup
+import com.android.axion.compose.preferences.SwitchPreference
 import com.android.axion.compose.scaffold.AxionScaffold
 
 import org.omnirom.omnijaws.R
@@ -37,6 +38,7 @@ fun WeatherAppWidgetConfigureScreen(
     onColorThemeChanged: (String) -> Unit,
     onBgTransparencyChanged: (String) -> Unit,
     onIconThemeChanged: (String) -> Unit,
+    onShowSubLocalityChanged: (Boolean) -> Unit,
     onOpenWeatherSettings: () -> Unit,
     onConfirm: () -> Unit,
     onCancel: () -> Unit
@@ -91,6 +93,16 @@ fun WeatherAppWidgetConfigureScreen(
                             options = iconOptions,
                             value = state.iconTheme,
                             onValueChange = onIconThemeChanged
+                        )
+                    }
+                }
+                if (state.supportsSubLocality) {
+                    item {
+                        SwitchPreference(
+                            title = stringResource(R.string.omnijaws_widget_sub_locality_title),
+                            summary = stringResource(R.string.omnijaws_widget_sub_locality_summary),
+                            checked = state.showSubLocality,
+                            onCheckedChange = onShowSubLocalityChanged
                         )
                     }
                 }

@@ -6,6 +6,7 @@ package org.omnirom.omnijaws.widget
 
 import android.app.Application
 import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
 
 import androidx.lifecycle.AndroidViewModel
@@ -52,7 +53,11 @@ class WidgetConfigureViewModel(application: Application) : AndroidViewModel(appl
             colorTheme = colorTheme.toString(),
             bgTransparency = bgTrans.toString(),
             iconTheme = iconTheme.toString(),
-            showIconTheme = IconPack.supportsThemes(context)
+            showIconTheme = IconPack.supportsThemes(context),
+            showSubLocality = WidgetConfig.showSubLocality(context, appWidgetId),
+            supportsSubLocality = AppWidgetManager.getInstance(context)
+                .getAppWidgetInfo(appWidgetId)?.provider ==
+                    ComponentName(context, WeatherAppWidgetProvider::class.java)
         )
     }
 
@@ -69,6 +74,14 @@ class WidgetConfigureViewModel(application: Application) : AndroidViewModel(appl
             .putInt(WidgetConfig.KEY_BG_TRANS + "_" + appWidgetId, value.toInt())
             .apply()
         _uiState.update { it.copy(bgTransparency = value) }
+    }
+
+    fun setShowSubLocality(value: Boolean) {
+        prefs.edit()
+            .putBoolean(WidgetConfig.KEY_SHOW_SUB_LOCALITY + "_" + appWidgetId, value)
+            .commit()
+        _uiState.update { it.copy(showSubLocality = value) }
+        WeatherAppWidgetProvider.updateAfterConfigure(context, appWidgetId)
     }
 
     fun setIconTheme(value: String) {

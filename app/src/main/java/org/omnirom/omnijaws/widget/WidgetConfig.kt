@@ -25,12 +25,21 @@ object WidgetConfig {
     const val BG_TRANS_SOLID = 3
     const val BG_TRANS_DEFAULT = BG_TRANS_SEMI
 
+    const val KEY_SHOW_SUB_LOCALITY = "show_sub_locality"
+    const val SHOW_SUB_LOCALITY_DEFAULT = false
+
+    @JvmStatic
+    fun showSubLocality(context: Context, id: Int): Boolean =
+        PreferenceManager.getDefaultSharedPreferences(context)
+            .getBoolean(KEY_SHOW_SUB_LOCALITY + "_" + id, SHOW_SUB_LOCALITY_DEFAULT)
+
     @JvmStatic
     fun clearPrefs(context: Context, id: Int) {
         PreferenceManager.getDefaultSharedPreferences(context).edit()
             .remove(KEY_COLOR_THEME + "_" + id)
             .remove(KEY_BG_TRANS + "_" + id)
             .remove(KEY_ICON_THEME + "_" + id)
+            .remove(KEY_SHOW_SUB_LOCALITY + "_" + id)
             .apply()
     }
 
@@ -41,6 +50,7 @@ object WidgetConfig {
         val oldBgValue = prefs.getInt(KEY_BG_TRANS + "_" + oldId, BG_TRANS_DEFAULT)
         val oldIconThemeValue =
             prefs.getInt(KEY_ICON_THEME + "_" + oldId, IconProvider.WIDGET_ICON_THEME_DEFAULT)
+        val oldSubLocalityValue = showSubLocality(context, oldId)
 
         prefs.edit()
             .putInt(KEY_COLOR_THEME + "_" + newId, oldThemeValue)
@@ -49,6 +59,8 @@ object WidgetConfig {
             .remove(KEY_BG_TRANS + "_" + oldId)
             .putInt(KEY_ICON_THEME + "_" + newId, oldIconThemeValue)
             .remove(KEY_ICON_THEME + "_" + oldId)
+            .putBoolean(KEY_SHOW_SUB_LOCALITY + "_" + newId, oldSubLocalityValue)
+            .remove(KEY_SHOW_SUB_LOCALITY + "_" + oldId)
             .apply()
     }
 }

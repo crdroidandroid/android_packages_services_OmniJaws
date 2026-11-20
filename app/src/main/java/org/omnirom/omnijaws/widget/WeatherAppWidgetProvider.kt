@@ -262,7 +262,11 @@ class WeatherAppWidgetProvider : AppWidgetProvider() {
             )
             widget.setTextViewText(R.id.current_data, currentData)
             widget.setTextViewText(R.id.current_weather_city, weatherData.city)
-            val subLocality = Config.getSubLocality(context, weatherData.city)
+            val subLocality = if (WidgetConfig.showSubLocality(context, appWidgetId)) {
+                Config.getSubLocality(context, weatherData.city)
+            } else {
+                null
+            }
             widget.setTextViewText(R.id.current_weather_sub_locality, subLocality ?: "")
             widget.setViewVisibility(
                 R.id.current_weather_sub_locality,

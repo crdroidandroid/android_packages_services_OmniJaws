@@ -57,6 +57,7 @@ class WeatherAppWidgetConfigureActivity : ComponentActivity() {
                     WeatherAppWidgetConfigureScreen(
                         state = state,
                         onColorThemeChanged = viewModel::setColorTheme,
+                        onShowSubLocalityChanged = viewModel::setShowSubLocality,
                         onBgTransparencyChanged = viewModel::setBgTransparency,
                         onIconThemeChanged = viewModel::setIconTheme,
                         onOpenWeatherSettings = {

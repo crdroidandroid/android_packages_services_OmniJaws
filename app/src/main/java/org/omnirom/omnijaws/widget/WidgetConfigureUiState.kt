@@ -11,5 +11,8 @@ data class WidgetConfigureUiState(
     val bgTransparency: String = WidgetConfig.BG_TRANS_DEFAULT.toString(),
     val iconTheme: String = IconProvider.WIDGET_ICON_THEME_DEFAULT.toString(),
     /** Whether the active icon pack supports light/dark theming (mirrors IconPack.supportsThemes). */
-    val showIconTheme: Boolean = false
+    val showIconTheme: Boolean = false,
+    val showSubLocality: Boolean = WidgetConfig.SHOW_SUB_LOCALITY_DEFAULT,
+    /** Only the weather widget shows a sub-locality; the pebble widget shares this screen. */
+    val supportsSubLocality: Boolean = false
 )
