@@ -15,4 +15,92 @@
     <drawable name="weather_tapas_7">@drawable/weather_tapas_18</drawable>
     <drawable name="weather_tapas_8">@drawable/weather_tapas_10</drawable>
     <drawable name="weather_tapas_9">@drawable/weather_tapas_11</drawable>
+
+    <!-- meteocons: codes sharing an image -->
+    <drawable name="meteocons_2">@drawable/meteocons_1</drawable> <!-- hurricane -->
+    <drawable name="meteocons_6">@drawable/meteocons_5</drawable> <!-- sleet -->
+    <drawable name="meteocons_7">@drawable/meteocons_5</drawable> <!-- sleet -->
+    <drawable name="meteocons_9">@drawable/meteocons_8</drawable> <!-- drizzle -->
+    <drawable name="meteocons_10">@drawable/meteocons_5</drawable> <!-- sleet -->
+    <drawable name="meteocons_12">@drawable/meteocons_11</drawable> <!-- rain -->
+    <drawable name="meteocons_16">@drawable/meteocons_13</drawable> <!-- snow -->
+    <drawable name="meteocons_18">@drawable/meteocons_5</drawable> <!-- sleet -->
+    <drawable name="meteocons_24">@drawable/meteocons_23</drawable> <!-- wind -->
+    <drawable name="meteocons_35">@drawable/meteocons_17</drawable> <!-- hail -->
+    <drawable name="meteocons_42">@drawable/meteocons_14</drawable> <!-- partly-cloudy-day-snow -->
+    <drawable name="meteocons_43">@drawable/meteocons_41</drawable> <!-- extreme-snow -->
+    <drawable name="meteocons_44">@drawable/meteocons_30</drawable> <!-- partly-cloudy-day -->
+    <drawable name="meteocons_45">@drawable/meteocons_4</drawable> <!-- thunderstorms-rain -->
+
+    <!-- metno: codes sharing an image -->
+    <drawable name="metno_1">@drawable/metno_0</drawable> <!-- heavyrainandthunder -->
+    <drawable name="metno_2">@drawable/metno_0</drawable> <!-- heavyrainandthunder -->
+    <drawable name="metno_3">@drawable/metno_0</drawable> <!-- heavyrainandthunder -->
+    <drawable name="metno_6">@drawable/metno_5</drawable> <!-- sleet -->
+    <drawable name="metno_7">@drawable/metno_5</drawable> <!-- sleet -->
+    <drawable name="metno_10">@drawable/metno_5</drawable> <!-- sleet -->
+    <drawable name="metno_12">@drawable/metno_11</drawable> <!-- rainshowers_day -->
+    <drawable name="metno_16">@drawable/metno_15</drawable> <!-- snow -->
+    <drawable name="metno_18">@drawable/metno_5</drawable> <!-- sleet -->
+    <drawable name="metno_20">@drawable/metno_19</drawable> <!-- fog -->
+    <drawable name="metno_21">@drawable/metno_19</drawable> <!-- fog -->
+    <drawable name="metno_22">@drawable/metno_19</drawable> <!-- fog -->
+    <drawable name="metno_24">@drawable/metno_23</drawable> <!-- cloudy -->
+    <drawable name="metno_25">@drawable/metno_23</drawable> <!-- cloudy -->
+    <drawable name="metno_26">@drawable/metno_23</drawable> <!-- cloudy -->
+    <drawable name="metno_33">@drawable/metno_29</drawable> <!-- fair_night -->
+    <drawable name="metno_34">@drawable/metno_30</drawable> <!-- fair_day -->
+    <drawable name="metno_35">@drawable/metno_17</drawable> <!-- heavysleet -->
+    <drawable name="metno_36">@drawable/metno_32</drawable> <!-- clearsky_day -->
+    <drawable name="metno_38">@drawable/metno_37</drawable> <!-- rainshowersandthunder_day -->
+    <drawable name="metno_43">@drawable/metno_41</drawable> <!-- heavysnow -->
+    <drawable name="metno_44">@drawable/metno_28</drawable> <!-- partlycloudy_day -->
+    <drawable name="metno_45">@drawable/metno_4</drawable> <!-- rainandthunder -->
+    <drawable name="metno_46">@drawable/metno_42</drawable> <!-- snowshowers_day -->
+
+    <!-- amcharts: codes sharing an image -->
+    <drawable name="amcharts_8">@drawable/amcharts_6</drawable> <!-- rain-and-sleet-mix -->
+    <drawable name="amcharts_10">@drawable/amcharts_6</drawable> <!-- rain-and-sleet-mix -->
+    <drawable name="amcharts_12">@drawable/amcharts_11</drawable> <!-- rainy-2 -->
+    <drawable name="amcharts_16">@drawable/amcharts_15</drawable> <!-- snowy-2 -->
+    <drawable name="amcharts_18">@drawable/amcharts_7</drawable> <!-- snow-and-sleet-mix -->
+    <drawable name="amcharts_22">@drawable/amcharts_21</drawable> <!-- haze -->
+    <drawable name="amcharts_24">@drawable/amcharts_23</drawable> <!-- wind -->
+    <drawable name="amcharts_35">@drawable/amcharts_17</drawable> <!-- hail -->
+    <drawable name="amcharts_36">@drawable/amcharts_32</drawable> <!-- clear-day -->
+    <drawable name="amcharts_43">@drawable/amcharts_41</drawable> <!-- snowy-3 -->
+    <drawable name="amcharts_44">@drawable/amcharts_30</drawable> <!-- cloudy-2-day -->
+    <drawable name="amcharts_45">@drawable/amcharts_4</drawable> <!-- thunderstorms -->
+    <drawable name="amcharts_46">@drawable/amcharts_15</drawable> <!-- snowy-2 -->
+
+    <!-- fluent: codes sharing an image -->
+    <drawable name="fluent_2">@drawable/fluent_1</drawable> <!-- cyclone -->
+    <drawable name="fluent_4">@drawable/fluent_3</drawable> <!-- cloud_with_lightning_and_rain -->
+    <drawable name="fluent_6">@drawable/fluent_5</drawable> <!-- cloud_with_snow -->
+    <drawable name="fluent_7">@drawable/fluent_5</drawable> <!-- cloud_with_snow -->
+    <drawable name="fluent_9">@drawable/fluent_8</drawable> <!-- cloud_with_rain -->
+    <drawable name="fluent_10">@drawable/fluent_8</drawable> <!-- cloud_with_rain -->
+    <drawable name="fluent_11">@drawable/fluent_8</drawable> <!-- cloud_with_rain -->
+    <drawable name="fluent_12">@drawable/fluent_8</drawable> <!-- cloud_with_rain -->
+    <drawable name="fluent_14">@drawable/fluent_5</drawable> <!-- cloud_with_snow -->
+    <drawable name="fluent_15">@drawable/fluent_5</drawable> <!-- cloud_with_snow -->
+    <drawable name="fluent_16">@drawable/fluent_5</drawable> <!-- cloud_with_snow -->
+    <drawable name="fluent_18">@drawable/fluent_5</drawable> <!-- cloud_with_snow -->
+    <drawable name="fluent_21">@drawable/fluent_20</drawable> <!-- cloud -->
+    <drawable name="fluent_22">@drawable/fluent_20</drawable> <!-- cloud -->
+    <drawable name="fluent_24">@drawable/fluent_23</drawable> <!-- wind_face -->
+    <drawable name="fluent_26">@drawable/fluent_20</drawable> <!-- cloud -->
+    <drawable name="fluent_27">@drawable/fluent_20</drawable> <!-- cloud -->
+    <drawable name="fluent_31">@drawable/fluent_29</drawable> <!-- crescent_moon -->
+    <drawable name="fluent_33">@drawable/fluent_29</drawable> <!-- crescent_moon -->
+    <drawable name="fluent_35">@drawable/fluent_8</drawable> <!-- cloud_with_rain -->
+    <drawable name="fluent_38">@drawable/fluent_3</drawable> <!-- cloud_with_lightning_and_rain -->
+    <drawable name="fluent_40">@drawable/fluent_8</drawable> <!-- cloud_with_rain -->
+    <drawable name="fluent_41">@drawable/fluent_5</drawable> <!-- cloud_with_snow -->
+    <drawable name="fluent_42">@drawable/fluent_5</drawable> <!-- cloud_with_snow -->
+    <drawable name="fluent_43">@drawable/fluent_5</drawable> <!-- cloud_with_snow -->
+    <drawable name="fluent_44">@drawable/fluent_30</drawable> <!-- sun_behind_cloud -->
+    <drawable name="fluent_45">@drawable/fluent_3</drawable> <!-- cloud_with_lightning_and_rain -->
+    <drawable name="fluent_46">@drawable/fluent_5</drawable> <!-- cloud_with_snow -->
+    <drawable name="fluent_47">@drawable/fluent_37</drawable> <!-- cloud_with_lightning -->
 </resources>

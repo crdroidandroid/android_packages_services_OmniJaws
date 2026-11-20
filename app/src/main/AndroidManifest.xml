@@ -283,6 +283,46 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".meteocons"
+            android:label="Meteocons"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="org.omnirom.WeatherIconPack" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".metno"
+            android:label="MET Norway"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="org.omnirom.WeatherIconPack" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".amcharts"
+            android:label="amCharts"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="org.omnirom.WeatherIconPack" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".fluent"
+            android:label="Fluent Emoji"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="org.omnirom.WeatherIconPack" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
         <receiver
             android:name=".widget.WeatherAppWidgetProvider"
             android:exported="true"
