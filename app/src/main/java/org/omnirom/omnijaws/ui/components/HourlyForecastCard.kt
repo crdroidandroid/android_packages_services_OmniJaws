@@ -15,7 +15,6 @@
  */
 package org.omnirom.omnijaws.ui.components
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -30,19 +29,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import android.graphics.drawable.Drawable
@@ -57,7 +52,6 @@ import kotlin.math.roundToInt
 private val ITEM_WIDTH = 64.dp
 private val ITEM_SPACING = 4.dp
 private val ROW_HORIZONTAL_PADDING = 12.dp
-private val GRAPH_VERTICAL_PADDING = 6.dp
 private const val MAX_HOURS = 24
 private const val ONE_HOUR_MS = 60L * 60L * 1000L
 
@@ -91,7 +85,7 @@ fun HourlyForecastCard(
         ),
         shape = MaterialTheme.shapes.extraLarge
     ) {
-        Column(modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)) {
+        Column(modifier = Modifier.padding(vertical = 16.dp)) {
             Text(
                 text = stringResource(R.string.omnijaws_forecast_card_hourly_title),
                 style = MaterialTheme.typography.titleMedium,
@@ -99,38 +93,28 @@ fun HourlyForecastCard(
                 modifier = Modifier.padding(horizontal = 20.dp)
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(
+                modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 12.dp),
+                color = MaterialTheme.colorScheme.outlineVariant
+            )
 
-            val scrollState = rememberScrollState()
-            val contentWidth = ITEM_WIDTH * items.size + ITEM_SPACING * (items.size - 1)
-
-            Column(
+            Row(
                 modifier = Modifier
-                    .horizontalScroll(scrollState)
+                    .horizontalScroll(rememberScrollState())
                     .padding(horizontal = ROW_HORIZONTAL_PADDING)
+                    .padding(top = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(ITEM_SPACING)
             ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(ITEM_SPACING)) {
-                    items.forEach { hourly ->
-                        HourlyItem(
-                            hourly = hourly,
-                            tempUnits = tempUnits,
-                            iconPack = iconPack,
-                            iconTheme = iconTheme,
-                            getConditionIcon = getConditionIcon,
-                            hourFormat = hourFormat,
-                            nowLabel = nowLabel,
-                            currentHourStart = currentHourStart
-                        )
-                    }
-                }
-
-                if (items.count { it.temperature.isFinite() } > 1) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    TemperatureGraph(
-                        temps = items.map { it.temperature },
-                        modifier = Modifier
-                            .width(contentWidth)
-                            .height(48.dp)
+                items.forEach { hourly ->
+                    HourlyItem(
+                        hourly = hourly,
+                        tempUnits = tempUnits,
+                        iconPack = iconPack,
+                        iconTheme = iconTheme,
+                        getConditionIcon = getConditionIcon,
+                        hourFormat = hourFormat,
+                        nowLabel = nowLabel,
+                        currentHourStart = currentHourStart
                     )
                 }
             }
@@ -171,11 +155,12 @@ private fun HourlyItem(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = tempText,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface
+            text = timeText,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1
         )
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         if (icon != null) {
             Image(
                 painter = rememberDrawablePainter(icon),
@@ -190,47 +175,12 @@ private fun HourlyItem(
         } else {
             Spacer(modifier = Modifier.size(28.dp))
         }
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = timeText,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            text = tempText,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1
-        )
-    }
-}
-
-@Composable
-private fun TemperatureGraph(
-    temps: List<Float>,
-    modifier: Modifier = Modifier
-) {
-    val lineColor = MaterialTheme.colorScheme.primary
-    val density = LocalDensity.current
-    val itemWidthPx = with(density) { ITEM_WIDTH.toPx() }
-    val cellStepPx = with(density) { (ITEM_WIDTH + ITEM_SPACING).toPx() }
-
-    Canvas(modifier = modifier) {
-        val finite = temps.filter { it.isFinite() }
-        if (finite.size < 2) return@Canvas
-
-        val minTemp = finite.min()
-        val maxTemp = finite.max()
-        val range = (maxTemp - minTemp).coerceAtLeast(1f)
-        val paddingY = GRAPH_VERTICAL_PADDING.toPx()
-
-        val path = Path()
-        temps.forEachIndexed { index, temp ->
-            if (!temp.isFinite()) return@forEachIndexed
-            val x = index * cellStepPx + itemWidthPx / 2f
-            val y = paddingY + (1f - (temp - minTemp) / range) * (size.height - 2 * paddingY)
-            if (path.isEmpty) path.moveTo(x, y) else path.lineTo(x, y)
-        }
-
-        drawPath(
-            path = path,
-            color = lineColor,
-            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
         )
     }
 }
