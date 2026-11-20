@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: crDroid Android Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+
+    <!-- Weather Client: 2 hurricane, as 1 tropical storm -->
+    <drawable name="weatherclient_2">@drawable/weatherclient_1</drawable>
+
+    <!-- Tapas: 5 rain/snow, 6 rain/sleet, 7 snow/sleet as 18 sleet;
+         8 freezing drizzle as 10 freezing rain; 9 drizzle as 11 showers -->
+    <drawable name="weather_tapas_5">@drawable/weather_tapas_18</drawable>
+    <drawable name="weather_tapas_6">@drawable/weather_tapas_18</drawable>
+    <drawable name="weather_tapas_7">@drawable/weather_tapas_18</drawable>
+    <drawable name="weather_tapas_8">@drawable/weather_tapas_10</drawable>
+    <drawable name="weather_tapas_9">@drawable/weather_tapas_11</drawable>
+</resources>
