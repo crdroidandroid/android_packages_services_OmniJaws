@@ -35,9 +35,10 @@ import org.omnirom.omnijaws.icon.IconProvider
 import org.omnirom.omnijaws.ui.WeatherDashboardActivity
 import org.omnirom.omnijaws.ui.WeatherSettingsActivity
 
-import java.text.SimpleDateFormat
-import java.util.Calendar
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.Date
+import java.util.Locale
 
 class WeatherAppWidgetProvider : AppWidgetProvider() {
 
@@ -228,13 +229,24 @@ class WeatherAppWidgetProvider : AppWidgetProvider() {
                 return
             }
 
-            val sdf = SimpleDateFormat("EE")
-            val cal = Calendar.getInstance()
+            val dayFormat = DateTimeFormatter.ofPattern("EEE", Locale.getDefault())
+            val today = LocalDate.now()
+            val shownDays = forecasts.mapNotNull { day ->
+                val date = runCatching { LocalDate.parse(day.date) }.getOrNull()
+                    ?: return@mapNotNull null
+                if (date.isBefore(today)) return@mapNotNull null
+                if (day.low?.toFloatOrNull()?.isFinite() != true ||
+                    day.high?.toFloatOrNull()?.isFinite() != true
+                ) return@mapNotNull null
+                if (day.conditionCode < 0 && day.condition.isNullOrBlank()) {
+                    return@mapNotNull null
+                }
+                day to date.format(dayFormat)
+            }.take(FORECAST_DAYS)
 
-            val days = minOf(FORECAST_DAYS, forecasts.size)
+            val days = shownDays.size
             for (i in 0 until days) {
-                val day = forecasts[i]
-                val dayShort = sdf.format(Date(cal.timeInMillis))
+                val (day, dayShort) = shownDays[i]
                 val forecastData = getWeatherDataString(day.low, day.high, weatherData.tempUnits)
 
                 setImageView(
@@ -246,8 +258,6 @@ class WeatherAppWidgetProvider : AppWidgetProvider() {
                 widget.setViewVisibility(FORECAST_IMAGE_IDS[i], View.VISIBLE)
                 widget.setViewVisibility(FORECAST_TEXT_IDS[i], View.VISIBLE)
                 widget.setViewVisibility(FORECAST_DATA_IDS[i], View.VISIBLE)
-
-                cal.add(Calendar.DATE, 1)
             }
             for (i in days until FORECAST_DAYS) {
                 widget.setViewVisibility(FORECAST_IMAGE_IDS[i], View.INVISIBLE)
