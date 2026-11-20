@@ -98,6 +98,19 @@
         <item name="android:textStyle">bold</item>
     </style>
 
+    <!-- Main widget: same background tones as the pebble widget. -->
+    <style name="Theme.OmniJaws.Widget.DayNight" parent="Theme.Material3.DynamicColors.DayNight">
+        <item name="android:colorBackground">@color/weather_widget_bg_daynight</item>
+    </style>
+
+    <style name="Theme.OmniJaws.Widget.Dark" parent="Theme.Material3.DynamicColors.Dark">
+        <item name="android:colorBackground">@color/weather_pebble_bg_dark</item>
+    </style>
+
+    <style name="Theme.OmniJaws.Widget.Light" parent="Theme.Material3.DynamicColors.Light">
+        <item name="android:colorBackground">@color/weather_pebble_bg_light</item>
+    </style>
+
     <!-- Light parent in both, as DeskClock does, so only the background differs. -->
     <style name="Theme.OmniJaws.PebbleWidget" parent="Theme.Material3Expressive.DynamicColors.Light" />
 
@@ -107,5 +120,10 @@
 
     <style name="Theme.OmniJaws.PebbleWidget.LightBg">
         <item name="pebbleBackgroundTint">@color/weather_pebble_bg_light</item>
+    </style>
+
+    <!-- "Follow system": light or dark with night mode, like the main widget. -->
+    <style name="Theme.OmniJaws.PebbleWidget.DayNight">
+        <item name="pebbleBackgroundTint">@color/weather_widget_bg_daynight</item>
     </style>
 </resources>

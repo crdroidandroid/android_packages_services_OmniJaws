@@ -191,8 +191,8 @@ class WeatherPebbleAppWidgetProvider : AppWidgetProvider() {
             views.setTextViewTextSize(R.id.info_text, dip, sizeDp * INFO_TEXT_RATIO)
         }
 
-        // Colours come from the root's theme; setting them here would stop the
-        // launcher swapping roots via setLightBackgroundLayoutId.
+        // Colours come from the root's theme. "Follow system" uses night mode,
+        // as the main widget does.
         private fun newThemedRemoteViews(context: Context, colorTheme: Int): RemoteViews {
             val pkg = context.packageName
             return when (colorTheme) {
@@ -202,9 +202,7 @@ class WeatherPebbleAppWidgetProvider : AppWidgetProvider() {
                 WidgetConfig.COLOR_THEME_LIGHT ->
                     RemoteViews(pkg, R.layout.weather_appwidget_pebble_lightbg)
 
-                else -> RemoteViews(pkg, R.layout.weather_appwidget_pebble_darkbg).apply {
-                    setLightBackgroundLayoutId(R.layout.weather_appwidget_pebble_lightbg)
-                }
+                else -> RemoteViews(pkg, R.layout.weather_appwidget_pebble_system)
             }
         }
 
