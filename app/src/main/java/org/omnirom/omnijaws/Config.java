@@ -39,6 +39,11 @@ public class Config {
     public static final String PREF_KEY_UPDATE_INTERVAL = "update_interval";
     public static final String PREF_KEY_ICON_PACK = "icon_pack";
     public static final String PREF_KEY_ICON_THEME = "app_icon_theme";
+    public static final String PREF_KEY_FORECAST_VIEW = "forecast_view";
+
+    // Multi-day forecast card on the dashboard
+    public static final int FORECAST_VIEW_LINE = 0;
+    public static final int FORECAST_VIEW_LIST = 1;
     public static final String PREF_KEY_UPDATE_ERROR = "update_error";
     public static final String PREF_KEY_OWM_KEY = "owm_key";
     public static final String PREF_KEY_PIRATE_WEATHER_KEY = "pirate_weather_key";
@@ -241,6 +246,20 @@ public class Config {
                 .getDefaultSharedPreferences(context);
         
         return prefs.getInt(PREF_KEY_ICON_THEME, IconProvider.ICON_THEME_DEFAULT);
+    }
+
+    public static int getForecastView(Context context) {
+        SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(context);
+
+        return prefs.getInt(PREF_KEY_FORECAST_VIEW, FORECAST_VIEW_LINE);
+    }
+
+    public static void setForecastView(Context context, int value) {
+        SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(context);
+
+        prefs.edit().putInt(PREF_KEY_FORECAST_VIEW, value).apply();
     }
 
     public static void setIconTheme(Context context, int value) {

@@ -421,7 +421,6 @@ private fun WeatherContent(
             item {
                 DailyForecastCard(
                     forecasts = weather.forecasts,
-                    currentTemp = weather.temp,
                     iconPack = iconPack,
                     iconTheme = iconTheme,
                     getConditionIcon = getConditionIcon
