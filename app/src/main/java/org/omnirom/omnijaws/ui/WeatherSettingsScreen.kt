@@ -60,6 +60,7 @@ import com.android.axion.compose.scaffold.AxionScaffold
 
 import org.omnirom.omnijaws.R
 import org.omnirom.omnijaws.icon.IconProvider
+import org.omnirom.omnijaws.ui.components.IconPackPickerDialog
 
 @Composable
 fun WeatherSettingsScreen(
@@ -211,12 +212,10 @@ fun WeatherSettingsScreen(
                 if (state.iconPacks.isNotEmpty()) {
                     PreferenceGroup(title = stringResource(R.string.omnijaws_category_appearance)) {
                         item {
-                            ListPreference(
-                                title = stringResource(R.string.omnijaws_weather_icon_pack_title),
-                                summary = state.iconPacks.firstOrNull { it.value == state.iconPack }?.label,
-                                options = state.iconPacks.map { it.value to it.label },
-                                value = state.iconPack,
-                                onValueChange = onIconPackChanged
+                            IconPackPreference(
+                                packs = state.iconPacks,
+                                selected = state.iconPack,
+                                onSelect = onIconPackChanged
                             )
                         }
                         if (state.iconPackSupportsTheming) {
@@ -320,6 +319,37 @@ private fun iconThemeLabel(value: String): String = when (value) {
     IconProvider.ICON_THEME_LIGHT.toString() -> stringResource(R.string.omnijaws_theme_light)
     IconProvider.ICON_THEME_DARK.toString() -> stringResource(R.string.omnijaws_theme_dark)
     else -> value
+}
+
+@Composable
+private fun IconPackPreference(
+    packs: List<IconPackItem>,
+    selected: String,
+    onSelect: (String) -> Unit
+) {
+    var showPicker by remember { mutableStateOf(false) }
+    val title = stringResource(R.string.omnijaws_weather_icon_pack_title)
+    val current = packs.firstOrNull { it.value == selected }
+
+    ClickablePreference(
+        title = title,
+        summary = current?.label,
+        iconDrawable = current?.previews?.firstOrNull(),
+        onClick = { showPicker = true }
+    )
+
+    if (showPicker) {
+        IconPackPickerDialog(
+            title = title,
+            packs = packs,
+            selected = selected,
+            onSelect = {
+                onSelect(it)
+                showPicker = false
+            },
+            onDismiss = { showPicker = false }
+        )
+    }
 }
 
 @Composable

@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.ComponentName;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
+import android.graphics.drawable.Drawable;
 
 import org.omnirom.omnijaws.Config;
 
@@ -73,6 +75,34 @@ public class IconPack {
                 prefix + "_" + conditionCode,
                 "drawable",
                 resourcesContext.getPackageName());
+    }
+
+    public static Drawable loadDrawable(Context context, String value, int conditionCode) {
+        IconPack pack = fromValue(context, value);
+        if (pack == null) {
+            return null;
+        }
+        try {
+            Context iconContext = null;
+            Resources res;
+            if (pack.packageName.equals(context.getPackageName())) {
+                iconContext = pack.supportsTheming
+                        ? IconProvider.getIconContext(context,
+                                IconProvider.getAppIconNightMode(Config.getIconTheme(context)))
+                        : context;
+                res = iconContext.getResources();
+            } else {
+                res = context.getPackageManager().getResourcesForApplication(pack.packageName);
+            }
+            int resId = res.getIdentifier(pack.prefix + "_" + conditionCode,
+                    "drawable", pack.packageName);
+            if (resId == RESOURCE_NOT_FOUND) {
+                return null;
+            }
+            return iconContext != null ? iconContext.getDrawable(resId) : res.getDrawable(resId, null);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public static boolean supportsThemes(Context context) {

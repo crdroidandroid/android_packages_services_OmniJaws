@@ -19,6 +19,7 @@ import android.Manifest
 import android.app.Application
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.drawable.Drawable
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.internal.util.crdroid.OmniJawsClient
@@ -38,7 +39,14 @@ import org.omnirom.omnijaws.widget.WeatherAppWidgetProvider
 import org.omnirom.omnijaws.icon.IconProvider
 import org.omnirom.omnijaws.icon.IconPack
 
-data class IconPackItem(val label: String, val value: String)
+data class IconPackItem(
+    val label: String,
+    val value: String,
+    /** Icons for [ICON_PACK_PREVIEW_CODES], null where the pack has none. */
+    val previews: List<Drawable?> = emptyList()
+)
+
+val ICON_PACK_PREVIEW_CODES = listOf(32, 30, 4, 16)
 
 data class SettingsUiState(
     val enabled: Boolean = false,
@@ -163,6 +171,10 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         Config.setIconTheme(ctx, value.toInt())
         _uiState.value = _uiState.value.copy(iconTheme = value)
         WeatherAppWidgetProvider.updateAllWidgets(ctx)
+        viewModelScope.launch {
+            val packs = withContext(Dispatchers.IO) { loadIconPacks() }
+            _uiState.value = _uiState.value.copy(iconPacks = packs)
+        }
     }
 
     fun setOwmKey(value: String) {
@@ -259,7 +271,11 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             result.add(IconPackItem(label, r.activityInfo.packageName + ".weather"))
         }
 
-        return defaultList + result
+        return (defaultList + result).map { item ->
+            item.copy(previews = ICON_PACK_PREVIEW_CODES.map {
+                IconPack.loadDrawable(ctx, item.value, it)
+            })
+        }
     }
 
     companion object {
