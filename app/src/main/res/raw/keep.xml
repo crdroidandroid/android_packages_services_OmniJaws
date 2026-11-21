@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@string/omnijaws_weather_*,
+        @drawable/weather_*,
+        @drawable/weatherclient_*,
+        @drawable/google_new_*,
+        @drawable/nothing_*,
+        @drawable/outline_*,
+        @drawable/stickers_*,
+        @drawable/marshmallow_*,
+        @drawable/icons8_color_hand_*,
+        @drawable/meteocons_*,
+        @drawable/metno_*,
+        @drawable/amcharts_*,
+        @drawable/fluent_*" />
