@@ -29,7 +29,10 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.MyLocation
+import androidx.compose.material.icons.outlined.Public
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Security
+import androidx.compose.material.icons.outlined.Thermostat
 import androidx.compose.material.icons.outlined.Update
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -118,6 +121,7 @@ fun WeatherSettingsScreen(
                                 "4" to stringResource(R.string.omnijaws_provider_visualcrossing)
                             ),
                             value = state.provider,
+                            icon = Icons.Outlined.Public,
                             onValueChange = onProviderChanged
                         )
                     }
@@ -130,6 +134,7 @@ fun WeatherSettingsScreen(
                                 "1" to stringResource(R.string.omnijaws_unit_imperial)
                             ),
                             value = state.units,
+                            icon = Icons.Outlined.Thermostat,
                             onValueChange = onUnitsChanged
                         )
                     }
@@ -145,6 +150,7 @@ fun WeatherSettingsScreen(
                                 "12" to stringResource(R.string.omnijaws_interval_12_hour)
                             ),
                             value = state.updateInterval,
+                            icon = Icons.Outlined.Schedule,
                             onValueChange = onIntervalChanged
                         )
                     }
