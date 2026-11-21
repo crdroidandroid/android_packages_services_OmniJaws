@@ -41,7 +41,9 @@ android_app {
   ],
 
   optimize: {
-    enabled: false,
+    enabled: true,
+    optimize: true,
+    shrink_resources: true,
   },
 
   required: [
