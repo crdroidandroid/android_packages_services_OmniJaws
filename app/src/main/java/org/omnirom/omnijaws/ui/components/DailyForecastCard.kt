@@ -230,6 +230,7 @@ private fun ForecastLineView(
     getConditionIcon: (Int) -> Drawable?
 ) {
     val contentWidth = LINE_COLUMN_WIDTH * days.size
+    val showPrecip = days.any { it.forecast.precipProbability.isNotablePrecipChance() }
 
     Column(
         modifier = Modifier
@@ -271,6 +272,10 @@ private fun ForecastLineView(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     ConditionIcon(day, iconPack, iconTheme, getConditionIcon, 32.dp)
+                    if (showPrecip) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        PrecipitationChance(day.forecast.precipProbability)
+                    }
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = "${day.forecast.high}°",
@@ -365,6 +370,7 @@ private fun ForecastListView(
     getConditionIcon: (Int) -> Drawable?
 ) {
     val colors = MaterialTheme.colorScheme
+    val showPrecip = days.any { it.forecast.precipProbability.isNotablePrecipChance() }
     Column(
         modifier = Modifier
             .padding(top = 8.dp)
@@ -394,6 +400,13 @@ private fun ForecastListView(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
                 )
+                if (showPrecip) {
+                    PrecipitationChance(
+                        day.forecast.precipProbability,
+                        modifier = Modifier.width(40.dp),
+                        textAlign = TextAlign.End
+                    )
+                }
                 ConditionIcon(day, iconPack, iconTheme, getConditionIcon, 28.dp)
                 Text(
                     text = buildAnnotatedString {

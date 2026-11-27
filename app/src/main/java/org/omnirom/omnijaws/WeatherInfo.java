@@ -107,6 +107,9 @@ public class WeatherInfo {
         public final String condition;
         public boolean metric;
         public String date;
+        // 0-100 and mm (in when imperial), NaN when unknown
+        public float precipProbability = Float.NaN;
+        public float precipAmount = Float.NaN;
 
         public DayForecast(float low, float high, String condition, int conditionCode, String date, boolean metric) {
             this.low = low;
@@ -132,6 +135,12 @@ public class WeatherInfo {
         public int getConditionCode() {
             return conditionCode;
         }
+
+        public DayForecast setPrecipitation(float probability, float amount) {
+            precipProbability = probability;
+            precipAmount = amount;
+            return this;
+        }
     }
 
     public static class HourlyForecast {
@@ -142,6 +151,8 @@ public class WeatherInfo {
         public final float humidity;
         public final float windSpeed;
         public boolean metric;
+        public float precipProbability = Float.NaN;
+        public float precipAmount = Float.NaN;
 
         public HourlyForecast(float temperature, int conditionCode, String condition,
                               long timestamp, float humidity, float windSpeed, boolean metric) {
@@ -156,6 +167,12 @@ public class WeatherInfo {
 
         public String getCondition(Context context) {
             return WeatherInfo.getCondition(context, conditionCode, condition);
+        }
+
+        public HourlyForecast setPrecipitation(float probability, float amount) {
+            precipProbability = probability;
+            precipAmount = amount;
+            return this;
         }
     }
 
@@ -287,7 +304,9 @@ public class WeatherInfo {
         ArrayList<DayForecast> days = new ArrayList<>();
         for (DayForecast d : forecasts) {
             days.add(new DayForecast(checkTemperature(d.low), checkTemperature(d.high),
-                    d.condition, d.conditionCode, d.date, d.metric));
+                    d.condition, d.conditionCode, d.date, d.metric)
+                    .setPrecipitation(checkPercent(d.precipProbability),
+                            checkRange(d.precipAmount, 0f, Float.MAX_VALUE)));
         }
         forecasts = days;
 
@@ -295,7 +314,9 @@ public class WeatherInfo {
         for (HourlyForecast h : hourlyForecasts) {
             hours.add(new HourlyForecast(checkTemperature(h.temperature), h.conditionCode,
                     h.condition, h.timestamp, checkPercent(h.humidity), checkWind(h.windSpeed),
-                    h.metric));
+                    h.metric)
+                    .setPrecipitation(checkPercent(h.precipProbability),
+                            checkRange(h.precipAmount, 0f, Float.MAX_VALUE)));
         }
         hourlyForecasts = hours;
     }
@@ -533,7 +554,9 @@ public class WeatherInfo {
             builder.append(d.low).append(';');
             builder.append(d.condition).append(';');
             builder.append(d.conditionCode).append(';');
-            builder.append(d.date);
+            builder.append(d.date).append(';');
+            builder.append(d.precipProbability).append(';');
+            builder.append(d.precipAmount);
         }
     }
 
@@ -546,7 +569,9 @@ public class WeatherInfo {
             builder.append(h.condition).append(';');
             builder.append(h.timestamp).append(';');
             builder.append(h.humidity).append(';');
-            builder.append(h.windSpeed);
+            builder.append(h.windSpeed).append(';');
+            builder.append(h.precipProbability).append(';');
+            builder.append(h.precipAmount);
         }
     }
 
@@ -586,14 +611,17 @@ public class WeatherInfo {
             return null;
         }
 
-        if (forecastItems == 0 || forecastParts.length != 5 * forecastItems + 1) {
+        // 7 fields per day since precipitation was added, 5 before
+        int dayFields = forecastItems == 0 ? 0 : (forecastParts.length - 1) / forecastItems;
+        if (forecastItems == 0 || (dayFields != 5 && dayFields != 7)
+                || forecastParts.length != dayFields * forecastItems + 1) {
             return null;
         }
 
         // Parse the forecast data
         try {
             for (int item = 0; item < forecastItems; item++) {
-                int offset = item * 5 + 1;
+                int offset = item * dayFields + 1;
                 DayForecast day = new DayForecast(
                         /* low */ Float.parseFloat(forecastParts[offset + 1]),
                         /* high */ Float.parseFloat(forecastParts[offset]),
@@ -601,6 +629,10 @@ public class WeatherInfo {
                         /* conditionCode */ Integer.parseInt(forecastParts[offset + 3]),
                         forecastParts[offset + 4],
                         metric);
+                if (dayFields == 7) {
+                    day.setPrecipitation(Float.parseFloat(forecastParts[offset + 5]),
+                            Float.parseFloat(forecastParts[offset + 6]));
+                }
                 if (!Float.isNaN(day.low) && !Float.isNaN(day.high) /*&& day.conditionCode >= 0*/) {
                     forecasts.add(day);
                 }
@@ -644,18 +676,26 @@ public class WeatherInfo {
 
                 String[] hourlyParts = parts[19].split(";");
                 int hourlyItems = Integer.parseInt(hourlyParts[0]);
+                // 8 fields per hour since precipitation was added, 6 before
+                int hourFields = hourlyItems > 0
+                        && hourlyParts.length == 8 * hourlyItems + 1 ? 8 : 6;
                 ArrayList<HourlyForecast> hourlyForecasts = new ArrayList<>();
                 for (int item = 0; item < hourlyItems; item++) {
-                    int offset = item * 6 + 1;
-                    if (offset + 5 < hourlyParts.length) {
-                        hourlyForecasts.add(new HourlyForecast(
+                    int offset = item * hourFields + 1;
+                    if (offset + hourFields - 1 < hourlyParts.length) {
+                        HourlyForecast hour = new HourlyForecast(
                                 Float.parseFloat(hourlyParts[offset]),
                                 Integer.parseInt(hourlyParts[offset + 1]),
                                 hourlyParts[offset + 2],
                                 Long.parseLong(hourlyParts[offset + 3]),
                                 Float.parseFloat(hourlyParts[offset + 4]),
                                 Float.parseFloat(hourlyParts[offset + 5]),
-                                metric));
+                                metric);
+                        if (hourFields == 8) {
+                            hour.setPrecipitation(Float.parseFloat(hourlyParts[offset + 6]),
+                                    Float.parseFloat(hourlyParts[offset + 7]));
+                        }
+                        hourlyForecasts.add(hour);
                     }
                 }
                 w.hourlyForecasts = hourlyForecasts;

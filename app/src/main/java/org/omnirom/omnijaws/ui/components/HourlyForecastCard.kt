@@ -77,6 +77,7 @@ fun HourlyForecastCard(
     val currentHourStart = remember(items) {
         System.currentTimeMillis() / ONE_HOUR_MS * ONE_HOUR_MS
     }
+    val showPrecip = remember(items) { items.any { it.precipProbability.isNotablePrecipChance() } }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -114,7 +115,8 @@ fun HourlyForecastCard(
                         getConditionIcon = getConditionIcon,
                         hourFormat = hourFormat,
                         nowLabel = nowLabel,
-                        currentHourStart = currentHourStart
+                        currentHourStart = currentHourStart,
+                        showPrecip = showPrecip
                     )
                 }
             }
@@ -131,7 +133,8 @@ private fun HourlyItem(
     getConditionIcon: (Int) -> Drawable?,
     hourFormat: SimpleDateFormat,
     nowLabel: String,
-    currentHourStart: Long
+    currentHourStart: Long,
+    showPrecip: Boolean
 ) {
     val timeText = remember(hourly.timestamp, hourFormat, currentHourStart) {
         when {
@@ -174,6 +177,10 @@ private fun HourlyItem(
             )
         } else {
             Spacer(modifier = Modifier.size(28.dp))
+        }
+        if (showPrecip) {
+            Spacer(modifier = Modifier.height(4.dp))
+            PrecipitationChance(hourly.precipProbability)
         }
         Spacer(modifier = Modifier.height(8.dp))
         Text(

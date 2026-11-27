@@ -38,7 +38,8 @@ public class VisualCrossingProvider extends AbstractWeatherProvider {
 
     private static final String ELEMENTS =
             "datetime,datetimeEpoch,temp,tempmax,tempmin,feelslike,humidity,dew,"
-            + "pressure,windspeed,winddir,uvindex,visibility,icon,sunriseEpoch,sunsetEpoch";
+            + "pressure,windspeed,winddir,uvindex,visibility,icon,sunriseEpoch,sunsetEpoch,"
+            + "precip,precipprob";
 
     // Timeline API: one call returns current conditions, daily forecast,
     // hourly forecast and astro data. unitGroup=metric -> degC / km/h / km,
@@ -187,7 +188,9 @@ public class VisualCrossingProvider extends AbstractWeatherProvider {
                         /* condition */ "",
                         /* conditionCode */ mapIconToCode(forecast.optString("icon", "")),
                         getDayOf(forecast, i),
-                        metric));
+                        metric).setPrecipitation(
+                        (float) forecast.optDouble("precipprob", Double.NaN),
+                        (float) forecast.optDouble("precip", Double.NaN)));
             } catch (JSONException e) {
                 Log.w(TAG, "Invalid forecast for day " + i, e);
             }
@@ -233,7 +236,9 @@ public class VisualCrossingProvider extends AbstractWeatherProvider {
                             ts * 1000L,
                             (float) hour.optDouble("humidity", Double.NaN),
                             (float) hour.optDouble("windspeed", Double.NaN),
-                            metric));
+                            metric).setPrecipitation(
+                            (float) hour.optDouble("precipprob", Double.NaN),
+                            (float) hour.optDouble("precip", Double.NaN)));
                 } catch (JSONException e) {
                     Log.w(TAG, "Invalid hourly forecast at day " + d + " index " + i, e);
                 }

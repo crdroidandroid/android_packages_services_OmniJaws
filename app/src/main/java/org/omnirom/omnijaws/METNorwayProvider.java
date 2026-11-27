@@ -151,6 +151,9 @@ public class METNorwayProvider extends AbstractWeatherProvider {
             double temp_min = Double.MAX_VALUE;
             boolean hasData = false;
             int entries = 0;
+            double precipSum = 0;
+            boolean hasPrecipAmount = false;
+            double precipChance = Double.NaN;
 
             int symbolCode = 0;
             int scSixToTwelve = 0; // symbolCode next_6_hours at 06:00
@@ -194,6 +197,22 @@ public class METNorwayProvider extends AbstractWeatherProvider {
                     boolean hasOneHour = data.has("next_1_hours");
                     boolean hasSixHours = data.has("next_6_hours");
                     boolean hasTwelveHours = data.has("next_12_hours");
+
+                    // sum hourly steps, then 6-hourly ones where the hourly part ends
+                    JSONObject step = data.optJSONObject(hasOneHour ? "next_1_hours" : "next_6_hours");
+                    JSONObject stepDetails = step != null ? step.optJSONObject("details") : null;
+                    if (stepDetails != null) {
+                        double amount = stepDetails.optDouble("precipitation_amount", Double.NaN);
+                        if (!Double.isNaN(amount)) {
+                            precipSum += amount;
+                            hasPrecipAmount = true;
+                        }
+                        double chance = stepDetails.optDouble("probability_of_precipitation", Double.NaN);
+                        if (!Double.isNaN(chance)) {
+                            precipChance = Double.isNaN(precipChance)
+                                    ? chance : Math.max(precipChance, chance);
+                        }
+                    }
 
                     // If true, there is no need to recalculate "symbolCode".
                     boolean hasFastCondition = scSixToEighteen != 0
@@ -257,7 +276,8 @@ public class METNorwayProvider extends AbstractWeatherProvider {
                     /* condition */ "",
                     /* conditionCode */ iconToCode(symbolCode),
                     day,
-                    metric));
+                    metric).setPrecipitation((float) precipChance,
+                    hasPrecipAmount ? precipFromMm(precipSum, metric) : Float.NaN));
         }
 
         // clients assume there are atleast 5 entries - so fill with dummy if needed
@@ -313,7 +333,10 @@ public class METNorwayProvider extends AbstractWeatherProvider {
                         ts,
                         (float) details.optDouble("relative_humidity", Double.NaN),
                         convertWindSpeed(details.optDouble("wind_speed", Double.NaN), metric),
-                        metric));
+                        metric).setPrecipitation(
+                        (float) hourDetails(data).optDouble("probability_of_precipitation", Double.NaN),
+                        precipFromMm(hourDetails(data).optDouble("precipitation_amount", Double.NaN),
+                                metric)));
             } catch (JSONException e) {
                 Log.w(TAG, "Invalid hourly forecast for index " + i, e);
             }
@@ -343,6 +366,12 @@ public class METNorwayProvider extends AbstractWeatherProvider {
             }
         }
         return null;
+    }
+
+    private static JSONObject hourDetails(JSONObject data) {
+        JSONObject step = data.optJSONObject("next_1_hours");
+        JSONObject details = step != null ? step.optJSONObject("details") : null;
+        return details != null ? details : new JSONObject();
     }
 
     private static String readSymbolCode(JSONObject step) throws JSONException {

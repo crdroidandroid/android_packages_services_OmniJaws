@@ -46,10 +46,11 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
             + "&current=temperature_2m,relative_humidity_2m,apparent_temperature,"
             + "weather_code,pressure_msl,wind_speed_10m,wind_direction_10m,is_day"
             + "&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,visibility,"
-            + "uv_index,weather_code,wind_speed_10m,is_day"
-            + "&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset"
+            + "uv_index,weather_code,wind_speed_10m,is_day,precipitation_probability,precipitation"
+            + "&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,"
+            + "precipitation_probability_max,precipitation_sum"
             + "&timeformat=unixtime&timezone=auto&forecast_days=7"
-            + "&temperature_unit=%s&wind_speed_unit=%s";
+            + "&temperature_unit=%s&wind_speed_unit=%s&precipitation_unit=%s";
 
     public OpenMeteoProvider(Context context) {
         super(context);
@@ -74,8 +75,9 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
 
         String tempUnit = metric ? "celsius" : "fahrenheit";
         String windUnit = metric ? "kmh" : "mph";
+        String precipUnit = metric ? "mm" : "inch";
         String url = String.format(Locale.US, URL_WEATHER,
-                coords[0], coords[1], tempUnit, windUnit);
+                coords[0], coords[1], tempUnit, windUnit, precipUnit);
 
         String response = retrieve(url);
         if (response == null) {
@@ -185,7 +187,9 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
                         /* condition */ "",
                         /* conditionCode */ mapWmoToCode(code, true),
                         dayAt(times, i, zone),
-                        metric));
+                        metric).setPrecipitation(
+                        floatAt(daily, "precipitation_probability_max", i),
+                        floatAt(daily, "precipitation_sum", i)));
             } catch (JSONException e) {
                 Log.w(TAG, "Invalid forecast for day " + i, e);
             }
@@ -236,7 +240,9 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
                         times.getLong(i) * 1000L,
                         humidity,
                         winds != null ? (float) winds.optDouble(i, Double.NaN) : Float.NaN,
-                        metric));
+                        metric).setPrecipitation(
+                        floatAt(hourly, "precipitation_probability", i),
+                        floatAt(hourly, "precipitation", i)));
             } catch (JSONException e) {
                 Log.w(TAG, "Invalid hourly forecast for index " + i, e);
             }

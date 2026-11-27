@@ -71,6 +71,8 @@ public class WeatherContentProvider extends ContentProvider {
     private static final String COLUMN_FORECAST_CONDITION = "forecast_condition";
     private static final String COLUMN_FORECAST_CONDITION_CODE = "forecast_condition_code";
     private static final String COLUMN_FORECAST_DATE = "forecast_date";
+    private static final String COLUMN_FORECAST_PRECIP_PROBABILITY = "forecast_precip_probability";
+    private static final String COLUMN_FORECAST_PRECIP_AMOUNT = "forecast_precip_amount";
 
     private static final String COLUMN_HOURLY_TEMPERATURE = "hourly_temperature";
     private static final String COLUMN_HOURLY_CONDITION_CODE = "hourly_condition_code";
@@ -78,6 +80,8 @@ public class WeatherContentProvider extends ContentProvider {
     private static final String COLUMN_HOURLY_TIMESTAMP = "hourly_timestamp";
     private static final String COLUMN_HOURLY_HUMIDITY = "hourly_humidity";
     private static final String COLUMN_HOURLY_WIND_SPEED = "hourly_wind_speed";
+    private static final String COLUMN_HOURLY_PRECIP_PROBABILITY = "hourly_precip_probability";
+    private static final String COLUMN_HOURLY_PRECIP_AMOUNT = "hourly_precip_amount";
 
     private static final String COLUMN_ENABLED = "enabled";
     private static final String COLUMN_PROVIDER = "provider";
@@ -116,7 +120,9 @@ public class WeatherContentProvider extends ContentProvider {
             COLUMN_FORECAST_HIGH,
             COLUMN_FORECAST_CONDITION,
             COLUMN_FORECAST_CONDITION_CODE,
-            COLUMN_FORECAST_DATE
+            COLUMN_FORECAST_DATE,
+            COLUMN_FORECAST_PRECIP_PROBABILITY,
+            COLUMN_FORECAST_PRECIP_AMOUNT
     };
 
     private static final String[] PROJECTION_DEFAULT_SETTINGS = new String[] {
@@ -135,7 +141,9 @@ public class WeatherContentProvider extends ContentProvider {
             COLUMN_HOURLY_CONDITION,
             COLUMN_HOURLY_TIMESTAMP,
             COLUMN_HOURLY_HUMIDITY,
-            COLUMN_HOURLY_WIND_SPEED
+            COLUMN_HOURLY_WIND_SPEED,
+            COLUMN_HOURLY_PRECIP_PROBABILITY,
+            COLUMN_HOURLY_PRECIP_AMOUNT
     };
 
     public static final String AUTHORITY = "org.omnirom.omnijaws.provider";
@@ -229,7 +237,10 @@ public class WeatherContentProvider extends ContentProvider {
                             .add(COLUMN_FORECAST_LOW, convertTemp(day.getLow(), from, to))
                             .add(COLUMN_FORECAST_HIGH, convertTemp(day.getHigh(), from, to))
                             .add(COLUMN_FORECAST_CONDITION_CODE, day.getConditionCode())
-                            .add(COLUMN_FORECAST_DATE, day.date);
+                            .add(COLUMN_FORECAST_DATE, day.date)
+                            .add(COLUMN_FORECAST_PRECIP_PROBABILITY, day.precipProbability)
+                            .add(COLUMN_FORECAST_PRECIP_AMOUNT,
+                                    convertPrecip(day.precipAmount, from, to));
                 }
                 return result;
             }
@@ -246,7 +257,10 @@ public class WeatherContentProvider extends ContentProvider {
                             .add(COLUMN_HOURLY_CONDITION, h.getCondition(mContext))
                             .add(COLUMN_HOURLY_TIMESTAMP, h.timestamp)
                             .add(COLUMN_HOURLY_HUMIDITY, h.humidity)
-                            .add(COLUMN_HOURLY_WIND_SPEED, convertSpeed(h.windSpeed, from, to));
+                            .add(COLUMN_HOURLY_WIND_SPEED, convertSpeed(h.windSpeed, from, to))
+                            .add(COLUMN_HOURLY_PRECIP_PROBABILITY, h.precipProbability)
+                            .add(COLUMN_HOURLY_PRECIP_AMOUNT,
+                                    convertPrecip(h.precipAmount, from, to));
                 }
                 return result;
             }
@@ -276,6 +290,14 @@ public class WeatherContentProvider extends ContentProvider {
             return value;
         }
         return toMetric ? value * KM_PER_MILE : value / KM_PER_MILE;
+    }
+
+    /** mm <-> inches. */
+    private static float convertPrecip(float value, boolean fromMetric, boolean toMetric) {
+        if (fromMetric == toMetric || Float.isNaN(value)) {
+            return value;
+        }
+        return toMetric ? value * 25.4f : value / 25.4f;
     }
 
     private String[] resolveProjection(String[] projection, int uriType) {

@@ -238,7 +238,7 @@ public class OpenWeatherMapProvider extends AbstractWeatherProvider {
         Calendar cal = Calendar.getInstance(zone);
         String today = fmt.format(new Date());
 
-        // day -> {low, high, condition code, hours from noon}
+        // day -> {low, high, condition code, hours from noon, rain chance, rain mm}
         LinkedHashMap<String, float[]> days = new LinkedHashMap<>();
         for (int i = 0; i < list.length(); i++) {
             try {
@@ -249,7 +249,8 @@ public class OpenWeatherMapProvider extends AbstractWeatherProvider {
                 String day = fmt.format(new Date(timeMs));
                 float[] d = days.get(day);
                 if (d == null) {
-                    d = new float[] { Float.MAX_VALUE, -Float.MAX_VALUE, -1, Float.MAX_VALUE };
+                    d = new float[] { Float.MAX_VALUE, -Float.MAX_VALUE, -1, Float.MAX_VALUE,
+                            Float.NaN, 0f };
                     if (day.equals(today)) {
                         d[0] = currentTemp;
                         d[1] = currentTemp;
@@ -264,6 +265,11 @@ public class OpenWeatherMapProvider extends AbstractWeatherProvider {
                     d[2] = mapConditionIconToCode(data.getString("icon"), data.getInt("id"));
                     d[3] = fromNoon;
                 }
+                float chance = precipChance(entry);
+                if (!Float.isNaN(chance)) {
+                    d[4] = Float.isNaN(d[4]) ? chance : Math.max(d[4], chance);
+                }
+                d[5] += precipAmount(entry, "3h", true);
             } catch (JSONException e) {
                 Log.w(TAG, "Invalid 2.5 forecast for index " + i, e);
             }
@@ -278,7 +284,8 @@ public class OpenWeatherMapProvider extends AbstractWeatherProvider {
                 break;
             }
             float[] d = entry.getValue();
-            result.add(new DayForecast(d[0], d[1], "", (int) d[2], entry.getKey(), metric));
+            result.add(new DayForecast(d[0], d[1], "", (int) d[2], entry.getKey(), metric)
+                    .setPrecipitation(d[4], precipFromMm(d[5], metric)));
         }
         return result;
     }
@@ -304,7 +311,8 @@ public class OpenWeatherMapProvider extends AbstractWeatherProvider {
                         entry.getLong("dt") * 1000L,
                         (float) main.getDouble("humidity"),
                         windSpeed,
-                        metric));
+                        metric).setPrecipitation(precipChance(entry),
+                        precipAmount(entry, "3h", metric)));
             } catch (JSONException e) {
                 Log.w(TAG, "Invalid 2.5 hourly forecast for index " + i, e);
             }
@@ -334,7 +342,8 @@ public class OpenWeatherMapProvider extends AbstractWeatherProvider {
                         /* conditionCode */ mapConditionIconToCode(
                         data.getString("icon"), data.getInt("id")),
                         day,
-                        metric);
+                        metric).setPrecipitation(precipChance(forecast),
+                        precipAmount(forecast, null, metric));
             } catch (JSONException e) {
                 Log.w(TAG, "Invalid forecast for day " + i, e);
                 continue;
@@ -376,7 +385,8 @@ public class OpenWeatherMapProvider extends AbstractWeatherProvider {
                         hour.getLong("dt") * 1000L,
                         (float) hour.getDouble("humidity"),
                         hWindSpeed,
-                        metric));
+                        metric).setPrecipitation(precipChance(hour),
+                        precipAmount(hour, "1h", metric)));
             } catch (JSONException e) {
                 Log.w(TAG, "Invalid hourly forecast for index " + i, e);
             }
@@ -398,6 +408,27 @@ public class OpenWeatherMapProvider extends AbstractWeatherProvider {
             }
         }
         return (float) value;
+    }
+
+    private static float precipChance(JSONObject o) {
+        return o.has("pop") ? (float) (o.optDouble("pop", Double.NaN) * 100) : Float.NaN;
+    }
+
+    // rain and snow in mm, either plain (daily) or keyed by period ("1h", "3h");
+    // OpenWeatherMap leaves them out when there is none
+    private static float precipAmount(JSONObject o, String period, boolean metric) {
+        double total = 0;
+        for (String key : new String[] { "rain", "snow" }) {
+            double value;
+            if (period == null) {
+                value = o.optDouble(key, 0);
+            } else {
+                JSONObject byPeriod = o.optJSONObject(key);
+                value = byPeriod != null ? byPeriod.optDouble(period, 0) : 0;
+            }
+            total += value;
+        }
+        return precipFromMm(total, metric);
     }
 
     private static final HashMap<String, String> LANGUAGE_CODE_MAPPING = new HashMap<String, String>();

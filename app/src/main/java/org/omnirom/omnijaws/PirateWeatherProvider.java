@@ -182,7 +182,8 @@ public class PirateWeatherProvider extends AbstractWeatherProvider {
                         /* condition */ "",
                         /* conditionCode */ mapConditionIconToCode(forecast.optString("icon", "")),
                         day,
-                        metric);
+                        metric).setPrecipitation(precipChance(forecast),
+                        precipAmount(forecast, metric, false));
             } catch (JSONException e) {
                 Log.w(TAG, "Invalid forecast for day " + i, e);
                 continue;
@@ -224,12 +225,26 @@ public class PirateWeatherProvider extends AbstractWeatherProvider {
                         time * 1000L,
                         (float) (hour.optDouble("humidity", Double.NaN) * 100),
                         convertWindSpeed(hour.optDouble("windSpeed", Double.NaN), metric),
-                        metric));
+                        metric).setPrecipitation(precipChance(hour),
+                        precipAmount(hour, metric, true)));
             } catch (JSONException e) {
                 Log.w(TAG, "Invalid hourly forecast for index " + i, e);
             }
         }
         return result;
+    }
+
+    private static float precipChance(JSONObject o) {
+        return (float) (o.optDouble("precipProbability", Double.NaN) * 100);
+    }
+
+    // precipAccumulation is cm (si) or inches (us); an hour's intensity is mm/h or in/h
+    private static float precipAmount(JSONObject o, boolean metric, boolean hourly) {
+        if (o.has("precipAccumulation")) {
+            double value = o.optDouble("precipAccumulation", Double.NaN);
+            return (float) (metric ? value * 10 : value);
+        }
+        return hourly ? (float) o.optDouble("precipIntensity", Double.NaN) : Float.NaN;
     }
 
     private static float convertWindSpeed(double value, boolean metric) {

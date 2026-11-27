@@ -285,6 +285,10 @@ public abstract class AbstractWeatherProvider {
         return city;
     }
 
+    protected static float precipFromMm(double mm, boolean metric) {
+        return (float) (metric ? mm : mm / 25.4);
+    }
+
     protected String getDay(int i) {
         Calendar calendar = Calendar.getInstance();
         if (i > 0) {
