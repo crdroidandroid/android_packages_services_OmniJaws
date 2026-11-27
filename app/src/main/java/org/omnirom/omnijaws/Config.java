@@ -27,6 +27,8 @@ import org.omnirom.omnijaws.icon.IconProvider;
 
 import androidx.preference.PreferenceManager;
 
+import com.android.internal.util.crdroid.OmniJawsClient;
+
 public class Config {
     public static final String PREF_KEY_PROVIDER = "provider";
     public static final String PREF_KEY_UNITS = "units";
@@ -45,6 +47,7 @@ public class Config {
     public static final int FORECAST_VIEW_LINE = 0;
     public static final int FORECAST_VIEW_LIST = 1;
     public static final String PREF_KEY_UPDATE_ERROR = "update_error";
+    public static final String PREF_KEY_UPDATE_ERROR_CODE = "update_error_code";
     public static final String PREF_KEY_OWM_KEY = "owm_key";
     public static final String PREF_KEY_PIRATE_WEATHER_KEY = "pirate_weather_key";
     public static final String PREF_KEY_VISUAL_CROSSING_KEY = "visual_crossing_key";
@@ -282,6 +285,20 @@ public class Config {
                 .getDefaultSharedPreferences(context);
 
         prefs.edit().putBoolean(PREF_KEY_UPDATE_ERROR, value).commit();
+    }
+
+    public static int getUpdateErrorCode(Context context) {
+        SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(context);
+
+        return prefs.getInt(PREF_KEY_UPDATE_ERROR_CODE, OmniJawsClient.EXTRA_ERROR_NETWORK);
+    }
+
+    public static void setUpdateErrorCode(Context context, int value) {
+        SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(context);
+
+        prefs.edit().putInt(PREF_KEY_UPDATE_ERROR_CODE, value).commit();
     }
 
     public static boolean isSetupDone(Context context) {

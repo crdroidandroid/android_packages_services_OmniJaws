@@ -35,13 +35,24 @@ public class NetworkUtils {
     private static final boolean DEBUG = false;
     private static final String TAG = "WeatherService::NetworkUtils";
 
-    private static final int HTTP_READ_TIMEOUT = 60000;
-    private static final int HTTP_CONNECTION_TIMEOUT = 60000;
+    private static final int HTTP_READ_TIMEOUT = 30000;
+    private static final int HTTP_CONNECTION_TIMEOUT = 30000;
     private static final long HTTP_CACHE_SIZE = 4 * 1024 * 1024;
     private static final String CONTACT_URL =
             "https://github.com/crdroidandroid/android_packages_services_OmniJaws";
 
     private static String sUserAgent = "OmniJaws " + CONTACT_URL;
+
+    // HTTP status of the last request on this thread, -1 if none was received
+    private static final ThreadLocal<Integer> sLastStatus = ThreadLocal.withInitial(() -> -1);
+
+    public static int getLastStatus() {
+        return sLastStatus.get();
+    }
+
+    public static void resetLastStatus() {
+        sLastStatus.set(-1);
+    }
 
     public static void init(Context context) {
         try {
@@ -63,6 +74,7 @@ public class NetworkUtils {
     public static HttpURLConnection setupHttpRequest(String urlStr) {
         URL url;
         HttpURLConnection urlConnection = null;
+        sLastStatus.set(-1);
         try {
             url = new URL(urlStr);
             urlConnection = (HttpURLConnection) url.openConnection();
@@ -73,8 +85,10 @@ public class NetworkUtils {
             urlConnection.addRequestProperty("User-Agent", sUserAgent);
             urlConnection.connect();
             int code = urlConnection.getResponseCode();
+            sLastStatus.set(code);
             if (code != HttpURLConnection.HTTP_OK) {
                 Log.w(TAG, "response:" + code);
+                urlConnection.disconnect();
                 return null;
             }
             return urlConnection;
@@ -94,22 +108,17 @@ public class NetworkUtils {
                 return null;
             }
 
-            InputStream is = urlConnection.getInputStream();
             ByteArrayOutputStream byteArray = new ByteArrayOutputStream();
-            int byteInt;
-
-            while ((byteInt = is.read()) >= 0) {
-                byteArray.write(byteInt);
+            try (InputStream is = urlConnection.getInputStream()) {
+                byte[] buffer = new byte[8192];
+                int read;
+                while ((read = is.read(buffer)) >= 0) {
+                    byteArray.write(buffer, 0, read);
+                }
             }
-
-            byte[] bytes = byteArray.toByteArray();
-            if (bytes == null) {
-                return null;
-            }
-            String responseBody = new String(bytes, StandardCharsets.UTF_8);
-
-            return responseBody;
+            return new String(byteArray.toByteArray(), StandardCharsets.UTF_8);
         } catch (Exception e) {
+            sLastStatus.set(-1);
             // Download failed for any number of reasons, timeouts, connection
             // drops, etc. Just log it in debugging mode.
             Log.e(TAG, "", e);

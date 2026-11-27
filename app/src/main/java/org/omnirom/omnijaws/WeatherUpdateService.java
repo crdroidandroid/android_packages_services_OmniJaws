@@ -37,6 +37,8 @@ import android.util.Log;
 
 import androidx.preference.PreferenceManager;
 
+import com.android.internal.util.crdroid.OmniJawsClient;
+
 import org.omnirom.omnijaws.widget.WeatherAppWidgetProvider;
 
 import java.text.SimpleDateFormat;
@@ -419,6 +421,7 @@ public class WeatherUpdateService extends JobService {
                 WeatherInfo w = null;
                 double[] coords = null;
                 boolean locationError = false;
+                NetworkUtils.resetLastStatus();
                 try {
                     AbstractWeatherProvider provider = Config.getProvider(ctx);
                     int i = 0;
@@ -495,6 +498,9 @@ public class WeatherUpdateService extends JobService {
                 } finally {
                     if (w == null) {
                         Config.setUpdateError(ctx, true);
+                        Config.setUpdateErrorCode(ctx, locationError
+                                ? OmniJawsClient.EXTRA_ERROR_LOCATION
+                                : errorFromStatus(NetworkUtils.getLastStatus()));
                         if (isCachedDataForOtherSource(ctx)) {
                             Log.d(TAG, "clearing weather data of previous provider/location");
                             Config.clearWeatherData(ctx);
@@ -517,6 +523,18 @@ public class WeatherUpdateService extends JobService {
                 }
             }
         });
+    }
+
+    private static int errorFromStatus(int status) {
+        switch (status) {
+            case 401:
+            case 403:
+                return OmniJawsClient.EXTRA_ERROR_API_KEY;
+            case 429:
+                return OmniJawsClient.EXTRA_ERROR_RATE_LIMIT;
+            default:
+                return OmniJawsClient.EXTRA_ERROR_NETWORK;
+        }
     }
 
     private boolean checkPermissions() {

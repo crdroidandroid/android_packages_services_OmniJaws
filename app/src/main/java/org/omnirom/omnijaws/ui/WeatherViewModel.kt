@@ -127,7 +127,7 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
                         !enabled -> OmniJawsClient.EXTRA_ERROR_DISABLED
                         locationIssue != LocationIssue.NONE -> OmniJawsClient.EXTRA_ERROR_LOCATION
                         current.error != null -> current.error
-                        else -> OmniJawsClient.EXTRA_ERROR_NETWORK
+                        else -> Config.getUpdateErrorCode(context)
                     },
                     iconPack = iconPack,
                     iconTheme = iconTheme,

@@ -218,6 +218,8 @@ private fun ErrorState(
             OmniJawsClient.EXTRA_ERROR_NETWORK -> R.string.omnijaws_error_network
             OmniJawsClient.EXTRA_ERROR_LOCATION -> R.string.omnijaws_error_location
             OmniJawsClient.EXTRA_ERROR_DISABLED -> R.string.omnijaws_error_disabled
+            OmniJawsClient.EXTRA_ERROR_API_KEY -> R.string.omnijaws_error_api_key_invalid
+            OmniJawsClient.EXTRA_ERROR_RATE_LIMIT -> R.string.omnijaws_error_rate_limited
             else -> R.string.omnijaws_service_unkown
         }
     }
@@ -226,7 +228,11 @@ private fun ErrorState(
         LocationIssue.SERVICES_DISABLED -> R.string.omnijaws_error_location_services_off_summary
         LocationIssue.PERMISSION_MISSING -> R.string.omnijaws_error_location_permission_summary
         LocationIssue.CUSTOM_LOCATION_MISSING -> R.string.omnijaws_error_custom_location_missing_summary
-        LocationIssue.NONE -> R.string.omnijaws_dashboard_error_subtitle
+        LocationIssue.NONE -> when (error) {
+            OmniJawsClient.EXTRA_ERROR_API_KEY -> R.string.omnijaws_error_api_key_invalid_summary
+            OmniJawsClient.EXTRA_ERROR_RATE_LIMIT -> R.string.omnijaws_error_rate_limited_summary
+            else -> R.string.omnijaws_dashboard_error_subtitle
+        }
     }
 
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
