@@ -265,6 +265,59 @@ public class WeatherInfo {
 
     private static final int MIN_FORECAST_DAYS = 5;
 
+    // Plausibility limits in metric units
+    private static final float MAX_TEMP_C = 100f;
+    private static final float MIN_PRESSURE_HPA = 800f;
+    private static final float MAX_PRESSURE_HPA = 1200f;
+    private static final float MAX_WIND_KMH = 540f;
+
+    /** Replaces implausible provider values with NaN. */
+    public void sanitize() {
+        temperature = checkTemperature(temperature);
+        feelsLike = checkTemperature(feelsLike);
+        dewPoint = checkTemperature(dewPoint);
+        humidity = checkPercent(humidity);
+        wind = checkWind(wind);
+        pressure = checkRange(pressure, MIN_PRESSURE_HPA, MAX_PRESSURE_HPA);
+        uvi = checkRange(uvi, 0f, Float.MAX_VALUE);
+        visibility = checkRange(visibility, 0f, Float.MAX_VALUE);
+        pm25 = checkRange(pm25, 0f, Float.MAX_VALUE);
+        pm10 = checkRange(pm10, 0f, Float.MAX_VALUE);
+
+        ArrayList<DayForecast> days = new ArrayList<>();
+        for (DayForecast d : forecasts) {
+            days.add(new DayForecast(checkTemperature(d.low), checkTemperature(d.high),
+                    d.condition, d.conditionCode, d.date, d.metric));
+        }
+        forecasts = days;
+
+        ArrayList<HourlyForecast> hours = new ArrayList<>();
+        for (HourlyForecast h : hourlyForecasts) {
+            hours.add(new HourlyForecast(checkTemperature(h.temperature), h.conditionCode,
+                    h.condition, h.timestamp, checkPercent(h.humidity), checkWind(h.windSpeed),
+                    h.metric));
+        }
+        hourlyForecasts = hours;
+    }
+
+    private float checkTemperature(float value) {
+        float max = metric ? MAX_TEMP_C : MAX_TEMP_C * 1.8f + 32f;
+        float min = metric ? -MAX_TEMP_C : -MAX_TEMP_C * 1.8f + 32f;
+        return checkRange(value, min, max);
+    }
+
+    private float checkWind(float value) {
+        return checkRange(value, 0f, metric ? MAX_WIND_KMH : MAX_WIND_KMH / 1.609344f);
+    }
+
+    private static float checkPercent(float value) {
+        return checkRange(value, 0f, 100f);
+    }
+
+    private static float checkRange(float value, float min, float max) {
+        return value >= min && value <= max ? value : Float.NaN;
+    }
+
     public void removeIncompleteForecasts() {
         ArrayList<DayForecast> kept = new ArrayList<>();
         for (DayForecast d : forecasts) {

@@ -462,7 +462,6 @@ public class WeatherUpdateService extends JobService {
                         }
                         if (w != null) {
                             w.setSubLocality(provider.getSubLocality());
-                            w.removeIncompleteForecasts();
                             if (coords != null) {
                                 // best effort: weather is stored even without AQI
                                 AirQualityProvider.fetchInto(w, coords[0], coords[1]);
@@ -475,6 +474,8 @@ public class WeatherUpdateService extends JobService {
                                     }
                                 }
                             }
+                            w.sanitize();
+                            w.removeIncompleteForecasts();
                             Config.setWeatherData(ctx, w);
                             prefs(ctx).edit().putString(PREF_KEY_DATA_SOURCE, source).commit();
                             WeatherContentProvider.updateCachedWeatherInfo(ctx);
