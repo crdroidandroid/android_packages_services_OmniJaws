@@ -16,11 +16,18 @@
 
 package org.omnirom.omnijaws;
 
+import java.net.HttpURLConnection;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.SimpleTimeZone;
+import java.util.TimeZone;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -39,6 +46,13 @@ public class OpenWeatherMapProvider extends AbstractWeatherProvider {
     private static final int FORECAST_DAYS = 5;
     private static final String URL_WEATHER =
             "https://api.openweathermap.org/data/3.0/onecall?%s&mode=json&units=%s&lang=%s&cnt=" + FORECAST_DAYS + "&appid=%s";
+    private static final String URL_CURRENT =
+            "https://api.openweathermap.org/data/2.5/weather?%s&units=%s&lang=%s&appid=%s";
+    private static final String URL_FORECAST =
+            "https://api.openweathermap.org/data/2.5/forecast?%s&units=%s&lang=%s&appid=%s";
+
+    // Key that One Call 3.0 rejected, so later updates go straight to 2.5
+    private static String sOneCallDeniedKey;
 
     private List<String> mKeys = new ArrayList<String>();
 
@@ -64,9 +78,17 @@ public class OpenWeatherMapProvider extends AbstractWeatherProvider {
 
         String units = metric ? "metric" : "imperial";
         String locale = getLanguageCode();
+        if (apiKey.equals(sOneCallDeniedKey)) {
+            return handleLegacyRequest(selection, units, locale, apiKey, metric);
+        }
         String conditionUrl = String.format(Locale.US, URL_WEATHER, selection, units, locale, apiKey);
         String conditionResponse = retrieve(conditionUrl);
         if (conditionResponse == null) {
+            if (NetworkUtils.getLastStatus() == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                Log.w(TAG, "One Call 3.0 not available for this key, using 2.5");
+                sOneCallDeniedKey = apiKey;
+                return handleLegacyRequest(selection, units, locale, apiKey, metric);
+            }
             return null;
         }
         log(TAG, "Condition URL = " + conditionUrl + " returning a response of " + conditionResponse);
@@ -138,6 +160,156 @@ public class OpenWeatherMapProvider extends AbstractWeatherProvider {
         }
 
         return null;
+    }
+
+    private WeatherInfo handleLegacyRequest(String selection, String units, String locale,
+            String apiKey, boolean metric) {
+        String currentResponse = retrieve(
+                String.format(Locale.US, URL_CURRENT, selection, units, locale, apiKey));
+        if (currentResponse == null) {
+            return null;
+        }
+        String forecastResponse = retrieve(
+                String.format(Locale.US, URL_FORECAST, selection, units, locale, apiKey));
+        if (forecastResponse == null) {
+            return null;
+        }
+
+        try {
+            JSONObject current = new JSONObject(currentResponse);
+            JSONObject main = current.getJSONObject("main");
+            JSONObject weather = current.getJSONArray("weather").getJSONObject(0);
+            JSONObject wind = current.optJSONObject("wind");
+            JSONArray list = new JSONObject(forecastResponse).getJSONArray("list");
+            TimeZone zone = new SimpleTimeZone(current.optInt("timezone", 0) * 1000, "UTC");
+
+            float temperature = sanitizeTemperature(main.getDouble("temp"), metric);
+            float windSpeed = wind != null ? (float) wind.optDouble("speed", 0) : 0f;
+            if (metric) {
+                windSpeed *= 3.6f;
+            }
+
+            String city = getWeatherDataLocality(selection);
+
+            WeatherInfo w = new WeatherInfo(mContext, selection, city,
+                    /* condition */ "",
+                    /* conditionCode */ mapConditionIconToCode(
+                    weather.getString("icon"), weather.getInt("id")),
+                    /* temperature */ temperature,
+                    /* humidity */ (float) main.getDouble("humidity"),
+                    /* wind */ windSpeed,
+                    /* windDir */ wind != null ? wind.optInt("deg", 0) : 0,
+                    metric,
+                    parseLegacyForecasts(list, zone, temperature, metric),
+                    System.currentTimeMillis());
+
+            if (main.has("feels_like")) {
+                w.setFeelsLike(sanitizeTemperature(main.getDouble("feels_like"), metric));
+            }
+            if (main.has("pressure")) {
+                w.setPressure((float) main.getDouble("pressure"));
+            }
+            if (current.has("visibility")) {
+                float vis = (float) current.getDouble("visibility");
+                w.setVisibility(metric ? vis / 1000f : vis / 1609.34f);
+            }
+            JSONObject sys = current.optJSONObject("sys");
+            if (sys != null && sys.has("sunrise") && sys.has("sunset")) {
+                w.setSunrise(sys.getLong("sunrise") * 1000L);
+                w.setSunset(sys.getLong("sunset") * 1000L);
+            }
+            w.setHourlyForecasts(parseLegacyHourlyForecasts(list, metric));
+
+            log(TAG, "Weather updated: " + w);
+            return w;
+        } catch (JSONException e) {
+            Log.w(TAG, "Received malformed 2.5 weather data (selection = " + selection
+                    + ", lang = " + locale + ")", e);
+        }
+        return null;
+    }
+
+    // 2.5 has 3-hourly steps only: build days from their range, with the
+    // condition of the step closest to noon
+    private ArrayList<DayForecast> parseLegacyForecasts(JSONArray list, TimeZone zone,
+            float currentTemp, boolean metric) throws JSONException {
+        SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+        fmt.setTimeZone(zone);
+        Calendar cal = Calendar.getInstance(zone);
+        String today = fmt.format(new Date());
+
+        // day -> {low, high, condition code, hours from noon}
+        LinkedHashMap<String, float[]> days = new LinkedHashMap<>();
+        for (int i = 0; i < list.length(); i++) {
+            try {
+                JSONObject entry = list.getJSONObject(i);
+                long timeMs = entry.getLong("dt") * 1000L;
+                JSONObject main = entry.getJSONObject("main");
+                JSONObject data = entry.getJSONArray("weather").getJSONObject(0);
+                String day = fmt.format(new Date(timeMs));
+                float[] d = days.get(day);
+                if (d == null) {
+                    d = new float[] { Float.MAX_VALUE, -Float.MAX_VALUE, -1, Float.MAX_VALUE };
+                    if (day.equals(today)) {
+                        d[0] = currentTemp;
+                        d[1] = currentTemp;
+                    }
+                    days.put(day, d);
+                }
+                d[0] = Math.min(d[0], sanitizeTemperature(main.getDouble("temp_min"), metric));
+                d[1] = Math.max(d[1], sanitizeTemperature(main.getDouble("temp_max"), metric));
+                cal.setTimeInMillis(timeMs);
+                int fromNoon = Math.abs(cal.get(Calendar.HOUR_OF_DAY) - 12);
+                if (fromNoon < d[3]) {
+                    d[2] = mapConditionIconToCode(data.getString("icon"), data.getInt("id"));
+                    d[3] = fromNoon;
+                }
+            } catch (JSONException e) {
+                Log.w(TAG, "Invalid 2.5 forecast for index " + i, e);
+            }
+        }
+        if (days.isEmpty()) {
+            throw new JSONException("Empty forecasts array");
+        }
+
+        ArrayList<DayForecast> result = new ArrayList<DayForecast>();
+        for (Map.Entry<String, float[]> entry : days.entrySet()) {
+            if (result.size() == FORECAST_DAYS) {
+                break;
+            }
+            float[] d = entry.getValue();
+            result.add(new DayForecast(d[0], d[1], "", (int) d[2], entry.getKey(), metric));
+        }
+        return result;
+    }
+
+    private ArrayList<WeatherInfo.HourlyForecast> parseLegacyHourlyForecasts(JSONArray list,
+            boolean metric) {
+        ArrayList<WeatherInfo.HourlyForecast> result = new ArrayList<>();
+        int count = Math.min(list.length(), 8); // 3-hour steps
+        for (int i = 0; i < count; i++) {
+            try {
+                JSONObject entry = list.getJSONObject(i);
+                JSONObject main = entry.getJSONObject("main");
+                JSONObject data = entry.getJSONArray("weather").getJSONObject(0);
+                JSONObject wind = entry.optJSONObject("wind");
+                float windSpeed = wind != null ? (float) wind.optDouble("speed", 0) : 0f;
+                if (metric) {
+                    windSpeed *= 3.6f;
+                }
+                result.add(new WeatherInfo.HourlyForecast(
+                        sanitizeTemperature(main.getDouble("temp"), metric),
+                        mapConditionIconToCode(data.getString("icon"), data.getInt("id")),
+                        "",
+                        entry.getLong("dt") * 1000L,
+                        (float) main.getDouble("humidity"),
+                        windSpeed,
+                        metric));
+            } catch (JSONException e) {
+                Log.w(TAG, "Invalid 2.5 hourly forecast for index " + i, e);
+            }
+        }
+        return result;
     }
 
     private ArrayList<DayForecast> parseForecasts(JSONArray forecasts, String timeZone,
