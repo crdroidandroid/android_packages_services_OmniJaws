@@ -20,6 +20,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
+import java.util.SimpleTimeZone;
 import java.util.TimeZone;
 
 import org.json.JSONArray;
@@ -99,7 +100,10 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
             float currentHumidity = (float) current.optDouble("relative_humidity_2m", Double.NaN);
             int weatherCode = snowIfCold(current.optInt("weather_code", -1),
                     toCelsius(currentTemp, metric), currentHumidity);
-            int utcOffsetSec = root.optInt("utc_offset_seconds", 0);
+            String tzId = root.optString("timezone", "");
+            TimeZone zone = tzId.isEmpty()
+                    ? new SimpleTimeZone(root.optInt("utc_offset_seconds", 0) * 1000, "UTC")
+                    : TimeZone.getTimeZone(tzId);
 
             String city = getWeatherDataLocality(selection);
 
@@ -113,7 +117,7 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
                     /* wind */ (float) current.optDouble("wind_speed_10m", Double.NaN),
                     /* windDir */ (int) current.optDouble("wind_direction_10m", 0),
                     metric,
-                    parseForecasts(daily, utcOffsetSec, metric),
+                    parseForecasts(daily, zone, metric),
                     System.currentTimeMillis());
 
             if (current.has("apparent_temperature")) {
@@ -154,7 +158,7 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
         return null;
     }
 
-    private ArrayList<DayForecast> parseForecasts(JSONObject daily, int utcOffsetSec, boolean metric)
+    private ArrayList<DayForecast> parseForecasts(JSONObject daily, TimeZone zone, boolean metric)
             throws JSONException {
         ArrayList<DayForecast> result = new ArrayList<>();
         JSONArray times = daily.optJSONArray("time");
@@ -180,7 +184,7 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
                         /* high */ high,
                         /* condition */ "",
                         /* conditionCode */ mapWmoToCode(code, true),
-                        dayAt(times, i, utcOffsetSec),
+                        dayAt(times, i, zone),
                         metric));
             } catch (JSONException e) {
                 Log.w(TAG, "Invalid forecast for day " + i, e);
@@ -292,12 +296,11 @@ public class OpenMeteoProvider extends AbstractWeatherProvider {
         return (float) arr.optDouble(idx, Double.NaN);
     }
 
-    private String dayAt(JSONArray times, int i, int utcOffsetSec) {
+    private String dayAt(JSONArray times, int i, TimeZone zone) {
         if (times != null && i < times.length() && !times.isNull(i)) {
-            long localMidnightMs = (times.optLong(i) + utcOffsetSec) * 1000L;
             SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
-            fmt.setTimeZone(TimeZone.getTimeZone("UTC"));
-            return fmt.format(new Date(localMidnightMs));
+            fmt.setTimeZone(zone);
+            return fmt.format(new Date(times.optLong(i) * 1000L));
         }
         return getDay(i);
     }
