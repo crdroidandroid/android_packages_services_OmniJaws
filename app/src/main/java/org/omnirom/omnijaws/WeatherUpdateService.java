@@ -475,6 +475,7 @@ public class WeatherUpdateService extends JobService {
                                 }
                             }
                             w.sanitize();
+                            WeatherCalculator.fillMissing(w);
                             w.removeIncompleteForecasts();
                             Config.setWeatherData(ctx, w);
                             prefs(ctx).edit().putString(PREF_KEY_DATA_SOURCE, source).commit();

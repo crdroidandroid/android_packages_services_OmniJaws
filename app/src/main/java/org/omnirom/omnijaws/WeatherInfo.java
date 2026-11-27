@@ -446,6 +446,10 @@ public class WeatherInfo {
         return humidity;
     }
 
+    public void setHumidity(float humidity) {
+        this.humidity = humidity;
+    }
+
     private String getTemperatureUnit() {
         return "\u00b0" + (metric ? "C" : "F");
     }
