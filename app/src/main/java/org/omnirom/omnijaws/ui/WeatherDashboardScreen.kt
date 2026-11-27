@@ -416,6 +416,7 @@ private fun WeatherContent(
                 HourlyForecastCard(
                     hourlyForecasts = weather.hourlyForecasts,
                     tempUnits = weather.tempUnits ?: "",
+                    windUnits = weather.windUnits ?: "",
                     iconPack = iconPack,
                     iconTheme = iconTheme,
                     getConditionIcon = getConditionIcon

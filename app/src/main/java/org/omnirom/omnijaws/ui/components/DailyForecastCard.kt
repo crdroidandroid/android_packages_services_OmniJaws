@@ -193,7 +193,7 @@ private fun ForecastViewToggle(selected: Int, onSelect: (Int) -> Unit) {
 }
 
 @Composable
-private fun ToggleSegment(text: String, selected: Boolean, onClick: () -> Unit) {
+internal fun ToggleSegment(text: String, selected: Boolean, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     val background by animateColorAsState(
         targetValue = if (selected) colors.secondaryContainer else colors.surfaceContainerHighest,
