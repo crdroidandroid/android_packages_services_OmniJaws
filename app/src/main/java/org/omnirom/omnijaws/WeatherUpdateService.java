@@ -463,6 +463,14 @@ public class WeatherUpdateService extends JobService {
                             if (coords != null) {
                                 // best effort: weather is stored even without AQI
                                 AirQualityProvider.fetchInto(w, coords[0], coords[1]);
+                                if (w.getSunrise() == 0 && w.getSunset() == 0) {
+                                    long[] sun = SunCalculator.getSunriseSunset(
+                                            coords[0], coords[1], System.currentTimeMillis());
+                                    if (sun != null) {
+                                        w.setSunrise(sun[0]);
+                                        w.setSunset(sun[1]);
+                                    }
+                                }
                             }
                             Config.setWeatherData(ctx, w);
                             prefs(ctx).edit().putString(PREF_KEY_DATA_SOURCE, source).commit();
