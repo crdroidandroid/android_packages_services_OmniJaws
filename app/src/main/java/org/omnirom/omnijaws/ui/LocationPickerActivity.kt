@@ -75,7 +75,7 @@ class LocationPickerActivity : ComponentActivity() {
         const val DATA_LOCATION_LAT = "location_lat"
         const val DATA_LOCATION_LON = "location_lon"
         internal const val URL_PLACES =
-            "https://secure.geonames.org/searchJSON?name_startsWith=%s&lang=%s&username=omnijaws&maxRows=20"
+            "https://geocoding-api.open-meteo.com/v1/search?name=%s&language=%s&count=20&format=json"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -214,29 +214,27 @@ private fun LocationPickerScreen(
 private suspend fun searchLocations(input: String): List<LocationItem> = withContext(Dispatchers.IO) {
     val results = mutableListOf<LocationItem>()
     try {
-        val lang = Locale.getDefault().language.replaceFirst("_", "-")
+        val lang = Locale.getDefault().language
         val url = String.format(
             LocationPickerActivity.URL_PLACES,
             Uri.encode(input.trim()),
             lang
         )
         val response = NetworkUtils.downloadUrlMemoryAsString(url) ?: return@withContext results
-        val jsonResults = JSONObject(response).getJSONArray("geonames")
+        // "results" is absent when nothing matches
+        val jsonResults = JSONObject(response).optJSONArray("results") ?: return@withContext results
         val seen = mutableSetOf<String>()
 
         for (i in 0 until jsonResults.length()) {
             val result = jsonResults.getJSONObject(i)
-            val population = if (result.has("population")) result.getInt("population") else 0
-            if (population == 0) continue
-
             val city = result.getString("name")
-            val country = result.getString("countryName")
-            val countryId = result.getString("countryId")
-            val adminName = if (result.has("adminName1")) result.getString("adminName1") else ""
-            val cityExt = (if (TextUtils.isEmpty(adminName)) "" else "$adminName, ") + country
-            val lat = result.getDouble("lat")
-            val lon = result.getDouble("lng")
-            val id = "$city,$countryId"
+            val country = result.optString("country", "")
+            val adminName = result.optString("admin1", "")
+            val cityExt = listOf(adminName, country).filterNot { TextUtils.isEmpty(it) }
+                .joinToString(", ")
+            val lat = result.getDouble("latitude")
+            val lon = result.getDouble("longitude")
+            val id = "$city,$adminName,${result.optString("country_code", country)}"
 
             if (id !in seen) {
                 seen.add(id)
