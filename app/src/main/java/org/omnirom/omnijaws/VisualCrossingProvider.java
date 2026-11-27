@@ -186,7 +186,7 @@ public class VisualCrossingProvider extends AbstractWeatherProvider {
                         /* high */ (float) forecast.getDouble("tempmax"),
                         /* condition */ "",
                         /* conditionCode */ mapIconToCode(forecast.optString("icon", "")),
-                        getDay(i),
+                        getDayOf(forecast, i),
                         metric));
             } catch (JSONException e) {
                 Log.w(TAG, "Invalid forecast for day " + i, e);
@@ -240,6 +240,11 @@ public class VisualCrossingProvider extends AbstractWeatherProvider {
             }
         }
         return result;
+    }
+
+    private String getDayOf(JSONObject forecast, int i) {
+        String date = forecast.optString("datetime", "");
+        return date.matches("\\d{4}-\\d{2}-\\d{2}") ? date : getDay(i);
     }
 
     private static Float optFloat(JSONObject obj, String key) {

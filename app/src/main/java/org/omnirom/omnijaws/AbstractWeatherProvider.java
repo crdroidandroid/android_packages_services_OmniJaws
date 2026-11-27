@@ -36,9 +36,11 @@ import java.io.StringReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -289,5 +291,14 @@ public abstract class AbstractWeatherProvider {
             calendar.add(Calendar.DATE, i);
         }
         return dayFormat.format(calendar.getTime());
+    }
+
+    protected String getDay(int i, long epochSec, String timeZone) {
+        if (epochSec <= 0 || TextUtils.isEmpty(timeZone)) {
+            return getDay(i);
+        }
+        SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+        fmt.setTimeZone(TimeZone.getTimeZone(timeZone));
+        return fmt.format(new Date(epochSec * 1000L));
     }
 }

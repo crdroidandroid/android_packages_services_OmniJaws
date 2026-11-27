@@ -76,7 +76,8 @@ public class PirateWeatherProvider extends AbstractWeatherProvider {
             JSONObject conditions = new JSONObject(conditionResponse);
             JSONObject conditionData = conditions.getJSONObject("currently");
             JSONArray dailyData = conditions.getJSONObject("daily").getJSONArray("data");
-            ArrayList<DayForecast> forecasts = parseForecasts(dailyData, metric);
+            ArrayList<DayForecast> forecasts = parseForecasts(dailyData,
+                    conditions.optString("timezone"), metric);
 
             String city = getWeatherDataLocality(selection);
 
@@ -156,7 +157,8 @@ public class PirateWeatherProvider extends AbstractWeatherProvider {
         }
     }
 
-    private ArrayList<DayForecast> parseForecasts(JSONArray forecasts, boolean metric) throws JSONException {
+    private ArrayList<DayForecast> parseForecasts(JSONArray forecasts, String timeZone,
+            boolean metric) throws JSONException {
         ArrayList<DayForecast> result = new ArrayList<DayForecast>();
         int count = forecasts.length();
 
@@ -164,10 +166,10 @@ public class PirateWeatherProvider extends AbstractWeatherProvider {
             throw new JSONException("Empty forecasts array");
         }
         for (int i = 0; i < count; i++) {
-            String day = getDay(i);
             DayForecast item = null;
             try {
                 JSONObject forecast = forecasts.getJSONObject(i);
+                String day = getDay(i, forecast.optLong("time"), timeZone);
                 double low = forecast.has("temperatureLow")
                         ? forecast.getDouble("temperatureLow")
                         : forecast.getDouble("temperatureMin");

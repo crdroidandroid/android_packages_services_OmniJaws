@@ -76,7 +76,8 @@ public class OpenWeatherMapProvider extends AbstractWeatherProvider {
             JSONObject conditionData = conditions.getJSONObject("current");
             JSONObject weather = conditionData.getJSONArray("weather").getJSONObject(0);
             ArrayList<DayForecast> forecasts =
-                    parseForecasts(conditions.getJSONArray("daily"), metric);
+                    parseForecasts(conditions.getJSONArray("daily"),
+                            conditions.optString("timezone"), metric);
             float windSpeed = (float) conditionData.getDouble("wind_speed");
             if (metric) {
                 // speeds are in m/s so convert to our common metric unit km/h
@@ -139,7 +140,8 @@ public class OpenWeatherMapProvider extends AbstractWeatherProvider {
         return null;
     }
 
-    private ArrayList<DayForecast> parseForecasts(JSONArray forecasts, boolean metric) throws JSONException {
+    private ArrayList<DayForecast> parseForecasts(JSONArray forecasts, String timeZone,
+            boolean metric) throws JSONException {
         ArrayList<DayForecast> result = new ArrayList<DayForecast>();
         int count = forecasts.length();
 
@@ -147,10 +149,10 @@ public class OpenWeatherMapProvider extends AbstractWeatherProvider {
             throw new JSONException("Empty forecasts array");
         }
         for (int i = 0; i < count; i++) {
-            String day = getDay(i);
             DayForecast item = null;
             try {
                 JSONObject forecast = forecasts.getJSONObject(i);
+                String day = getDay(i, forecast.optLong("dt"), timeZone);
                 JSONObject conditionData = forecast.getJSONObject("temp");
                 JSONObject data = forecast.getJSONArray("weather").getJSONObject(0);
                 item = new DayForecast(
