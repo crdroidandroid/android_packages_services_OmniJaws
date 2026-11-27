@@ -105,6 +105,9 @@ public class METNorwayProvider extends AbstractWeatherProvider {
             if (weather.has("dew_point_temperature")) {
                 w.setDewPoint(convertTemperature(weather.getDouble("dew_point_temperature"), metric));
             }
+            if (weather.has("apparent_air_temperature")) {
+                w.setFeelsLike(convertTemperature(weather.getDouble("apparent_air_temperature"), metric));
+            }
 
             w.setHourlyForecasts(parseHourlyForecasts(timeseries, metric));
 
