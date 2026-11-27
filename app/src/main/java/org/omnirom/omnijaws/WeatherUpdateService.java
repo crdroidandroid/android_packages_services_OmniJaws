@@ -481,6 +481,7 @@ public class WeatherUpdateService extends JobService {
                             prefs(ctx).edit().putString(PREF_KEY_DATA_SOURCE, source).commit();
                             WeatherContentProvider.updateCachedWeatherInfo(ctx);
                             WeatherAppWidgetProvider.updateAllWidgets(ctx);
+                            WeatherNotifications.updateOngoing(ctx);
                             // we are outa here
                             break;
                         } else {

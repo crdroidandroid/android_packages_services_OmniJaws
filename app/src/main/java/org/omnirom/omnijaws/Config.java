@@ -53,6 +53,8 @@ public class Config {
     public static final String PREF_KEY_VISUAL_CROSSING_KEY = "visual_crossing_key";
     public static final String PREF_KEY_HISTORY = "history";
     public static final String PREF_KEY_HISTORY_SIZE = "history_size";
+    public static final String PREF_KEY_NOTIFY_FORECAST = "notify_forecast";
+    public static final String PREF_KEY_NOTIFY_ONGOING = "notify_ongoing";
 
     public static final String DEFAULT_ICON_PACK = "org.omnirom.omnijaws.google_new";
     private static final String LEGACY_DEFAULT_ICON_PACK =
@@ -356,5 +358,33 @@ public class Config {
                 .getDefaultSharedPreferences(context);
 
         prefs.edit().putInt(PREF_KEY_HISTORY_SIZE, value).commit();
+    }
+
+    public static boolean isForecastNotificationOn(Context context) {
+        SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(context);
+
+        return prefs.getBoolean(PREF_KEY_NOTIFY_FORECAST, false);
+    }
+
+    public static void setForecastNotificationOn(Context context, boolean value) {
+        SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(context);
+
+        prefs.edit().putBoolean(PREF_KEY_NOTIFY_FORECAST, value).commit();
+    }
+
+    public static boolean isOngoingNotificationOn(Context context) {
+        SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(context);
+
+        return prefs.getBoolean(PREF_KEY_NOTIFY_ONGOING, false);
+    }
+
+    public static void setOngoingNotificationOn(Context context, boolean value) {
+        SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(context);
+
+        prefs.edit().putBoolean(PREF_KEY_NOTIFY_ONGOING, value).commit();
     }
 }

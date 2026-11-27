@@ -35,6 +35,7 @@ public class SystemReceiver extends BroadcastReceiver {
             if (DEBUG) Log.d(TAG, "boot completed kick alarm");
             WeatherUpdateService.scheduleUpdatePeriodic(context);
             WeatherUpdateService.scheduleUpdateNow(context);
+            WeatherNotifications.update(context);
         } else if (FORCE_UPDATE.equals(action)) {
             if (DEBUG) Log.d(TAG, "force update action received");
             WeatherUpdateService.scheduleUpdateNow(context);

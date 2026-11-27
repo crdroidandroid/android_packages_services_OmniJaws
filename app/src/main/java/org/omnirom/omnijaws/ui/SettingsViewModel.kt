@@ -34,6 +34,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.omnirom.omnijaws.Config
 import org.omnirom.omnijaws.WeatherContentProvider
+import org.omnirom.omnijaws.WeatherNotifications
 import org.omnirom.omnijaws.WeatherUpdateService
 import org.omnirom.omnijaws.widget.WeatherAppWidgetProvider
 import org.omnirom.omnijaws.icon.IconProvider
@@ -61,6 +62,8 @@ data class SettingsUiState(
     val owmKey: String = "",
     val pirateWeatherKey: String = "",
     val visualCrossingKey: String = "",
+    val forecastNotification: Boolean = false,
+    val ongoingNotification: Boolean = false,
     val lastUpdateTime: String = "",
     val isUpdating: Boolean = false,
     val iconPacks: List<IconPackItem> = emptyList(),
@@ -94,6 +97,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                     owmKey = Config.getOwmKey(ctx) ?: "",
                     pirateWeatherKey = Config.getPirateWeatherKey(ctx) ?: "",
                     visualCrossingKey = Config.getVisualCrossingKey(ctx) ?: "",
+                    forecastNotification = Config.isForecastNotificationOn(ctx),
+                    ongoingNotification = Config.isOngoingNotificationOn(ctx),
                     lastUpdateTime = queryLastUpdate(),
                     isUpdating = _uiState.value.isUpdating,
                     iconPacks = loadIconPacks(),
@@ -115,6 +120,19 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             WeatherAppWidgetProvider.disableAllWidgets(ctx)
             WeatherUpdateService.disabledCall(ctx)
         }
+        WeatherNotifications.update(ctx)
+    }
+
+    fun setForecastNotification(enabled: Boolean) {
+        Config.setForecastNotificationOn(ctx, enabled)
+        _uiState.value = _uiState.value.copy(forecastNotification = enabled)
+        WeatherNotifications.update(ctx)
+    }
+
+    fun setOngoingNotification(enabled: Boolean) {
+        Config.setOngoingNotificationOn(ctx, enabled)
+        _uiState.value = _uiState.value.copy(ongoingNotification = enabled)
+        WeatherNotifications.update(ctx)
     }
 
     fun setProvider(value: String) {
@@ -196,6 +214,10 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         prefs.edit().putString(Config.PREF_KEY_VISUAL_CROSSING_KEY, value).apply()
         _uiState.value = _uiState.value.copy(visualCrossingKey = value)
         scheduleUpdate()
+    }
+
+    fun refreshNotifications() {
+        WeatherNotifications.update(ctx)
     }
 
     fun onPermissionResult(granted: Boolean) {

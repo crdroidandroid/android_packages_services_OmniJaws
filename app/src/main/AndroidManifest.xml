@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <permission android:name="org.omnirom.omnijaws.READ_WEATHER" />
     <uses-permission android:name="org.omnirom.omnijaws.READ_WEATHER" />
@@ -101,6 +102,10 @@
                 <action android:name="org.omnirom.omnijaws.FORCE_UPDATE" />
             </intent-filter>
         </receiver>
+
+        <receiver
+            android:name=".WeatherNotifications"
+            android:exported="false" />
 
         <!-- name is used a prefix +"_" for images e.g. weather_<condition_id>
              weather_foo_<condition_id> -->

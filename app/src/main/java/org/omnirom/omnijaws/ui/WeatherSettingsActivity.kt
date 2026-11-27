@@ -60,6 +60,12 @@ class WeatherSettingsActivity : ComponentActivity(), OmniJawsClient.OmniJawsObse
         viewModel.onPermissionResult(granted)
     }
 
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) viewModel.refreshNotifications()
+    }
+
     private val backgroundPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -103,6 +109,14 @@ class WeatherSettingsActivity : ComponentActivity(), OmniJawsClient.OmniJawsObse
                         onOwmKeyChanged = { viewModel.setOwmKey(it) },
                         onPirateWeatherKeyChanged = { viewModel.setPirateWeatherKey(it) },
                         onVisualCrossingKeyChanged = { viewModel.setVisualCrossingKey(it) },
+                        onForecastNotificationChanged = {
+                            viewModel.setForecastNotification(it)
+                            if (it) requestNotificationPermissionIfNeeded()
+                        },
+                        onOngoingNotificationChanged = {
+                            viewModel.setOngoingNotification(it)
+                            if (it) requestNotificationPermissionIfNeeded()
+                        },
                         onRequestLocationPermission = { requestLocationPermissionIfNeeded() },
                         onRequestBackgroundLocationPermission = {
                             backgroundPermissionLauncher.launch(
@@ -142,6 +156,12 @@ class WeatherSettingsActivity : ComponentActivity(), OmniJawsClient.OmniJawsObse
                     Manifest.permission.ACCESS_COARSE_LOCATION
                 )
             )
+        }
+    }
+
+    private fun requestNotificationPermissionIfNeeded() {
+        if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 
