@@ -17,6 +17,8 @@
  */
 package org.omnirom.omnijaws;
 
+import android.content.Context;
+import android.net.http.HttpResponseCache;
 import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
@@ -35,6 +37,28 @@ public class NetworkUtils {
 
     private static final int HTTP_READ_TIMEOUT = 60000;
     private static final int HTTP_CONNECTION_TIMEOUT = 60000;
+    private static final long HTTP_CACHE_SIZE = 4 * 1024 * 1024;
+    private static final String CONTACT_URL =
+            "https://github.com/crdroidandroid/android_packages_services_OmniJaws";
+
+    private static String sUserAgent = "OmniJaws " + CONTACT_URL;
+
+    public static void init(Context context) {
+        try {
+            String version = context.getPackageManager()
+                    .getPackageInfo(context.getPackageName(), 0).versionName;
+            sUserAgent = "OmniJaws/" + version + " " + CONTACT_URL;
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to read version", e);
+        }
+        try {
+            if (HttpResponseCache.getInstalled() == null) {
+                HttpResponseCache.install(new File(context.getCacheDir(), "http"), HTTP_CACHE_SIZE);
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to install HTTP cache", e);
+        }
+    }
 
     public static HttpURLConnection setupHttpRequest(String urlStr) {
         URL url;
@@ -46,7 +70,7 @@ public class NetworkUtils {
             urlConnection.setReadTimeout(HTTP_READ_TIMEOUT);
             urlConnection.setRequestMethod("GET");
             urlConnection.setDoInput(true);
-            urlConnection.addRequestProperty("User-Agent", "OmniJawsApp/1.0");
+            urlConnection.addRequestProperty("User-Agent", sUserAgent);
             urlConnection.connect();
             int code = urlConnection.getResponseCode();
             if (code != HttpURLConnection.HTTP_OK) {
