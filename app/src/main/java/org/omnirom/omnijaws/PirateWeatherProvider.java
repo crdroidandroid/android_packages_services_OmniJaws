@@ -170,12 +170,12 @@ public class PirateWeatherProvider extends AbstractWeatherProvider {
             try {
                 JSONObject forecast = forecasts.getJSONObject(i);
                 String day = getDay(i, forecast.optLong("time"), timeZone);
-                double low = forecast.has("temperatureLow")
-                        ? forecast.getDouble("temperatureLow")
-                        : forecast.getDouble("temperatureMin");
-                double high = forecast.has("temperatureHigh")
-                        ? forecast.getDouble("temperatureHigh")
-                        : forecast.getDouble("temperatureMax");
+                double low = forecast.has("temperatureMin")
+                        ? forecast.getDouble("temperatureMin")
+                        : forecast.getDouble("temperatureLow");
+                double high = forecast.has("temperatureMax")
+                        ? forecast.getDouble("temperatureMax")
+                        : forecast.getDouble("temperatureHigh");
                 item = new DayForecast(
                         /* low */ (float) low,
                         /* high */ (float) high,
