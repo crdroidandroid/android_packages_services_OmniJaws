@@ -6,7 +6,7 @@
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:configure="org.omnirom.omnijaws.widget.WeatherAppWidgetConfigureActivity"
     android:description="@string/omnijaws_weather_pebble_widget_desc"
-    android:initialLayout="@layout/weather_appwidget_pebble"
+    android:initialLayout="@layout/weather_appwidget_pebble_system"
     android:minWidth="@dimen/weather_pebble_min_size"
     android:minHeight="@dimen/weather_pebble_min_size"
     android:minResizeWidth="@dimen/weather_pebble_min_resize_size"
