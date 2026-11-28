@@ -37,7 +37,7 @@ import android.util.Log;
 
 import androidx.preference.PreferenceManager;
 
-import com.android.internal.util.crdroid.OmniJawsClient;
+import org.omnirom.omnijaws.client.OmniJawsClient;
 
 import org.omnirom.omnijaws.widget.WeatherAppWidgetProvider;
 

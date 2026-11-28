@@ -27,7 +27,7 @@ import org.omnirom.omnijaws.icon.IconProvider;
 
 import androidx.preference.PreferenceManager;
 
-import com.android.internal.util.crdroid.OmniJawsClient;
+import org.omnirom.omnijaws.client.OmniJawsClient;
 
 public class Config {
     public static final String PREF_KEY_PROVIDER = "provider";

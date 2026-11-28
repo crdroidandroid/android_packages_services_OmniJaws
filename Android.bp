@@ -18,6 +18,7 @@ android_app {
   ],
 
   static_libs: [
+    "OmniJawsClient",
     "ax_compose",
     "androidx.core_core",
     "androidx.core_core-ktx",
@@ -63,4 +64,14 @@ prebuilt_etc {
   src: "default_permissions_org.omnirom.omnijaws.xml",
   sub_dir: "default-permissions",
   filename_from_src: true,
+}
+
+java_library {
+  name: "OmniJawsClient",
+  srcs: ["client/src/**/*.kt"],
+  sdk_version: "current",
+
+  kotlincflags: [
+    "-Xjvm-default=all",
+  ],
 }

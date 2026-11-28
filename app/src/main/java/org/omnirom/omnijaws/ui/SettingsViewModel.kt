@@ -22,7 +22,7 @@ import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.android.internal.util.crdroid.OmniJawsClient
+import org.omnirom.omnijaws.client.OmniJawsClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -268,7 +268,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     private fun queryLastUpdate(): String {
         OmniJawsClient.get().queryWeather(ctx)
-        return OmniJawsClient.get().getWeatherInfo()?.getLastUpdateTime() ?: ""
+        return OmniJawsClient.get().weatherInfo?.getLastUpdateTime() ?: ""
     }
 
     private fun loadIconPacks(): List<IconPackItem> {

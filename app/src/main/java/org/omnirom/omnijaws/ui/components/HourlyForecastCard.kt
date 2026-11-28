@@ -52,7 +52,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import android.graphics.drawable.Drawable
 import android.text.format.DateFormat
-import com.android.internal.util.crdroid.OmniJawsClient
+import org.omnirom.omnijaws.client.OmniJawsClient
 import org.omnirom.omnijaws.R
 import java.text.SimpleDateFormat
 import java.util.Date

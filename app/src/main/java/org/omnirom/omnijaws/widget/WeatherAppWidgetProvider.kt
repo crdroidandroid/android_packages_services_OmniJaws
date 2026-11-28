@@ -26,7 +26,7 @@ import android.widget.RemoteViews
 
 import androidx.preference.PreferenceManager
 
-import com.android.internal.util.crdroid.OmniJawsClient
+import org.omnirom.omnijaws.client.OmniJawsClient
 
 import org.omnirom.omnijaws.Config
 import org.omnirom.omnijaws.R
@@ -477,11 +477,12 @@ class WeatherAppWidgetProvider : AppWidgetProvider() {
             widget.setImageViewBitmap(viewId, getBitmapDrawable(context, d).bitmap)
         }
 
-        private fun getWeatherDataString(min: String, max: String?, tempUnits: String): String {
+        private fun getWeatherDataString(min: String?, max: String?, tempUnits: String?): String {
+            val units = tempUnits.orEmpty()
             return if (max != null) {
-                "$min/$max$tempUnits"
+                "$min/$max$units"
             } else {
-                "$min$tempUnits"
+                "$min$units"
             }
         }
 

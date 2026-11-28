@@ -19,7 +19,7 @@ import android.widget.RemoteViews
 
 import androidx.preference.PreferenceManager
 
-import com.android.internal.util.crdroid.OmniJawsClient
+import org.omnirom.omnijaws.client.OmniJawsClient
 
 import org.omnirom.omnijaws.Config
 import org.omnirom.omnijaws.R

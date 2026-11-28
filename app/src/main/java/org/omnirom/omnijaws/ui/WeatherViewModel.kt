@@ -26,7 +26,7 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.preference.PreferenceManager
-import com.android.internal.util.crdroid.OmniJawsClient
+import org.omnirom.omnijaws.client.OmniJawsClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -86,7 +86,7 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             val info = withContext(Dispatchers.IO) {
                 client.queryWeather(context)
-                client.getWeatherInfo()
+                client.weatherInfo
             }
 
             val (enabled, locationIssue, otherSource) = withContext(Dispatchers.IO) {

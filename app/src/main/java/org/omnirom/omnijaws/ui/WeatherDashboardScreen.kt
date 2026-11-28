@@ -76,7 +76,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.android.internal.util.crdroid.OmniJawsClient
+import org.omnirom.omnijaws.client.OmniJawsClient
 import kotlinx.coroutines.launch
 import org.omnirom.omnijaws.R
 import org.omnirom.omnijaws.ui.components.DailyForecastCard
@@ -411,10 +411,11 @@ private fun WeatherContent(
             )
         }
 
-        if (!weather.hourlyForecasts.isNullOrEmpty()) {
+        val hourlyForecasts = weather.hourlyForecasts
+        if (!hourlyForecasts.isNullOrEmpty()) {
             item {
                 HourlyForecastCard(
-                    hourlyForecasts = weather.hourlyForecasts,
+                    hourlyForecasts = hourlyForecasts,
                     tempUnits = weather.tempUnits ?: "",
                     windUnits = weather.windUnits ?: "",
                     iconPack = iconPack,
@@ -424,10 +425,11 @@ private fun WeatherContent(
             }
         }
 
-        if (!weather.forecasts.isNullOrEmpty()) {
+        val forecasts = weather.forecasts
+        if (!forecasts.isNullOrEmpty()) {
             item {
                 DailyForecastCard(
-                    forecasts = weather.forecasts,
+                    forecasts = forecasts,
                     iconPack = iconPack,
                     iconTheme = iconTheme,
                     getConditionIcon = getConditionIcon
