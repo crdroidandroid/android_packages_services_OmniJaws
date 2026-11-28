@@ -351,6 +351,7 @@ public class WeatherUpdateService extends JobService {
         JobInfo job = new JobInfo.Builder(PERIODIC_UPDATE_JOB_ID, component)
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 .setPeriodic(interval)
+                .setRequiresBatteryNotLow(true)
                 .build();
         JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
         jobScheduler.schedule(job);
