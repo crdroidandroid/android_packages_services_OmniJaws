@@ -52,7 +52,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -81,6 +83,8 @@ private val LINE_GRAPH_PADDING = 8.dp
 private val LIST_ROW_HEIGHT = 52.dp
 private const val VIEW_FADE_MS = 300
 private const val PAST_ALPHA = 0.4f
+private val PRECIP_BAR_WIDTH = 16.dp
+private const val PRECIP_BAR_ALPHA = 0.2f
 
 private class DayItem(
     val forecast: OmniJawsClient.DayForecast,
@@ -272,10 +276,6 @@ private fun ForecastLineView(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     ConditionIcon(day, iconPack, iconTheme, getConditionIcon, 32.dp)
-                    if (showPrecip) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        PrecipitationChance(day.forecast.precipProbability)
-                    }
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = "${day.forecast.high}°",
@@ -308,6 +308,19 @@ private fun ForecastLineView(
                 )
             }
         }
+
+        if (showPrecip) {
+            Row(modifier = Modifier.padding(top = 4.dp)) {
+                days.forEach { day ->
+                    PrecipitationChance(
+                        day.forecast.precipProbability,
+                        modifier = Modifier
+                            .width(LINE_COLUMN_WIDTH)
+                            .alpha(if (day.isPast) PAST_ALPHA else 1f)
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -315,6 +328,7 @@ private fun ForecastLineView(
 private fun TemperatureLines(days: List<DayItem>, modifier: Modifier) {
     val lineColor = MaterialTheme.colorScheme.onSurfaceVariant
     val pointColor = MaterialTheme.colorScheme.onSurface
+    val barColor = MaterialTheme.colorScheme.primary.copy(alpha = PRECIP_BAR_ALPHA)
 
     Canvas(modifier = modifier) {
         val minT = days.minOf { it.low }
@@ -328,6 +342,21 @@ private fun TemperatureLines(days: List<DayItem>, modifier: Modifier) {
 
         fun x(i: Int) = column * i + column / 2f
         fun y(t: Float) = pad + (maxT - t) / range * (size.height - 2 * pad)
+
+        val barWidth = PRECIP_BAR_WIDTH.toPx()
+        days.forEachIndexed { i, day ->
+            val chance = day.forecast.precipProbability
+            if (chance.isNotablePrecipChance()) {
+                val h = size.height * chance.coerceAtMost(100f) / 100f
+                drawRoundRect(
+                    color = if (day.isPast) barColor.copy(alpha = barColor.alpha * PAST_ALPHA)
+                            else barColor,
+                    topLeft = Offset(x(i) - barWidth / 2f, size.height - h),
+                    size = Size(barWidth, h),
+                    cornerRadius = CornerRadius(barWidth / 2f)
+                )
+            }
+        }
 
         for (temps in listOf(days.map { it.high }, days.map { it.low })) {
             for (i in 0 until days.size - 1) {
