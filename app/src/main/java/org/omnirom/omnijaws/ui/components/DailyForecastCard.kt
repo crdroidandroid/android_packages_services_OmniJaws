@@ -66,6 +66,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
@@ -80,8 +82,9 @@ import java.util.Locale
 
 private val LINE_COLUMN_WIDTH = 84.dp
 private val LINE_HORIZONTAL_PADDING = 12.dp
-private val LINE_GRAPH_HEIGHT = 112.dp
+private val LINE_GRAPH_HEIGHT = 168.dp
 private val LINE_GRAPH_PADDING = 8.dp
+private val LABEL_GAP = 4.dp
 private val LIST_ROW_HEIGHT = 52.dp
 private const val VIEW_FADE_MS = 300
 private const val PAST_ALPHA = 0.4f
@@ -279,13 +282,6 @@ private fun ForecastLineView(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     ConditionIcon(day, iconPack, iconTheme, getConditionIcon, 32.dp)
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = "${day.forecast.high}°",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1
-                    )
                 }
             }
         }
@@ -296,21 +292,6 @@ private fun ForecastLineView(
                 .width(contentWidth)
                 .height(LINE_GRAPH_HEIGHT)
         )
-
-        Row {
-            days.forEach { day ->
-                Text(
-                    text = "${day.forecast.low}°",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .width(LINE_COLUMN_WIDTH)
-                        .alpha(if (day.isPast) PAST_ALPHA else 1f)
-                )
-            }
-        }
 
         if (showPrecip) {
             Row(modifier = Modifier.padding(top = 4.dp)) {
@@ -332,12 +313,17 @@ private fun TemperatureLines(days: List<DayItem>, modifier: Modifier) {
     val highColor = MaterialTheme.colorScheme.tertiary
     val lowColor = MaterialTheme.colorScheme.secondary
     val barColor = MaterialTheme.colorScheme.primary.copy(alpha = PRECIP_BAR_ALPHA)
+    val textColor = MaterialTheme.colorScheme.onSurface
+    val textStyle = MaterialTheme.typography.titleMedium
+    val textMeasurer = rememberTextMeasurer()
 
     Canvas(modifier = modifier) {
         val minT = days.minOf { it.low }
         val maxT = days.maxOf { it.high }
         val range = (maxT - minT).coerceAtLeast(1f)
-        val pad = LINE_GRAPH_PADDING.toPx()
+        val gap = LABEL_GAP.toPx()
+        val labelHeight = textMeasurer.measure("0°", textStyle).size.height
+        val pad = LINE_GRAPH_PADDING.toPx() + labelHeight + gap
         val column = LINE_COLUMN_WIDTH.toPx()
         val strokeWidth = 2.dp.toPx()
         val radius = 4.dp.toPx()
@@ -410,6 +396,25 @@ private fun TemperatureLines(days: List<DayItem>, modifier: Modifier) {
                     drawCircle(color = lineColor, radius = radius, center = center)
                 }
             }
+        }
+
+        days.forEachIndexed { i, day ->
+            val color = if (day.isPast) textColor.copy(alpha = PAST_ALPHA) else textColor
+            val high = textMeasurer.measure("${day.forecast.high}°", textStyle)
+            drawText(
+                high,
+                color = color,
+                topLeft = Offset(
+                    x(i) - high.size.width / 2f,
+                    y(day.high) - radius - gap - high.size.height
+                )
+            )
+            val low = textMeasurer.measure("${day.forecast.low}°", textStyle)
+            drawText(
+                low,
+                color = color,
+                topLeft = Offset(x(i) - low.size.width / 2f, y(day.low) + radius + gap)
+            )
         }
     }
 }
