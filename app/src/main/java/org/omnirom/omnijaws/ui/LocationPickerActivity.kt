@@ -56,8 +56,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.android.axion.compose.scaffold.AxionScaffold
-import com.android.axion.compose.theme.AxionTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -66,6 +64,8 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import org.omnirom.omnijaws.NetworkUtils
 import org.omnirom.omnijaws.R
+import org.omnirom.omnijaws.ui.components.OmniJawsTheme
+import org.omnirom.omnijaws.ui.components.SettingsScaffold
 import java.util.Locale
 
 class LocationPickerActivity : ComponentActivity() {
@@ -82,7 +82,7 @@ class LocationPickerActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            AxionTheme {
+            OmniJawsTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.surfaceContainer
@@ -124,9 +124,9 @@ private fun LocationPickerScreen(
     val scope = rememberCoroutineScope()
     var searchJob by remember { mutableStateOf<Job?>(null) }
 
-    AxionScaffold(
+    SettingsScaffold(
         title = stringResource(R.string.omnijaws_location_query_hint),
-        onBackClick = onBack
+        onBack = onBack
     ) { padding ->
         Column(
             modifier = Modifier

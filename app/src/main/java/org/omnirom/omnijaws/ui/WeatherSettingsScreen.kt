@@ -23,21 +23,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CalendarToday
-import androidx.compose.material.icons.outlined.Cloud
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Key
-import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.material.icons.outlined.MyLocation
-import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Public
-import androidx.compose.material.icons.outlined.Schedule
-import androidx.compose.material.icons.outlined.Security
-import androidx.compose.material.icons.outlined.Thermostat
-import androidx.compose.material.icons.outlined.Update
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -57,15 +43,16 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.core.text.HtmlCompat
-import com.android.axion.compose.preferences.ClickablePreference
-import com.android.axion.compose.preferences.ListPreference
-import com.android.axion.compose.preferences.PreferenceGroup
-import com.android.axion.compose.preferences.SwitchPreference
-import com.android.axion.compose.scaffold.AxionScaffold
-
 import org.omnirom.omnijaws.R
 import org.omnirom.omnijaws.icon.IconProvider
+import org.omnirom.omnijaws.ui.components.ClickablePreference
 import org.omnirom.omnijaws.ui.components.IconPackPickerDialog
+import org.omnirom.omnijaws.ui.components.ListPreference
+import org.omnirom.omnijaws.ui.components.MasterSwitchPreference
+import org.omnirom.omnijaws.ui.components.OmniJawsIcon
+import org.omnirom.omnijaws.ui.components.PreferenceGroup
+import org.omnirom.omnijaws.ui.components.SettingsScaffold
+import org.omnirom.omnijaws.ui.components.SwitchPreference
 
 @Composable
 fun WeatherSettingsScreen(
@@ -88,9 +75,9 @@ fun WeatherSettingsScreen(
     onRequestLocationPermission: () -> Unit,
     onRequestBackgroundLocationPermission: () -> Unit
 ) {
-    AxionScaffold(
+    SettingsScaffold(
         title = stringResource(R.string.omnijaws_weather_config_title),
-        onBackClick = onBack
+        onBack = onBack
     ) { padding ->
         Column(
             modifier = Modifier
@@ -100,16 +87,11 @@ fun WeatherSettingsScreen(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            PreferenceGroup {
-                item {
-                    SwitchPreference(
-                        title = stringResource(R.string.omnijaws_enable_title),
-                        checked = state.enabled,
-                        onCheckedChange = onEnableChanged,
-                        icon = Icons.Outlined.Cloud
-                    )
-                }
-            }
+            MasterSwitchPreference(
+                title = stringResource(R.string.omnijaws_enable_title),
+                checked = state.enabled,
+                onCheckedChange = onEnableChanged
+            )
 
             if (state.enabled) {
                 PreferenceGroup(title = stringResource(R.string.omnijaws_category_general)) {
@@ -125,7 +107,7 @@ fun WeatherSettingsScreen(
                                 "4" to stringResource(R.string.omnijaws_provider_visualcrossing)
                             ),
                             value = state.provider,
-                            icon = Icons.Outlined.Public,
+                            icon = R.drawable.ic_public,
                             onValueChange = onProviderChanged
                         )
                     }
@@ -138,7 +120,7 @@ fun WeatherSettingsScreen(
                                 "1" to stringResource(R.string.omnijaws_unit_imperial)
                             ),
                             value = state.units,
-                            icon = Icons.Outlined.Thermostat,
+                            icon = R.drawable.ic_thermostat,
                             onValueChange = onUnitsChanged
                         )
                     }
@@ -154,7 +136,7 @@ fun WeatherSettingsScreen(
                                 "12" to stringResource(R.string.omnijaws_interval_12_hour)
                             ),
                             value = state.updateInterval,
-                            icon = Icons.Outlined.Schedule,
+                            icon = R.drawable.ic_schedule,
                             onValueChange = onIntervalChanged
                         )
                     }
@@ -167,7 +149,7 @@ fun WeatherSettingsScreen(
                                     stringResource(R.string.omnijaws_weather_last_update_never)
                                 else -> state.lastUpdateTime
                             },
-                            icon = Icons.Outlined.Update,
+                            icon = R.drawable.ic_update,
                             onClick = onForceUpdate
                         )
                     }
@@ -180,7 +162,7 @@ fun WeatherSettingsScreen(
                             summary = stringResource(R.string.omnijaws_custom_location_summary),
                             checked = state.customLocation,
                             onCheckedChange = onCustomLocationChanged,
-                            icon = Icons.Outlined.MyLocation
+                            icon = R.drawable.ic_my_location
                         )
                     }
                     if (state.customLocation) {
@@ -190,7 +172,7 @@ fun WeatherSettingsScreen(
                                 summary = state.locationName.ifEmpty {
                                     stringResource(R.string.omnijaws_weather_custom_location_missing)
                                 },
-                                icon = Icons.Outlined.LocationOn,
+                                icon = R.drawable.ic_location_on,
                                 onClick = onLocationPickerClick
                             )
                         }
@@ -200,7 +182,7 @@ fun WeatherSettingsScreen(
                             ClickablePreference(
                                 title = stringResource(R.string.omnijaws_grant_location_permission_title),
                                 summary = stringResource(R.string.omnijaws_grant_location_permission_summary),
-                                icon = Icons.Outlined.Security,
+                                icon = R.drawable.ic_privacy_tip,
                                 onClick = onRequestLocationPermission
                             )
                         }
@@ -212,7 +194,7 @@ fun WeatherSettingsScreen(
                             ClickablePreference(
                                 title = stringResource(R.string.omnijaws_grant_background_location_title),
                                 summary = stringResource(R.string.omnijaws_grant_background_location_summary),
-                                icon = Icons.Outlined.Security,
+                                icon = R.drawable.ic_privacy_tip,
                                 onClick = onRequestBackgroundLocationPermission
                             )
                         }
@@ -226,7 +208,7 @@ fun WeatherSettingsScreen(
                             summary = stringResource(R.string.omnijaws_notify_forecast_summary),
                             checked = state.forecastNotification,
                             onCheckedChange = onForecastNotificationChanged,
-                            icon = Icons.Outlined.CalendarToday
+                            icon = R.drawable.ic_calendar_today
                         )
                     }
                     item {
@@ -235,7 +217,7 @@ fun WeatherSettingsScreen(
                             summary = stringResource(R.string.omnijaws_notify_ongoing_summary),
                             checked = state.ongoingNotification,
                             onCheckedChange = onOngoingNotificationChanged,
-                            icon = Icons.Outlined.Notifications
+                            icon = R.drawable.ic_notifications_active
                         )
                     }
                 }
@@ -263,6 +245,7 @@ fun WeatherSettingsScreen(
                                             stringResource(R.string.omnijaws_theme_dark)
                                     ),
                                     value = state.iconTheme,
+                                    icon = R.drawable.ic_contrast,
                                     onValueChange = onIconThemeChanged
                                 )
                             }
@@ -365,6 +348,7 @@ private fun IconPackPreference(
     ClickablePreference(
         title = title,
         summary = current?.label,
+        icon = R.drawable.ic_palette,
         iconDrawable = current?.previews?.firstOrNull(),
         onClick = { showPicker = true }
     )
@@ -396,7 +380,7 @@ private fun EditTextPreference(
     ClickablePreference(
         title = title,
         summary = value.ifEmpty { emptyText },
-        icon = Icons.Outlined.Key,
+        icon = R.drawable.ic_key,
         onClick = { showDialog = true }
     )
 
@@ -441,8 +425,8 @@ private fun PlainNotePreference(text: String) {
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.Top
     ) {
-        Icon(
-            imageVector = Icons.Outlined.Info,
+        OmniJawsIcon(
+            id = R.drawable.ic_info,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )

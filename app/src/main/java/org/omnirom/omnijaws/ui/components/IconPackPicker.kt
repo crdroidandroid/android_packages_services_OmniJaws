@@ -49,7 +49,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
-import com.android.axion.compose.preferences.dialogWidth
 import org.omnirom.omnijaws.ui.IconPackItem
 
 private val PREVIEW_ICON_SIZE = 36.dp

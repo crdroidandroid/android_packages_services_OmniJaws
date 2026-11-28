@@ -34,7 +34,7 @@ import androidx.activity.viewModels
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import org.omnirom.omnijaws.client.OmniJawsClient
-import com.android.axion.compose.theme.AxionTheme
+import org.omnirom.omnijaws.ui.components.OmniJawsTheme
 
 class WeatherDashboardActivity : ComponentActivity(), OmniJawsClient.OmniJawsObserver {
 
@@ -81,7 +81,7 @@ class WeatherDashboardActivity : ComponentActivity(), OmniJawsClient.OmniJawsObs
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            AxionTheme {
+            OmniJawsTheme {
                 val uiState by viewModel.uiState.collectAsState()
                 WeatherDashboardScreen(
                     uiState = uiState,

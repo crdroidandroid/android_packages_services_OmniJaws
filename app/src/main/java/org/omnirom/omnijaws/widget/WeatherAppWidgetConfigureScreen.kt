@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -24,13 +22,12 @@ import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 
-import com.android.axion.compose.preferences.ClickablePreference
-import com.android.axion.compose.preferences.ListPreference
-import com.android.axion.compose.preferences.PreferenceGroup
-import com.android.axion.compose.preferences.SwitchPreference
-import com.android.axion.compose.scaffold.AxionScaffold
-
 import org.omnirom.omnijaws.R
+import org.omnirom.omnijaws.ui.components.ClickablePreference
+import org.omnirom.omnijaws.ui.components.ListPreference
+import org.omnirom.omnijaws.ui.components.PreferenceGroup
+import org.omnirom.omnijaws.ui.components.SettingsScaffold
+import org.omnirom.omnijaws.ui.components.SwitchPreference
 
 @Composable
 fun WeatherAppWidgetConfigureScreen(
@@ -43,9 +40,9 @@ fun WeatherAppWidgetConfigureScreen(
     onConfirm: () -> Unit,
     onCancel: () -> Unit
 ) {
-    AxionScaffold(
+    SettingsScaffold(
         title = stringResource(R.string.omnijaws_weather_widget),
-        onBackClick = onCancel
+        onBack = onCancel
     ) { padding ->
         val colorValues = stringArrayResource(R.array.color_theme_values)
         val colorEntries = stringArrayResource(R.array.color_theme_entries)
@@ -73,6 +70,7 @@ fun WeatherAppWidgetConfigureScreen(
                         summary = labelFor(colorOptions, state.colorTheme),
                         options = colorOptions,
                         value = state.colorTheme,
+                        icon = R.drawable.ic_palette,
                         onValueChange = onColorThemeChanged
                     )
                 }
@@ -82,6 +80,7 @@ fun WeatherAppWidgetConfigureScreen(
                         summary = labelFor(bgOptions, state.bgTransparency),
                         options = bgOptions,
                         value = state.bgTransparency,
+                        icon = R.drawable.ic_opacity,
                         onValueChange = onBgTransparencyChanged
                     )
                 }
@@ -92,6 +91,7 @@ fun WeatherAppWidgetConfigureScreen(
                             summary = labelFor(iconOptions, state.iconTheme),
                             options = iconOptions,
                             value = state.iconTheme,
+                        icon = R.drawable.ic_contrast,
                             onValueChange = onIconThemeChanged
                         )
                     }
@@ -102,6 +102,7 @@ fun WeatherAppWidgetConfigureScreen(
                             title = stringResource(R.string.omnijaws_widget_sub_locality_title),
                             summary = stringResource(R.string.omnijaws_widget_sub_locality_summary),
                             checked = state.showSubLocality,
+                            icon = R.drawable.ic_location_city,
                             onCheckedChange = onShowSubLocalityChanged
                         )
                     }
@@ -112,7 +113,7 @@ fun WeatherAppWidgetConfigureScreen(
                 item {
                     ClickablePreference(
                         title = stringResource(R.string.omnijaws_weather_config_title),
-                        icon = Icons.Outlined.Tune,
+                        icon = R.drawable.ic_tune,
                         onClick = onOpenWeatherSettings
                     )
                 }
