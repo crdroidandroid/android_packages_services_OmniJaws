@@ -55,6 +55,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -85,6 +87,7 @@ private const val VIEW_FADE_MS = 300
 private const val PAST_ALPHA = 0.4f
 private val PRECIP_BAR_WIDTH = 16.dp
 private const val PRECIP_BAR_ALPHA = 0.2f
+private const val FILL_ALPHA = 0.25f
 
 private class DayItem(
     val forecast: OmniJawsClient.DayForecast,
@@ -326,8 +329,8 @@ private fun ForecastLineView(
 
 @Composable
 private fun TemperatureLines(days: List<DayItem>, modifier: Modifier) {
-    val lineColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val pointColor = MaterialTheme.colorScheme.onSurface
+    val highColor = MaterialTheme.colorScheme.tertiary
+    val lowColor = MaterialTheme.colorScheme.secondary
     val barColor = MaterialTheme.colorScheme.primary.copy(alpha = PRECIP_BAR_ALPHA)
 
     Canvas(modifier = modifier) {
@@ -358,7 +361,27 @@ private fun TemperatureLines(days: List<DayItem>, modifier: Modifier) {
             }
         }
 
-        for (temps in listOf(days.map { it.high }, days.map { it.low })) {
+        val highs = days.map { it.high }
+        if (days.size > 1) {
+            val fill = Path().apply {
+                moveTo(x(0), y(highs[0]))
+                for (i in 0 until days.size - 1) {
+                    val midX = (x(i) + x(i + 1)) / 2f
+                    cubicTo(midX, y(highs[i]), midX, y(highs[i + 1]), x(i + 1), y(highs[i + 1]))
+                }
+                lineTo(x(days.size - 1), size.height)
+                lineTo(x(0), size.height)
+                close()
+            }
+            drawPath(
+                path = fill,
+                brush = Brush.verticalGradient(
+                    listOf(highColor.copy(alpha = FILL_ALPHA), Color.Transparent)
+                )
+            )
+        }
+
+        for ((temps, lineColor) in listOf(highs to highColor, days.map { it.low } to lowColor)) {
             for (i in 0 until days.size - 1) {
                 val start = Offset(x(i), y(temps[i]))
                 val end = Offset(x(i + 1), y(temps[i + 1]))
@@ -378,13 +401,13 @@ private fun TemperatureLines(days: List<DayItem>, modifier: Modifier) {
                 val center = Offset(x(i), y(t))
                 if (days[i].isPast) {
                     drawCircle(
-                        color = pointColor.copy(alpha = PAST_ALPHA),
+                        color = lineColor.copy(alpha = PAST_ALPHA),
                         radius = radius,
                         center = center,
                         style = Stroke(width = strokeWidth)
                     )
                 } else {
-                    drawCircle(color = pointColor, radius = radius, center = center)
+                    drawCircle(color = lineColor, radius = radius, center = center)
                 }
             }
         }
